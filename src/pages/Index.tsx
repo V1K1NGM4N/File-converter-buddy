@@ -152,7 +152,7 @@ const Index = () => {
             </div>
             
             <h1 className="text-5xl font-bold text-primary-foreground">
-              Image Converter Pro
+              File Converter Buddy
             </h1>
             
             <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
@@ -164,7 +164,7 @@ const Index = () => {
               <span>• Supports PNG, JPEG, WebP</span>
               <span>• Bulk conversion</span>
               <span>• High quality output</span>
-              <span>• Privacy-focused</span>
+              <span>• Lightning-fast conversion</span>
             </div>
           </div>
         </div>
