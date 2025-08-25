@@ -15,8 +15,10 @@ import {
 import { downloadMultipleFiles } from '@/utils/zipDownload';
 import { toast } from 'sonner';
 import { Zap, Image as ImageIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Index = () => {
+  const navigate = useNavigate();
   const [files, setFiles] = useState<ConversionFile[]>([]);
   const [selectedFormat, setSelectedFormat] = useState<ImageFormat>('png');
   const [isConverting, setIsConverting] = useState(false);
@@ -180,6 +182,7 @@ const Index = () => {
                 variant="secondary" 
                 size="lg"
                 className="min-w-32 hover:shadow-glow"
+                onClick={() => navigate('/video')}
               >
                 <Zap className="h-5 w-5 mr-2" />
                 Video
