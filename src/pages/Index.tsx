@@ -166,6 +166,33 @@ const Index = () => {
               <span>• High quality output</span>
               <span>• Lightning-fast conversion</span>
             </div>
+            
+            <div className="flex flex-wrap justify-center gap-6 mt-8">
+              <Button 
+                variant="secondary" 
+                size="lg"
+                className="min-w-32 hover:shadow-glow"
+              >
+                <ImageIcon className="h-5 w-5 mr-2" />
+                Images
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="lg"
+                className="min-w-32 hover:shadow-glow"
+              >
+                <Zap className="h-5 w-5 mr-2" />
+                Video
+              </Button>
+              <Button 
+                variant="secondary" 
+                size="lg"
+                className="min-w-32 hover:shadow-glow"
+              >
+                <ImageIcon className="h-5 w-5 mr-2" />
+                Text Files
+              </Button>
+            </div>
           </div>
         </div>
       </div>
