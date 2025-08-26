@@ -182,30 +182,41 @@ const VideoConverter = () => {
           
           {/* Upload Section */}
           {files.length === 0 && (
-            <Card className="p-6 bg-gradient-card shadow-card border-border/50 border-dashed border-2 hover:border-primary/50 hover:shadow-glow transition-all duration-300">
-              <CardContent className="flex flex-col items-center justify-center space-y-4 p-12">
-                <div className="flex items-center gap-3 mb-4">
-                  <Upload className="h-12 w-12 text-primary" />
-                  <Video className="h-12 w-12 text-primary" />
+            <div className="relative border-2 border-dashed border-border rounded-xl p-8 text-center transition-all duration-300 bg-gradient-upload shadow-upload hover:border-primary/50 hover:shadow-glow">
+              <input
+                type="file"
+                multiple
+                accept="video/*"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  handleFilesSelected(files);
+                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2 text-primary">
+                  <Upload className="h-8 w-8" />
+                  <Video className="h-8 w-8" />
                 </div>
-                <div className="text-center">
-                  <h3 className="text-2xl font-semibold mb-2 text-foreground">Upload Videos</h3>
+                
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Upload Videos
+                  </h3>
                   <p className="text-muted-foreground mb-4">
                     Drag and drop your video files here, or click to select files
                   </p>
-                  <p className="text-sm text-muted-foreground/80 mb-6">
+                  <p className="text-sm text-muted-foreground">
                     Supports MP4, AVI, MOV, WMV, FLV, WebM, MKV and other video formats
                   </p>
-                  <Button 
-                    size="lg" 
-                    onClick={handleFileUpload}
-                    className="hover:shadow-glow"
-                  >
-                    Choose Files
-                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+                
+                <Button variant="secondary">
+                  Choose Files
+                </Button>
+              </div>
+            </div>
           )}
           
           {/* Format Selection */}
