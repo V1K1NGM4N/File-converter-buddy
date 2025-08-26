@@ -4,23 +4,23 @@ const fileTypes = ['images', 'videos', 'files'];
 
 export const AnimatedFileType = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % fileTypes.length);
-    }, 2000); // Change every 2 seconds
+      setIsVisible(false);
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % fileTypes.length);
+        setIsVisible(true);
+      }, 150);
+    }, 2500); // Change every 2.5 seconds
 
     return () => clearInterval(interval);
   }, []);
 
   return (
-    <span className="inline-block relative w-16 text-center">
-      <span 
-        key={currentIndex}
-        className="animate-fade-in absolute inset-0"
-      >
-        {fileTypes[currentIndex]}
-      </span>
+    <span className="inline-block min-w-[4rem] text-center transition-opacity duration-150" style={{ opacity: isVisible ? 1 : 0 }}>
+      {fileTypes[currentIndex]}
     </span>
   );
 };
