@@ -4,7 +4,7 @@ interface AnimatedFileTypeProps {
 
 export const AnimatedFileType = ({ fileType }: AnimatedFileTypeProps) => {
   return (
-    <span className="inline-block min-w-[4rem] text-center">
+    <span className="inline-block w-[5rem] text-center">
       {fileType}
     </span>
   );
