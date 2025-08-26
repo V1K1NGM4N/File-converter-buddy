@@ -171,7 +171,7 @@ const TextConverter = () => {
             </p>
             
             <div className="flex flex-wrap justify-center gap-4 text-primary-foreground/60">
-              <span>• Supports TXT, PDF, DOCX, RTF</span>
+              <span>• Supports all major formats</span>
               <span>• Bulk conversion</span>
               <span>• High quality output</span>
               <span>• Lightning-fast conversion</span>
