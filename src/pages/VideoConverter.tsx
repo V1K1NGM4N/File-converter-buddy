@@ -15,6 +15,7 @@ import {
   Zap
 } from 'lucide-react';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
+import { AnimatedFileType } from '@/components/AnimatedFileType';
 import { VideoFormatSelector } from '@/components/VideoFormatSelector';
 
 type VideoFormat = 'mp4' | 'avi' | 'mov' | 'wmv' | 'flv' | 'webm' | 'mkv';
@@ -160,8 +161,8 @@ const VideoConverter = () => {
             </h1>
             
             <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-              Convert your videos to any format instantly. Upload multiple files, 
-              choose your preferred format, and download converted videos in bulk.
+              Convert your <AnimatedFileType /> to any format instantly. Upload multiple files, 
+              choose your preferred format, and download converted files in bulk.
             </p>
             
             <div className="flex flex-wrap justify-center gap-4 text-primary-foreground/60">

@@ -12,6 +12,7 @@ import {
   Play
 } from 'lucide-react';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
+import { AnimatedFileType } from '@/components/AnimatedFileType';
 import { TextFormatSelector, TextFormat } from '@/components/TextFormatSelector';
 import { ConversionControls } from '@/components/ConversionControls';
 
@@ -166,7 +167,7 @@ const TextConverter = () => {
             </h1>
             
             <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-              Convert your text files to any format instantly. Upload multiple files, 
+              Convert your <AnimatedFileType /> to any format instantly. Upload multiple files, 
               choose your preferred format, and download converted files in bulk.
             </p>
             

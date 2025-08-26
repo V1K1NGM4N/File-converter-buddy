@@ -15,6 +15,7 @@ import {
 import { downloadMultipleFiles } from '@/utils/zipDownload';
 import { toast } from 'sonner';
 import { Zap, Image as ImageIcon } from 'lucide-react';
+import { AnimatedFileType } from '@/components/AnimatedFileType';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 
 const Index = () => {
@@ -157,8 +158,8 @@ const Index = () => {
             </h1>
             
             <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-              Convert your images to any format instantly. Upload multiple files, 
-              choose your preferred format, and download converted images in bulk.
+              Convert your <AnimatedFileType /> to any format instantly. Upload multiple files, 
+              choose your preferred format, and download converted files in bulk.
             </p>
             
             <div className="flex flex-wrap justify-center gap-4 text-primary-foreground/60">
