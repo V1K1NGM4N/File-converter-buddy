@@ -14,10 +14,10 @@ export const AnimatedFileType = () => {
   }, []);
 
   return (
-    <span className="inline-block relative">
+    <span className="inline-block relative w-16 text-center">
       <span 
         key={currentIndex}
-        className="animate-fade-in"
+        className="animate-fade-in absolute inset-0"
       >
         {fileTypes[currentIndex]}
       </span>
