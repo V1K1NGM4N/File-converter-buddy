@@ -1,23 +1,19 @@
 import { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { 
-  Video, 
+  FileText, 
   Upload, 
   Download, 
   X, 
   RefreshCw, 
-  ArrowLeft,
-  Play,
-  Zap
+  Play
 } from 'lucide-react';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
-import { VideoFormatSelector } from '@/components/VideoFormatSelector';
-
-type VideoFormat = 'mp4' | 'avi' | 'mov' | 'wmv' | 'flv' | 'webm' | 'mkv';
+import { TextFormatSelector, TextFormat } from '@/components/TextFormatSelector';
+import { ConversionControls } from '@/components/ConversionControls';
 
 interface ConversionFile {
   id: string;
@@ -28,12 +24,11 @@ interface ConversionFile {
   converted?: Blob;
 }
 
-const VideoConverter = () => {
+const TextConverter = () => {
   const [files, setFiles] = useState<ConversionFile[]>([]);
-  const [selectedFormat, setSelectedFormat] = useState<VideoFormat>('mp4');
+  const [selectedFormat, setSelectedFormat] = useState<TextFormat>('txt');
   const [isConverting, setIsConverting] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
-
 
   const handleFilesSelected = useCallback((newFiles: File[]) => {
     const conversionFiles: ConversionFile[] = newFiles.map(file => ({
@@ -45,14 +40,14 @@ const VideoConverter = () => {
     }));
     
     setFiles(prev => [...prev, ...conversionFiles]);
-    toast.success(`Added ${newFiles.length} video(s) for conversion`);
+    toast.success(`Added ${newFiles.length} text file(s) for conversion`);
   }, []);
 
   const handleFileUpload = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
-    input.accept = 'video/*';
+    input.accept = '.txt,.pdf,.docx,.rtf,.md,.csv,.json,.xml';
     input.onchange = (e) => {
       const files = Array.from((e.target as HTMLInputElement).files || []);
       handleFilesSelected(files);
@@ -76,7 +71,6 @@ const VideoConverter = () => {
     setIsConverting(true);
     setOverallProgress(0);
     
-    // Simulate conversion process (in real app, this would use FFmpeg.js or similar)
     try {
       const totalFiles = files.length;
       let completedFiles = 0;
@@ -88,14 +82,14 @@ const VideoConverter = () => {
         
         // Simulate conversion progress
         for (let i = 0; i <= 100; i += 10) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+          await new Promise(resolve => setTimeout(resolve, 150));
           setFiles(prev => prev.map(f => 
             f.id === file.id ? { ...f, progress: i } : f
           ));
         }
         
-        // Create a mock converted blob (in real app, this would be the actual converted video)
-        const converted = new Blob([file.file], { type: `video/${selectedFormat}` });
+        // Create a mock converted blob
+        const converted = new Blob([file.file], { type: `text/${selectedFormat}` });
         
         setFiles(prev => prev.map(f => 
           f.id === file.id 
@@ -108,7 +102,7 @@ const VideoConverter = () => {
       });
       
       await Promise.all(conversions);
-      toast.success(`Conversion complete! ${completedFiles} videos converted.`);
+      toast.success(`Conversion complete! ${completedFiles} files converted.`);
       
     } catch (error) {
       toast.error('Conversion failed. Please try again.');
@@ -135,6 +129,18 @@ const VideoConverter = () => {
     URL.revokeObjectURL(url);
   }, [selectedFormat]);
 
+  const handleDownloadAll = useCallback(async () => {
+    const completedFiles = files.filter(f => f.status === 'completed' && f.converted);
+    
+    if (completedFiles.length === 0) {
+      toast.error('No completed conversions to download');
+      return;
+    }
+    
+    completedFiles.forEach(file => handleDownloadFile(file));
+    toast.success(`Downloaded ${completedFiles.length} converted files`);
+  }, [files, handleDownloadFile]);
+
   const handleReset = useCallback(() => {
     files.forEach(file => {
       URL.revokeObjectURL(file.preview);
@@ -151,8 +157,8 @@ const VideoConverter = () => {
         <div className="container mx-auto px-4 py-16">
           <div className="text-center space-y-6">
             <div className="flex items-center justify-center gap-3 mb-4">
-              <Zap className="h-12 w-12 text-primary-foreground" />
-              <Video className="h-12 w-12 text-primary-foreground" />
+              <FileText className="h-12 w-12 text-primary-foreground" />
+              <Play className="h-12 w-12 text-primary-foreground" />
             </div>
             
             <h1 className="text-5xl font-bold text-primary-foreground">
@@ -160,12 +166,12 @@ const VideoConverter = () => {
             </h1>
             
             <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-              Convert your videos to any format instantly. Upload multiple files, 
-              choose your preferred format, and download converted videos in bulk.
+              Convert your text files to any format instantly. Upload multiple files, 
+              choose your preferred format, and download converted files in bulk.
             </p>
             
             <div className="flex flex-wrap justify-center gap-4 text-primary-foreground/60">
-              <span>• Supports all major formats</span>
+              <span>• Supports TXT, PDF, DOCX, RTF</span>
               <span>• Bulk conversion</span>
               <span>• High quality output</span>
               <span>• Lightning-fast conversion</span>
@@ -186,15 +192,15 @@ const VideoConverter = () => {
               <CardContent className="flex flex-col items-center justify-center space-y-4 p-12">
                 <div className="flex items-center gap-3 mb-4">
                   <Upload className="h-16 w-16 text-primary/60" />
-                  <Video className="h-16 w-16 text-primary/60" />
+                  <FileText className="h-16 w-16 text-primary/60" />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-2xl font-semibold mb-2">Upload Videos</h3>
+                  <h3 className="text-2xl font-semibold mb-2">Upload Text Files</h3>
                   <p className="text-muted-foreground mb-6">
-                    Drag and drop your video files here, or click to select files
+                    Drag and drop your text files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground/60 mb-6">
-                    Supports MP4, AVI, MOV, WMV, FLV, WebM, MKV and other video formats
+                    Supports TXT, PDF, DOCX, RTF, Markdown, CSV, JSON, XML and other text formats
                   </p>
                   <Button 
                     size="lg" 
@@ -210,7 +216,7 @@ const VideoConverter = () => {
           
           {/* Format Selection */}
           {files.length > 0 && (
-            <VideoFormatSelector 
+            <TextFormatSelector 
               selectedFormat={selectedFormat}
               onFormatChange={setSelectedFormat}
             />
@@ -218,66 +224,24 @@ const VideoConverter = () => {
           
           {/* Conversion Controls */}
           {files.length > 0 && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">
-                      {files.length} video{files.length !== 1 ? 's' : ''} ready for conversion
-                    </h3>
-                    <p className="text-muted-foreground">
-                      Converting to {selectedFormat.toUpperCase()} format
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleStartConversion}
-                      disabled={isConverting}
-                      className="hover:shadow-glow"
-                    >
-                      {isConverting ? (
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Play className="h-4 w-4 mr-2" />
-                      )}
-                      {isConverting ? 'Converting...' : 'Start Conversion'}
-                    </Button>
-                    <Button variant="outline" onClick={handleReset}>
-                      <X className="h-4 w-4 mr-2" />
-                      Clear All
-                    </Button>
-                  </div>
-                </div>
-                
-                {isConverting && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Overall Progress</span>
-                      <span>{Math.round(overallProgress)}%</span>
-                    </div>
-                    <Progress value={overallProgress} />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            <ConversionControls
+              files={files}
+              isConverting={isConverting}
+              overallProgress={overallProgress}
+              onStartConversion={handleStartConversion}
+              onDownloadAll={handleDownloadAll}
+              onReset={handleReset}
+            />
           )}
           
-          {/* Video Preview Grid */}
+          {/* File Preview Grid */}
           {files.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {files.map((file) => (
                 <Card key={file.id} className="overflow-hidden hover:shadow-glow transition-all duration-300 bg-gradient-card shadow-card border-border/50">
                   <CardContent className="p-4">
-                    <div className="aspect-video bg-muted rounded-lg mb-4 relative overflow-hidden">
-                      <video
-                        src={file.preview}
-                        className="w-full h-full object-cover"
-                        controls={false}
-                        muted
-                      />
-                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                        <Video className="h-8 w-8 text-white" />
-                      </div>
+                    <div className="aspect-video bg-muted rounded-lg mb-4 relative overflow-hidden flex items-center justify-center">
+                      <FileText className="h-16 w-16 text-muted-foreground/30" />
                     </div>
                     
                     <div className="space-y-3">
@@ -295,7 +259,7 @@ const VideoConverter = () => {
                       </div>
                       
                       <div className="text-sm text-muted-foreground">
-                        Size: {(file.file.size / 1024 / 1024).toFixed(2)} MB
+                        Size: {(file.file.size / 1024).toFixed(2)} KB
                       </div>
                       
                       {file.status === 'converting' && (
@@ -340,7 +304,7 @@ const VideoConverter = () => {
                 onClick={handleFileUpload}
                 className="hover:shadow-glow"
               >
-                Add More Videos
+                Add More Files
               </Button>
             </div>
           )}
@@ -350,4 +314,4 @@ const VideoConverter = () => {
   );
 };
 
-export default VideoConverter;
+export default TextConverter;

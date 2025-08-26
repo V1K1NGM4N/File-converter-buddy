@@ -1,38 +1,44 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ImageFormat } from '@/utils/imageConverter';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
-interface FormatSelectorProps {
-  selectedFormat: ImageFormat;
-  onFormatChange: (format: ImageFormat) => void;
+export type TextFormat = 'txt' | 'pdf' | 'docx' | 'rtf' | 'md' | 'csv' | 'json' | 'xml';
+
+interface TextFormatSelectorProps {
+  selectedFormat: TextFormat;
+  onFormatChange: (format: TextFormat) => void;
   className?: string;
 }
 
-const mainFormats: Array<{ value: ImageFormat; label: string; description: string }> = [
+const mainFormats: Array<{ value: TextFormat; label: string; description: string }> = [
   {
-    value: 'png',
-    label: 'PNG',
-    description: 'Lossless compression, supports transparency'
+    value: 'txt',
+    label: 'TXT',
+    description: 'Plain text, universal format'
   },
   {
-    value: 'jpeg',
-    label: 'JPEG',
-    description: 'Smaller file size, best for photos'
+    value: 'pdf',
+    label: 'PDF',
+    description: 'Portable document format'
   }
 ];
 
-const otherFormats: Array<{ value: ImageFormat; label: string }> = [
-  { value: 'webp', label: 'WebP' }
+const otherFormats: Array<{ value: TextFormat; label: string }> = [
+  { value: 'docx', label: 'DOCX' },
+  { value: 'rtf', label: 'RTF' },
+  { value: 'md', label: 'Markdown' },
+  { value: 'csv', label: 'CSV' },
+  { value: 'json', label: 'JSON' },
+  { value: 'xml', label: 'XML' }
 ];
 
-export const FormatSelector = ({ 
+export const TextFormatSelector = ({ 
   selectedFormat, 
   onFormatChange, 
   className 
-}: FormatSelectorProps) => {
+}: TextFormatSelectorProps) => {
   const selectedOtherFormat = otherFormats.find(f => f.value === selectedFormat);
   
   return (

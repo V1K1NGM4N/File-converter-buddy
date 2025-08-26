@@ -1,38 +1,43 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ImageFormat } from '@/utils/imageConverter';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
-interface FormatSelectorProps {
-  selectedFormat: ImageFormat;
-  onFormatChange: (format: ImageFormat) => void;
+export type VideoFormat = 'mp4' | 'avi' | 'mov' | 'wmv' | 'flv' | 'webm' | 'mkv';
+
+interface VideoFormatSelectorProps {
+  selectedFormat: VideoFormat;
+  onFormatChange: (format: VideoFormat) => void;
   className?: string;
 }
 
-const mainFormats: Array<{ value: ImageFormat; label: string; description: string }> = [
+const mainFormats: Array<{ value: VideoFormat; label: string; description: string }> = [
   {
-    value: 'png',
-    label: 'PNG',
-    description: 'Lossless compression, supports transparency'
+    value: 'mp4',
+    label: 'MP4',
+    description: 'Most compatible, high quality'
   },
   {
-    value: 'jpeg',
-    label: 'JPEG',
-    description: 'Smaller file size, best for photos'
+    value: 'avi',
+    label: 'AVI',
+    description: 'Uncompressed, large file size'
   }
 ];
 
-const otherFormats: Array<{ value: ImageFormat; label: string }> = [
-  { value: 'webp', label: 'WebP' }
+const otherFormats: Array<{ value: VideoFormat; label: string }> = [
+  { value: 'mov', label: 'MOV' },
+  { value: 'wmv', label: 'WMV' },
+  { value: 'flv', label: 'FLV' },
+  { value: 'webm', label: 'WebM' },
+  { value: 'mkv', label: 'MKV' }
 ];
 
-export const FormatSelector = ({ 
+export const VideoFormatSelector = ({ 
   selectedFormat, 
   onFormatChange, 
   className 
-}: FormatSelectorProps) => {
+}: VideoFormatSelectorProps) => {
   const selectedOtherFormat = otherFormats.find(f => f.value === selectedFormat);
   
   return (
