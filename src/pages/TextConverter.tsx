@@ -9,7 +9,8 @@ import {
   Download, 
   X, 
   RefreshCw, 
-  Play
+  Play,
+  Zap
 } from 'lucide-react';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
@@ -158,8 +159,8 @@ const TextConverter = () => {
         <div className="container mx-auto px-4 py-16">
           <div className="text-center space-y-6">
             <div className="flex items-center justify-center gap-3 mb-4">
+              <Zap className="h-12 w-12 text-primary-foreground" />
               <FileText className="h-12 w-12 text-primary-foreground" />
-              <Play className="h-12 w-12 text-primary-foreground" />
             </div>
             
             <h1 className="text-5xl font-bold text-primary-foreground">
