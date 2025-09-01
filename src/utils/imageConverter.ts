@@ -1,5 +1,9 @@
 export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'tiff' | 'gif' | 'bmp' | 'svg' | 'ico' | 'heic' | 'avif';
 
+
+
+
+
 export interface ConversionFile {
   id: string;
   file: File;
