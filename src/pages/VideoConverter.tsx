@@ -16,9 +16,9 @@ import {
 } from 'lucide-react';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
-import { VideoFormatSelector } from '@/components/VideoFormatSelector';
-
-type VideoFormat = 'mp4' | 'avi' | 'mov' | 'wmv' | 'flv' | 'webm' | 'mkv';
+import { VideoFormatSelector, VideoFormat } from '@/components/VideoFormatSelector';
+import { ConversionControls } from '@/components/ConversionControls';
+import { generateConvertedFilename } from '@/utils/imageConverter';
 
 interface ConversionFile {
   id: string;
@@ -122,9 +122,7 @@ const VideoConverter = () => {
   const handleDownloadFile = useCallback((file: ConversionFile) => {
     if (!file.converted) return;
     
-    const originalName = file.file.name;
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const newName = `${nameWithoutExt}.${selectedFormat}`;
+    const newName = generateConvertedFilename(file.file.name, selectedFormat);
     
     const url = URL.createObjectURL(file.converted);
     const a = document.createElement('a');

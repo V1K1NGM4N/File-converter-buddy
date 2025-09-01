@@ -1,49 +1,48 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ImageFormat } from '@/utils/imageConverter';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
-interface FormatSelectorProps {
-  selectedFormat: ImageFormat;
-  onFormatChange: (format: ImageFormat) => void;
+export type SpreadsheetFormat = 'csv' | 'xlsx' | 'ods' | 'tsv' | 'json' | 'xml' | 'html' | 'pdf';
+
+interface SpreadsheetFormatSelectorProps {
+  selectedFormat: SpreadsheetFormat;
+  onFormatChange: (format: SpreadsheetFormat) => void;
   className?: string;
 }
 
-const mainFormats: Array<{ value: ImageFormat; label: string; description: string }> = [
+const mainFormats: Array<{ value: SpreadsheetFormat; label: string; description: string }> = [
   {
-    value: 'png',
-    label: 'PNG',
-    description: 'Lossless compression, supports transparency'
+    value: 'csv',
+    label: 'CSV',
+    description: 'Universal format, text-based'
   },
   {
-    value: 'jpeg',
-    label: 'JPEG',
-    description: 'Smaller file size, best for photos'
+    value: 'xlsx',
+    label: 'XLSX',
+    description: 'Excel format, most compatible'
   },
   {
-    value: 'webp',
-    label: 'WebP',
-    description: 'Modern format, excellent compression'
+    value: 'ods',
+    label: 'ODS',
+    description: 'OpenDocument, open source'
   }
 ];
 
-const otherFormats: Array<{ value: ImageFormat; label: string }> = [
-  { value: 'tiff', label: 'TIFF' },
-  { value: 'gif', label: 'GIF' },
-  { value: 'bmp', label: 'BMP' },
-  { value: 'svg', label: 'SVG' },
-  { value: 'ico', label: 'ICO' },
-  { value: 'heic', label: 'HEIC' },
-  { value: 'avif', label: 'AVIF' }
+const otherFormats: Array<{ value: SpreadsheetFormat; label: string }> = [
+  { value: 'tsv', label: 'TSV' },
+  { value: 'json', label: 'JSON' },
+  { value: 'xml', label: 'XML' },
+  { value: 'html', label: 'HTML' },
+  { value: 'pdf', label: 'PDF' }
 ];
 
-export const FormatSelector = ({ 
+export const SpreadsheetFormatSelector = ({ 
   selectedFormat, 
   onFormatChange, 
   className 
-}: FormatSelectorProps) => {
+}: SpreadsheetFormatSelectorProps) => {
   const selectedOtherFormat = otherFormats.find(f => f.value === selectedFormat);
   
   return (

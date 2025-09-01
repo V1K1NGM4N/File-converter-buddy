@@ -10,7 +10,8 @@ import {
   convertImage, 
   createPreviewUrl, 
   downloadBlob, 
-  getFileExtension 
+  getFileExtension, 
+  generateConvertedFilename 
 } from '@/utils/imageConverter';
 import { downloadMultipleFiles } from '@/utils/zipDownload';
 import { toast } from 'sonner';
@@ -97,9 +98,7 @@ const Index = () => {
   const handleDownloadFile = useCallback((file: ConversionFile) => {
     if (!file.converted) return;
     
-    const originalName = file.file.name;
-    const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-    const newName = `${nameWithoutExt}.${getFileExtension(selectedFormat)}`;
+    const newName = generateConvertedFilename(file.file.name, getFileExtension(selectedFormat));
     
     downloadBlob(file.converted, newName);
   }, [selectedFormat]);
@@ -114,9 +113,7 @@ const Index = () => {
     
     try {
       const downloadFiles = completedFiles.map(file => {
-        const originalName = file.file.name;
-        const nameWithoutExt = originalName.substring(0, originalName.lastIndexOf('.'));
-        const newName = `${nameWithoutExt}.${getFileExtension(selectedFormat)}`;
+        const newName = generateConvertedFilename(file.file.name, getFileExtension(selectedFormat));
         
         return {
           name: newName,

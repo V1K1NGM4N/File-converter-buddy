@@ -4,7 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
-export type VideoFormat = 'mp4' | 'avi' | 'mov' | 'wmv' | 'flv' | 'webm' | 'mkv';
+export type VideoFormat = 'mp4' | 'avi' | 'mov' | 'wmv' | 'flv' | 'webm' | 'mkv' | '3gp' | 'ogv' | 'm4v' | 'ts' | 'vob' | 'asf' | 'rm' | 'rmvb' | 'swf';
 
 interface VideoFormatSelectorProps {
   selectedFormat: VideoFormat;
@@ -30,7 +30,16 @@ const otherFormats: Array<{ value: VideoFormat; label: string }> = [
   { value: 'wmv', label: 'WMV' },
   { value: 'flv', label: 'FLV' },
   { value: 'webm', label: 'WebM' },
-  { value: 'mkv', label: 'MKV' }
+  { value: 'mkv', label: 'MKV' },
+  { value: '3gp', label: '3GP' },
+  { value: 'ogv', label: 'OGV' },
+  { value: 'm4v', label: 'M4V' },
+  { value: 'ts', label: 'TS' },
+  { value: 'vob', label: 'VOB' },
+  { value: 'asf', label: 'ASF' },
+  { value: 'rm', label: 'RM' },
+  { value: 'rmvb', label: 'RMVB' },
+  { value: 'swf', label: 'SWF' }
 ];
 
 export const VideoFormatSelector = ({ 

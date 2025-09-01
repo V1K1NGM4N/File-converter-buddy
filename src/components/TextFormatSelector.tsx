@@ -4,7 +4,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
-export type TextFormat = 'txt' | 'pdf' | 'docx' | 'rtf' | 'md' | 'csv' | 'json' | 'xml';
+export type TextFormat = 'txt' | 'pdf' | 'docx' | 'rtf' | 'md' | 'csv' | 'json' | 'xml' | 'odt' | 'pages' | 'epub' | 'html' | 'yaml' | 'toml' | 'ini' | 'log' | 'bib';
 
 interface TextFormatSelectorProps {
   selectedFormat: TextFormat;
@@ -31,7 +31,16 @@ const otherFormats: Array<{ value: TextFormat; label: string }> = [
   { value: 'md', label: 'Markdown' },
   { value: 'csv', label: 'CSV' },
   { value: 'json', label: 'JSON' },
-  { value: 'xml', label: 'XML' }
+  { value: 'xml', label: 'XML' },
+  { value: 'odt', label: 'ODT' },
+  { value: 'pages', label: 'PAGES' },
+  { value: 'epub', label: 'EPUB' },
+  { value: 'html', label: 'HTML' },
+  { value: 'yaml', label: 'YAML' },
+  { value: 'toml', label: 'TOML' },
+  { value: 'ini', label: 'INI' },
+  { value: 'log', label: 'LOG' },
+  { value: 'bib', label: 'BIB' }
 ];
 
 export const TextFormatSelector = ({ 

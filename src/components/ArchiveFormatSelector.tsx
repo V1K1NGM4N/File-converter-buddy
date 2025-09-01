@@ -1,49 +1,48 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ImageFormat } from '@/utils/imageConverter';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
-interface FormatSelectorProps {
-  selectedFormat: ImageFormat;
-  onFormatChange: (format: ImageFormat) => void;
+export type ArchiveFormat = 'zip' | 'rar' | '7z' | 'tar' | 'gz' | 'bz2' | 'xz' | 'lzma';
+
+interface ArchiveFormatSelectorProps {
+  selectedFormat: ArchiveFormat;
+  onFormatChange: (format: ArchiveFormat) => void;
   className?: string;
 }
 
-const mainFormats: Array<{ value: ImageFormat; label: string; description: string }> = [
+const mainFormats: Array<{ value: ArchiveFormat; label: string; description: string }> = [
   {
-    value: 'png',
-    label: 'PNG',
-    description: 'Lossless compression, supports transparency'
+    value: 'zip',
+    label: 'ZIP',
+    description: 'Most compatible, universal format'
   },
   {
-    value: 'jpeg',
-    label: 'JPEG',
-    description: 'Smaller file size, best for photos'
+    value: 'rar',
+    label: 'RAR',
+    description: 'High compression ratio'
   },
   {
-    value: 'webp',
-    label: 'WebP',
-    description: 'Modern format, excellent compression'
+    value: '7z',
+    label: '7Z',
+    description: 'Best compression, open source'
   }
 ];
 
-const otherFormats: Array<{ value: ImageFormat; label: string }> = [
-  { value: 'tiff', label: 'TIFF' },
-  { value: 'gif', label: 'GIF' },
-  { value: 'bmp', label: 'BMP' },
-  { value: 'svg', label: 'SVG' },
-  { value: 'ico', label: 'ICO' },
-  { value: 'heic', label: 'HEIC' },
-  { value: 'avif', label: 'AVIF' }
+const otherFormats: Array<{ value: ArchiveFormat; label: string }> = [
+  { value: 'tar', label: 'TAR' },
+  { value: 'gz', label: 'GZ' },
+  { value: 'bz2', label: 'BZ2' },
+  { value: 'xz', label: 'XZ' },
+  { value: 'lzma', label: 'LZMA' }
 ];
 
-export const FormatSelector = ({ 
+export const ArchiveFormatSelector = ({ 
   selectedFormat, 
   onFormatChange, 
   className 
-}: FormatSelectorProps) => {
+}: ArchiveFormatSelectorProps) => {
   const selectedOtherFormat = otherFormats.find(f => f.value === selectedFormat);
   
   return (

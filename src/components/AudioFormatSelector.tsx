@@ -1,49 +1,48 @@
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ImageFormat } from '@/utils/imageConverter';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
-interface FormatSelectorProps {
-  selectedFormat: ImageFormat;
-  onFormatChange: (format: ImageFormat) => void;
+export type AudioFormat = 'mp3' | 'wav' | 'flac' | 'aac' | 'ogg' | 'wma' | 'm4a' | 'aiff';
+
+interface AudioFormatSelectorProps {
+  selectedFormat: AudioFormat;
+  onFormatChange: (format: AudioFormat) => void;
   className?: string;
 }
 
-const mainFormats: Array<{ value: ImageFormat; label: string; description: string }> = [
+const mainFormats: Array<{ value: AudioFormat; label: string; description: string }> = [
   {
-    value: 'png',
-    label: 'PNG',
-    description: 'Lossless compression, supports transparency'
+    value: 'mp3',
+    label: 'MP3',
+    description: 'Most compatible, good quality'
   },
   {
-    value: 'jpeg',
-    label: 'JPEG',
-    description: 'Smaller file size, best for photos'
+    value: 'wav',
+    label: 'WAV',
+    description: 'Uncompressed, high quality'
   },
   {
-    value: 'webp',
-    label: 'WebP',
-    description: 'Modern format, excellent compression'
+    value: 'flac',
+    label: 'FLAC',
+    description: 'Lossless compression'
   }
 ];
 
-const otherFormats: Array<{ value: ImageFormat; label: string }> = [
-  { value: 'tiff', label: 'TIFF' },
-  { value: 'gif', label: 'GIF' },
-  { value: 'bmp', label: 'BMP' },
-  { value: 'svg', label: 'SVG' },
-  { value: 'ico', label: 'ICO' },
-  { value: 'heic', label: 'HEIC' },
-  { value: 'avif', label: 'AVIF' }
+const otherFormats: Array<{ value: AudioFormat; label: string }> = [
+  { value: 'aac', label: 'AAC' },
+  { value: 'ogg', label: 'OGG' },
+  { value: 'wma', label: 'WMA' },
+  { value: 'm4a', label: 'M4A' },
+  { value: 'aiff', label: 'AIFF' }
 ];
 
-export const FormatSelector = ({ 
+export const AudioFormatSelector = ({ 
   selectedFormat, 
   onFormatChange, 
   className 
-}: FormatSelectorProps) => {
+}: AudioFormatSelectorProps) => {
   const selectedOtherFormat = otherFormats.find(f => f.value === selectedFormat);
   
   return (

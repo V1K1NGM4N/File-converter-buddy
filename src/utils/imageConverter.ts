@@ -1,4 +1,4 @@
-export type ImageFormat = 'png' | 'jpeg' | 'webp';
+export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'tiff' | 'gif' | 'bmp' | 'svg' | 'ico' | 'heic' | 'avif';
 
 export interface ConversionFile {
   id: string;
@@ -69,6 +69,24 @@ export const getFileExtension = (format: ImageFormat): string => {
   switch (format) {
     case 'jpeg':
       return 'jpg';
+    case 'png':
+      return 'png';
+    case 'webp':
+      return 'webp';
+    case 'tiff':
+      return 'tiff';
+    case 'gif':
+      return 'gif';
+    case 'bmp':
+      return 'bmp';
+    case 'svg':
+      return 'svg';
+    case 'ico':
+      return 'ico';
+    case 'heic':
+      return 'heic';
+    case 'avif':
+      return 'avif';
     default:
       return format;
   }
@@ -76,4 +94,21 @@ export const getFileExtension = (format: ImageFormat): string => {
 
 export const isImageFile = (file: File): boolean => {
   return file.type.startsWith('image/');
+};
+
+export const getFilenameWithoutExtension = (filename: string): string => {
+  // Handle files without extension
+  const lastDotIndex = filename.lastIndexOf('.');
+  if (lastDotIndex === -1) {
+    return filename;
+  }
+  
+  // Handle files with multiple dots (e.g., "my.file.name.jpg")
+  // Only remove the last extension
+  return filename.substring(0, lastDotIndex);
+};
+
+export const generateConvertedFilename = (originalFilename: string, newExtension: string): string => {
+  const nameWithoutExt = getFilenameWithoutExtension(originalFilename);
+  return `${nameWithoutExt}.${newExtension}`;
 };
