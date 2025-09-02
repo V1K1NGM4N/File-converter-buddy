@@ -22,15 +22,11 @@ const mainFormats: Array<{ value: AudioFormat; label: string; description: strin
     value: 'wav',
     label: 'WAV',
     description: 'Uncompressed, high quality'
-  },
-  {
-    value: 'flac',
-    label: 'FLAC',
-    description: 'Lossless compression'
   }
 ];
 
 const otherFormats: Array<{ value: AudioFormat; label: string }> = [
+  { value: 'flac', label: 'FLAC' },
   { value: 'aac', label: 'AAC' },
   { value: 'ogg', label: 'OGG' },
   { value: 'wma', label: 'WMA' },

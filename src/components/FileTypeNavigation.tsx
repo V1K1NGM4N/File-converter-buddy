@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Image as ImageIcon, Video, FileText, Music, Archive, Table } from 'lucide-react';
+import { Image as ImageIcon, Video, Music, Zap } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface FileTypeNavigationProps {
@@ -12,6 +12,12 @@ export const FileTypeNavigation = ({ className }: FileTypeNavigationProps) => {
   const location = useLocation();
 
   const navigationItems = [
+    {
+      path: '/allfiles',
+      label: 'All files',
+      icon: Zap,
+      active: location.pathname === '/allfiles'
+    },
     {
       path: '/',
       label: 'Images',
@@ -29,24 +35,6 @@ export const FileTypeNavigation = ({ className }: FileTypeNavigationProps) => {
       label: 'Audio',
       icon: Music,
       active: location.pathname === '/audio'
-    },
-    {
-      path: '/archive',
-      label: 'Archives',
-      icon: Archive,
-      active: location.pathname === '/archive'
-    },
-    {
-      path: '/spreadsheet',
-      label: 'Spreadsheets',
-      icon: Table,
-      active: location.pathname === '/spreadsheet'
-    },
-    {
-      path: '/text',
-      label: 'Text Files',
-      icon: FileText,
-      active: location.pathname === '/text'
     }
   ];
 

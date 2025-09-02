@@ -2,7 +2,7 @@ import { Download, X, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ConversionFile, downloadBlob, getFileExtension } from '@/utils/imageConverter';
+import { ConversionFile, downloadBlob, getFileExtension, generateConvertedFilename } from '@/utils/imageConverter';
 import { cn } from '@/lib/utils';
 
 interface ImagePreviewProps {
@@ -10,15 +10,27 @@ interface ImagePreviewProps {
   targetFormat: string;
   onRemoveFile: (id: string) => void;
   onDownloadFile: (file: ConversionFile) => void;
+  fileGroup?: string;
 }
 
 export const ImagePreview = ({ 
   files, 
   targetFormat, 
   onRemoveFile, 
-  onDownloadFile 
+  onDownloadFile,
+  fileGroup = 'images'
 }: ImagePreviewProps) => {
   if (files.length === 0) return null;
+
+  const completedFiles = files.filter(f => f.status === 'completed').length;
+  const allCompleted = completedFiles === files.length && files.length > 0;
+  
+  const getSectionTitle = () => {
+    if (allCompleted) {
+      return `${fileGroup.charAt(0).toUpperCase() + fileGroup.slice(1)} Converted (${files.length})`;
+    }
+    return `Uploaded ${fileGroup.charAt(0).toUpperCase() + fileGroup.slice(1)} (${files.length})`;
+  };
 
   const getStatusIcon = (status: ConversionFile['status']) => {
     switch (status) {
@@ -33,10 +45,17 @@ export const ImagePreview = ({
     }
   };
 
+  const getDisplayFilename = (file: ConversionFile) => {
+    if (file.status === 'completed' && file.converted) {
+      return generateConvertedFilename(file.file.name, getFileExtension(targetFormat as any));
+    }
+    return file.file.name;
+  };
+
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold">
-        Uploaded Images ({files.length})
+        {getSectionTitle()}
       </h3>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -45,7 +64,7 @@ export const ImagePreview = ({
             <div className="aspect-square relative overflow-hidden">
               <img
                 src={file.preview}
-                alt={file.file.name}
+                alt={getDisplayFilename(file)}
                 className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
               />
               
@@ -68,8 +87,8 @@ export const ImagePreview = ({
             
             <div className="p-4 space-y-3">
               <div>
-                <p className="font-medium truncate" title={file.file.name}>
-                  {file.file.name}
+                <p className="font-medium truncate" title={getDisplayFilename(file)}>
+                  {getDisplayFilename(file)}
                 </p>
                 <p className="text-sm text-muted-foreground">
                   {(file.file.size / 1024 / 1024).toFixed(2)} MB

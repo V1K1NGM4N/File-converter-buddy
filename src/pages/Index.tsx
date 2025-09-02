@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
-import { ImageUpload } from '@/components/ImageUpload';
+import { UniversalFileUpload } from '@/components/UniversalFileUpload';
 import { ImagePreview } from '@/components/ImagePreview';
-import { FormatSelector } from '@/components/FormatSelector';
+import { SmartFormatSelector } from '@/components/SmartFormatSelector';
 import { ConversionControls } from '@/components/ConversionControls';
 import { Button } from '@/components/ui/button';
 import { 
@@ -15,7 +15,7 @@ import {
 } from '@/utils/imageConverter';
 import { downloadMultipleFiles } from '@/utils/zipDownload';
 import { toast } from 'sonner';
-import { Zap, Image as ImageIcon } from 'lucide-react';
+import { Zap, Image as ImageIcon, Upload } from 'lucide-react';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 
@@ -177,14 +177,49 @@ const Index = () => {
           
           {/* Upload Section */}
           {files.length === 0 && (
-            <ImageUpload onFilesSelected={handleFilesSelected} />
+            <div className="relative border-2 border-dashed border-border rounded-xl p-8 text-center transition-all duration-300 bg-gradient-upload shadow-upload hover:border-primary/50 hover:shadow-glow">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={(e) => {
+                  const files = Array.from(e.target.files || []);
+                  handleFilesSelected(files);
+                }}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+              />
+              
+              <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2 text-primary">
+                  <Upload className="h-8 w-8" />
+                  <ImageIcon className="h-8 w-8" />
+                </div>
+                
+                <div>
+                  <h3 className="text-xl font-semibold mb-2">
+                    Upload Images
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Drag and drop your image files here, or click to select files
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Supports JPG, PNG, GIF, BMP, TIFF, WebP and other image formats
+                  </p>
+                </div>
+                
+                <Button variant="secondary">
+                  Choose Files
+                </Button>
+              </div>
+            </div>
           )}
           
           {/* Format Selection */}
           {files.length > 0 && (
-            <FormatSelector 
+            <SmartFormatSelector 
+              files={files.map(f => f.file)}
               selectedFormat={selectedFormat}
-              onFormatChange={setSelectedFormat}
+              onFormatChange={(format) => setSelectedFormat(format as ImageFormat)}
             />
           )}
           
@@ -206,6 +241,7 @@ const Index = () => {
             targetFormat={selectedFormat}
             onRemoveFile={handleRemoveFile}
             onDownloadFile={handleDownloadFile}
+            fileGroup="images"
           />
           
           {/* Add More Files Button */}
