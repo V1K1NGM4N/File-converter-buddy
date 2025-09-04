@@ -894,63 +894,66 @@ const ProductFeedDownloader: React.FC = () => {
                       </div>
                       
                       {/* Content */}
-                      <div className="px-6 space-y-4 flex-1 flex flex-col">
-                        {/* Product Images Preview */}
-                        {product.images.length > 0 && (
-                          <div className={`grid gap-2 ${product.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
-                            {product.images.slice(0, product.images.length > 4 ? 3 : product.images.length).map((image, index) => (
-                              <div key={index} className="aspect-square bg-muted rounded-md overflow-hidden">
-                                <img
-                                  src={image.url}
-                                  alt={image.alt || product.title}
-                                  className="w-full h-full object-cover"
-                                  onError={(e) => {
-                                    const target = e.target as HTMLImageElement;
-                                    target.style.display = 'none';
-                                  }}
-                                />
+                      <div className="px-6 flex-1 flex flex-col min-h-0">
+                        {/* Main Content Area - grows to fill space */}
+                        <div className="flex-1 space-y-4 min-h-0">
+                          {/* Product Images Preview */}
+                          {product.images.length > 0 && (
+                            <div className={`grid gap-2 ${product.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
+                              {product.images.slice(0, product.images.length > 4 ? 3 : product.images.length).map((image, index) => (
+                                <div key={index} className="aspect-square bg-muted rounded-md overflow-hidden">
+                                  <img
+                                    src={image.url}
+                                    alt={image.alt || product.title}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                    }}
+                                  />
+                                </div>
+                              ))}
+                              {product.images.length > 4 && (
+                                <div className="aspect-square bg-muted rounded-md flex items-center justify-center">
+                                  <span className="text-sm text-muted-foreground">
+                                    +{product.images.length - 3} more
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Product Details */}
+                          <div className="space-y-2 text-sm">
+                            {product.category && (
+                              <div>
+                                <span className="font-medium">Category:</span> {product.category}
                               </div>
-                            ))}
-                            {product.images.length > 4 && (
-                              <div className="aspect-square bg-muted rounded-md flex items-center justify-center">
-                                <span className="text-sm text-muted-foreground">
-                                  +{product.images.length - 3} more
+                            )}
+                            {product.color && (
+                              <div>
+                                <span className="font-medium">Color:</span> {product.color}
+                              </div>
+                            )}
+                            {product.availability && (
+                              <div>
+                                <span className="font-medium">Availability:</span> 
+                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
+                                  product.availability === 'in_stock' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : 'bg-red-100 text-red-800'
+                                }`}>
+                                  {product.availability === 'in_stock' ? 'In Stock' : product.availability}
                                 </span>
                               </div>
                             )}
                           </div>
-                        )}
-
-                        {/* Product Details */}
-                        <div className="space-y-2 text-sm">
-                          {product.category && (
-                            <div>
-                              <span className="font-medium">Category:</span> {product.category}
-                            </div>
-                          )}
-                          {product.color && (
-                            <div>
-                              <span className="font-medium">Color:</span> {product.color}
-                            </div>
-                          )}
-                          {product.availability && (
-                            <div>
-                              <span className="font-medium">Availability:</span> 
-                              <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                product.availability === 'in_stock' 
-                                  ? 'bg-green-100 text-green-800' 
-                                  : 'bg-red-100 text-red-800'
-                              }`}>
-                                {product.availability === 'in_stock' ? 'In Stock' : product.availability}
-                              </span>
-                            </div>
-                          )}
                         </div>
 
                         <Separator />
 
-                        {/* Action Buttons */}
-                        <div className="space-y-2 mt-auto">
+                        {/* Action Buttons - always at bottom */}
+                        <div className="space-y-2 pt-4">
                           <div className="flex gap-2">
                             <select
                               value={imageFormat}
