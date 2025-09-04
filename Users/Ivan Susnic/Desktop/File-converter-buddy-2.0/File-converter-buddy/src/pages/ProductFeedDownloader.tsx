@@ -862,17 +862,18 @@ const ProductFeedDownloader: React.FC = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {paginatedProducts.map((product) => (
-                    <Card 
+                    <div 
                       key={product.id} 
-                      className="overflow-hidden bg-card/50 backdrop-blur-sm border-border/50 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 flex flex-col h-full"
+                      className="overflow-hidden bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 h-full flex flex-col"
                       onClick={() => handleProductClick(product)}
                     >
-                      <CardHeader className="pb-3">
+                      {/* Header */}
+                      <div className="p-6 pb-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
-                            <CardTitle className="text-lg line-clamp-2 mb-2">
+                            <h3 className="text-lg font-semibold line-clamp-2 mb-2">
                               {product.title}
-                            </CardTitle>
+                            </h3>
                             {product.brand && (
                               <Badge variant="secondary" className="mb-2">
                                 {product.brand}
@@ -890,9 +891,10 @@ const ProductFeedDownloader: React.FC = () => {
                             )}
                           </div>
                         </div>
-                      </CardHeader>
+                      </div>
                       
-                      <CardContent className="space-y-4 flex flex-col flex-grow">
+                      {/* Content */}
+                      <div className="px-6 space-y-4 flex-1 flex flex-col">
                         {/* Product Images Preview */}
                         {product.images.length > 0 && (
                           <div className={`grid gap-2 ${product.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
@@ -991,8 +993,8 @@ const ProductFeedDownloader: React.FC = () => {
                             )}
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
+                      </div>
+                    </div>
                   ))}
                 </div>
               )}
