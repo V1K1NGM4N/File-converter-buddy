@@ -427,7 +427,7 @@ const ProductFeedDownloader: React.FC = () => {
             <div className="hidden md:flex items-center space-x-6">
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Package className="h-4 w-4" />
-                <span>XML Parsing</span>
+                <span>Get images from feed easily</span>
               </div>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <Zap className="h-4 w-4" />
@@ -445,15 +445,32 @@ const ProductFeedDownloader: React.FC = () => {
       {/* Hero Section */}
       <div className="bg-background">
         <div className="container mx-auto px-6 py-12">
-          <div className="flex items-center space-x-4">
-            <div className="animate-fade-in">
-              <AnimatedFileType />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="animate-fade-in">
+                <AnimatedFileType />
+              </div>
+              <div className="animate-fade-in-up">
+                <h1 className="text-4xl font-bold">
+                  Product Feed <span className="text-primary">Image Downloader</span>
+                </h1>
+                <p className="text-muted-foreground text-sm">Download images from XML feeds with ease</p>
+              </div>
             </div>
-            <div className="animate-fade-in-up">
-              <h1 className="text-4xl font-bold">
-                Product Feed <span className="text-primary">Image Downloader</span>
-              </h1>
-              <p className="text-muted-foreground text-sm">Download images from XML feeds with ease</p>
+            
+            <div className="flex items-center space-x-6 animate-fade-in-up delay-200">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Package className="h-4 w-4" />
+                <span>Get images from feed easily</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Zap className="h-4 w-4" />
+                <span>Bulk Download</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <ImageIcon className="h-4 w-4" />
+                <span>Multiple Formats</span>
+              </div>
             </div>
           </div>
         </div>
@@ -690,7 +707,7 @@ const ProductFeedDownloader: React.FC = () => {
                 {/* CORS Warning - only show when URL fetch fails */}
                 {showCorsWarning && (
                   <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md text-sm text-yellow-800 max-w-lg">
-                    <strong>Note:</strong> If you get a CORS error with URLs, try again or paste the feed content directly into the XML content field instead.
+                    <strong>Note:</strong> If you get a CORS error with URLs, try pasting the XML content directly instead.
                   </div>
                 )}
               </div>
