@@ -896,7 +896,7 @@ const ProductFeedDownloader: React.FC = () => {
                       {/* Content */}
                       <div className="px-6 flex-1 flex flex-col min-h-0">
                         {/* Main Content Area - grows to fill space */}
-                        <div className="flex-1 space-y-4 min-h-0">
+                        <div className="flex-1 space-y-6 min-h-0">
                           {/* Product Images Preview */}
                           {product.images.length > 0 && (
                             <div className={`grid gap-2 ${product.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
@@ -950,7 +950,7 @@ const ProductFeedDownloader: React.FC = () => {
                           </div>
                         </div>
 
-                        <Separator className="my-6" />
+                        <Separator className="my-4" />
 
                         {/* Action Buttons - always at bottom */}
                         <div className="space-y-2">
