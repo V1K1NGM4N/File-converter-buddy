@@ -864,7 +864,7 @@ const ProductFeedDownloader: React.FC = () => {
                   {paginatedProducts.map((product) => (
                     <Card 
                       key={product.id} 
-                      className="overflow-hidden bg-card/50 backdrop-blur-sm border-border/50 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-primary/50"
+                      className="overflow-hidden bg-card/50 backdrop-blur-sm border-border/50 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 flex flex-col h-full"
                       onClick={() => handleProductClick(product)}
                     >
                       <CardHeader className="pb-3">
@@ -892,7 +892,7 @@ const ProductFeedDownloader: React.FC = () => {
                         </div>
                       </CardHeader>
                       
-                      <CardContent className="space-y-4">
+                      <CardContent className="space-y-4 flex flex-col flex-grow">
                         {/* Product Images Preview */}
                         {product.images.length > 0 && (
                           <div className={`grid gap-2 ${product.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
@@ -948,7 +948,7 @@ const ProductFeedDownloader: React.FC = () => {
                         <Separator />
 
                         {/* Action Buttons */}
-                        <div className="space-y-2">
+                        <div className="space-y-2 mt-auto">
                           <div className="flex gap-2">
                             <select
                               value={imageFormat}
