@@ -286,6 +286,15 @@ export const FILE_TYPES: Record<string, FileTypeInfo> = {
     extensions: ['xml'],
     compatibleFormats: ['txt', 'md', 'html', 'css', 'js', 'json', 'csv', 'tsv', 'log'],
     description: 'XML markup file'
+  },
+
+  // Document formats
+  'application/pdf': {
+    category: 'document',
+    mimeType: 'application/pdf',
+    extensions: ['pdf'],
+    compatibleFormats: ['png', 'jpeg', 'webp', 'tiff', 'txt', 'md', 'html', 'docx'],
+    description: 'Portable Document Format file'
   }
 };
 

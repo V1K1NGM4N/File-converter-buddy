@@ -1,170 +1,202 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UniversalFileUpload } from '@/components/UniversalFileUpload';
+import { SmartFormatSelector } from '@/components/SmartFormatSelector';
+import { ConversionControls } from '@/components/ConversionControls';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Progress } from '@/components/ui/progress';
-import { toast } from 'sonner';
-import { 
-  Music, 
-  Upload, 
-  Download, 
-  X, 
-  RefreshCw, 
-  Play, 
-  Zap,
-  Image as ImageIcon,
-  Video,
-  Package
-} from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
-import { AudioFormatSelector, AudioFormat } from '@/components/AudioFormatSelector';
-import { ConversionControls } from '@/components/ConversionControls';
-import { generateConvertedFilename } from '@/utils/imageConverter';
+import { detectFileType, FileCategory } from '@/utils/fileTypeDetector';
+import { convertImage, downloadBlob, generateConvertedFilename, getFileExtension, type ImageFormat } from '@/utils/imageConverter';
+import { 
+  convertPDFToImage, 
+  convertPDFToText, 
+  convertPDFToHTML,
+  convertPDFToMarkdown,
+  convertPDFToWord
+} from '@/utils/pdfConverter';
+import { toast } from 'sonner';
+import { FileType, Info, Upload, Zap, Image as ImageIcon, Video, Music, Package } from 'lucide-react';
 
-interface ConversionFile {
+interface DemoFile {
   id: string;
   file: File;
-  preview: string;
+  fileType: ReturnType<typeof detectFileType>;
   progress: number;
   status: 'pending' | 'converting' | 'completed' | 'error';
   converted?: Blob;
 }
 
-const AudioConverter = () => {
+const UniversalConverter = () => {
   const navigate = useNavigate();
-  const [files, setFiles] = useState<ConversionFile[]>([]);
-  const [selectedFormat, setSelectedFormat] = useState<AudioFormat>('mp3');
+  const [files, setFiles] = useState<DemoFile[]>([]);
+  const [selectedFormat, setSelectedFormat] = useState<string>('');
   const [isConverting, setIsConverting] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
 
   const handleFilesSelected = useCallback((newFiles: File[]) => {
-    const conversionFiles: ConversionFile[] = newFiles.map(file => ({
+    const demoFiles: DemoFile[] = newFiles.map(file => ({
       id: crypto.randomUUID(),
       file,
-      preview: URL.createObjectURL(file),
+      fileType: detectFileType(file),
       progress: 0,
       status: 'pending' as const
     }));
     
-    setFiles(prev => [...prev, ...conversionFiles]);
-    toast.success(`Added ${newFiles.length} audio file(s) for conversion`);
+    setFiles(prev => [...prev, ...demoFiles]);
+    
+    // Auto-select the first compatible format
+    if (demoFiles.length > 0 && demoFiles[0].fileType) {
+      const firstFile = demoFiles[0];
+      const compatibleFormats = firstFile.fileType.compatibleFormats;
+      if (compatibleFormats.length > 0) {
+        setSelectedFormat(compatibleFormats[0]);
+      }
+    }
+    
+    toast.success(`Added ${newFiles.length} file(s) for conversion`);
   }, []);
 
-  const handleFileUpload = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.multiple = true;
-    input.accept = 'audio/*';
-    input.onchange = (e) => {
-      const files = Array.from((e.target as HTMLInputElement).files || []);
-      handleFilesSelected(files);
-    };
-    input.click();
-  };
-
   const handleRemoveFile = useCallback((id: string) => {
-    setFiles(prev => {
-      const file = prev.find(f => f.id === id);
-      if (file) {
-        URL.revokeObjectURL(file.preview);
-      }
-      return prev.filter(f => f.id !== id);
-    });
+    setFiles(prev => prev.filter(f => f.id !== id));
+  }, []);
+
+  const handleReset = useCallback(() => {
+    setFiles([]);
+    setSelectedFormat('');
+    setIsConverting(false);
+    setOverallProgress(0);
+    toast.success('Cleared all files');
   }, []);
 
   const handleStartConversion = useCallback(async () => {
-    if (files.length === 0) return;
+    if (files.length === 0 || !selectedFormat) return;
     
     setIsConverting(true);
     setOverallProgress(0);
     
-    // Simulate conversion process (in real app, this would use Web Audio API or similar)
     try {
       const totalFiles = files.length;
       let completedFiles = 0;
       
-      const conversions = files.map(async (file) => {
+      // Convert files in parallel with progress tracking
+      const conversions = files.map(async (file, index) => {
         setFiles(prev => prev.map(f => 
           f.id === file.id ? { ...f, status: 'converting', progress: 0 } : f
         ));
         
-        // Simulate conversion progress
-        for (let i = 0; i <= 100; i += 10) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+        try {
+          let converted: Blob;
+          
+          // Handle different file types
+          if (file.fileType?.category === 'image') {
+            converted = await convertImage(file.file, selectedFormat as ImageFormat);
+          } else if (file.fileType?.category === 'document' && file.file.type === 'application/pdf') {
+            // Handle PDF conversions
+            if (['png', 'jpeg', 'webp', 'tiff'].includes(selectedFormat)) {
+              converted = await convertPDFToImage(file.file, selectedFormat as 'png' | 'jpeg' | 'webp' | 'tiff');
+            } else if (selectedFormat === 'txt') {
+              converted = await convertPDFToText(file.file);
+            } else if (selectedFormat === 'html') {
+              converted = await convertPDFToHTML(file.file);
+            } else if (selectedFormat === 'md') {
+              converted = await convertPDFToMarkdown(file.file);
+            } else if (selectedFormat === 'docx') {
+              converted = await convertPDFToWord(file.file);
+            } else {
+              throw new Error(`Unsupported PDF conversion format: ${selectedFormat}`);
+            }
+          } else {
+            throw new Error(`Unsupported file type for conversion`);
+          }
+          
+          // Update file status to completed
           setFiles(prev => prev.map(f => 
-            f.id === file.id ? { ...f, progress: i } : f
+            f.id === file.id ? { ...f, status: 'completed', progress: 100, converted } : f
           ));
+          
+          completedFiles++;
+          setOverallProgress((completedFiles / totalFiles) * 100);
+          
+        } catch (error) {
+          console.error(`Error converting file ${file.file.name}:`, error);
+          setFiles(prev => prev.map(f => 
+            f.id === file.id ? { ...f, status: 'error', progress: 0 } : f
+          ));
+          
+          completedFiles++;
+          setOverallProgress((completedFiles / totalFiles) * 100);
         }
-        
-        // Create a mock converted blob (in real app, this would be the actual converted audio)
-        const converted = new Blob([file.file], { type: `audio/${selectedFormat}` });
-        
-        setFiles(prev => prev.map(f => 
-          f.id === file.id 
-            ? { ...f, status: 'completed', progress: 100, converted }
-            : f
-        ));
-        
-        completedFiles++;
-        setOverallProgress((completedFiles / totalFiles) * 100);
       });
       
       await Promise.all(conversions);
-      toast.success(`Conversion complete! ${completedFiles} audio files converted.`);
       
+      toast.success('Conversion completed!');
     } catch (error) {
-      toast.error('Conversion failed. Please try again.');
       console.error('Conversion error:', error);
+      toast.error('Conversion failed. Please try again.');
     } finally {
       setIsConverting(false);
     }
   }, [files, selectedFormat]);
 
-  const handleDownloadFile = useCallback((file: ConversionFile) => {
+  const handleDownloadFile = useCallback(async (file: DemoFile) => {
     if (!file.converted) return;
     
-    const newName = generateConvertedFilename(file.file.name, selectedFormat);
-    
-    const url = URL.createObjectURL(file.converted);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = newName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const filename = generateConvertedFilename(file.file.name, selectedFormat);
+    downloadBlob(file.converted, filename);
+    toast.success(`Downloaded ${filename}`);
   }, [selectedFormat]);
 
   const handleDownloadAll = useCallback(async () => {
     const completedFiles = files.filter(f => f.status === 'completed' && f.converted);
     if (completedFiles.length === 0) return;
     
-    if (completedFiles.length === 1) {
-      handleDownloadFile(completedFiles[0]);
-      return;
-    }
-    
-    try {
-      // Download multiple files individually since we don't have ZIP functionality for audio
-      completedFiles.forEach(file => {
-        handleDownloadFile(file);
-      });
-      toast.success(`Downloaded ${completedFiles.length} files`);
-    } catch (error) {
-      console.error('Download error:', error);
-      toast.error('Failed to download files. Please try again.');
-    }
-  }, [files, handleDownloadFile]);
-
-  const handleReset = useCallback(() => {
-    files.forEach(file => {
-      URL.revokeObjectURL(file.preview);
+    completedFiles.forEach(file => {
+      const filename = generateConvertedFilename(file.file.name, selectedFormat);
+      downloadBlob(file.converted!, filename);
     });
-    setFiles([]);
-    setOverallProgress(0);
-    toast.success('Cleared all files');
-  }, [files]);
+    
+    toast.success(`Downloaded ${completedFiles.length} file(s)`);
+  }, [files, selectedFormat]);
+
+  const getStatusIcon = (status: DemoFile['status']) => {
+    switch (status) {
+      case 'pending':
+        return <Upload className="h-3 w-3 text-muted-foreground" />;
+      case 'converting':
+        return <Zap className="h-3 w-3 text-blue-500 animate-pulse" />;
+      case 'completed':
+        return <FileType className="h-3 w-3 text-green-500" />;
+      case 'error':
+        return <Info className="h-3 w-3 text-red-500" />;
+      default:
+        return null;
+    }
+  };
+
+  const getFileTypeBadge = (fileType: ReturnType<typeof detectFileType>) => {
+    if (!fileType) return <Badge variant="secondary">Unknown</Badge>;
+    
+    const categoryColors = {
+      image: 'bg-blue-100 text-blue-800',
+      document: 'bg-green-100 text-green-800',
+      video: 'bg-purple-100 text-purple-800',
+      audio: 'bg-orange-100 text-orange-800',
+      archive: 'bg-gray-100 text-gray-800'
+    };
+    
+    return (
+      <Badge 
+        variant="secondary" 
+        className={categoryColors[fileType.category] || 'bg-gray-100 text-gray-800'}
+      >
+        {fileType.category}
+      </Badge>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -189,7 +221,7 @@ const AudioConverter = () => {
             
             <div className="hidden md:flex items-center space-x-6">
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Music className="h-4 w-4" />
+                <FileType className="h-4 w-4" />
                 <span>All Formats</span>
               </div>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
@@ -214,9 +246,9 @@ const AudioConverter = () => {
             </div>
             <div className="animate-fade-in-up">
               <h1 className="text-4xl font-bold">
-                Audio <span className="text-primary">File Converter</span>
+                Universal <span className="text-primary">File Converter</span>
               </h1>
-              <p className="text-muted-foreground text-sm">Convert audio between formats with ease</p>
+              <p className="text-muted-foreground text-sm">Convert any file type to any format instantly</p>
             </div>
           </div>
         </div>
@@ -324,7 +356,6 @@ const AudioConverter = () => {
               <input
                 type="file"
                 multiple
-                accept="audio/*"
                 onChange={(e) => {
                   const files = Array.from(e.target.files || []);
                   handleFilesSelected(files);
@@ -335,18 +366,18 @@ const AudioConverter = () => {
               <div className="flex flex-col items-center gap-4">
                 <div className="flex items-center gap-2 text-primary">
                   <Upload className="h-8 w-8" />
-                  <Music className="h-8 w-8" />
+                  <FileType className="h-8 w-8" />
                 </div>
                 
                 <div>
                   <h3 className="text-xl font-semibold mb-2">
-                    Upload Audio Files
+                    Upload Any File Type
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    Drag and drop your audio files here, or click to select files
+                    Drag and drop your files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports MP3, WAV, FLAC, AAC, OGG, WMA, M4A, AIFF and other audio formats
+                    Supports Images, PDFs, Documents, Videos, Audio and other file formats
                   </p>
                 </div>
                 
@@ -359,131 +390,104 @@ const AudioConverter = () => {
           
           {/* Format Selection */}
           {files.length > 0 && (
-            <AudioFormatSelector 
-              selectedFormat={selectedFormat}
-              onFormatChange={setSelectedFormat}
-            />
-          )}
-          
-          {/* Conversion Controls */}
-          {files.length > 0 && (
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">
-                      {files.length} audio file{files.length !== 1 ? 's' : ''} ready for conversion
-                    </h3>
-                    <p className="text-muted-foreground">
-                      Converting to {selectedFormat.toUpperCase()} format
-                    </p>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={handleStartConversion}
-                      disabled={isConverting}
-                      className="hover:shadow-glow"
-                    >
-                      {isConverting ? (
-                        <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Play className="h-4 w-4 mr-2" />
-                      )}
-                      {isConverting ? 'Converting...' : 'Start Conversion'}
-                    </Button>
-                    {files.some(f => f.status === 'completed') && (
-                      <Button
-                        onClick={handleDownloadAll}
-                        className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
-                        variant="default"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download All
-                      </Button>
-                    )}
-                    <Button variant="outline" onClick={handleReset}>
-                      <X className="h-4 w-4 mr-2" />
-                      Clear All
-                    </Button>
-                  </div>
-                </div>
-                
-                {isConverting && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span>Overall Progress</span>
-                      <span>{Math.round(overallProgress)}%</span>
-                    </div>
-                    <Progress value={overallProgress} />
-                  </div>
-                )}
+            <Card className="bg-gradient-card shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Zap className="h-5 w-5 text-primary" />
+                  Select Output Format
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <SmartFormatSelector
+                  files={files.map(f => f.file)}
+                  selectedFormat={selectedFormat}
+                  onFormatChange={setSelectedFormat}
+                />
               </CardContent>
             </Card>
           )}
           
-          {/* Audio Preview Grid */}
+          {/* Conversion Controls */}
           {files.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {files.map((file) => (
-                <Card key={file.id} className="overflow-hidden hover:shadow-glow transition-all duration-300 bg-gradient-card shadow-card border-border/50">
-                  <CardContent className="p-4">
-                    <div className="aspect-video bg-muted rounded-lg mb-4 relative overflow-hidden flex items-center justify-center">
-                      <Music className="h-16 w-16 text-muted-foreground/30" />
-                      <audio
-                        src={file.preview}
-                        controls
-                        className="absolute inset-0 w-full h-full"
-                      />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium truncate flex-1 mr-2">
-                          {file.file.name}
-                        </h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveFile(file.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      <div className="text-sm text-muted-foreground">
-                        Size: {(file.file.size / 1024 / 1024).toFixed(2)} MB
-                      </div>
-                      
-                      {file.status === 'converting' && (
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Converting...</span>
-                            <span>{file.progress}%</span>
-                          </div>
-                          <Progress value={file.progress} />
+            <ConversionControls
+              files={files.map(f => ({ id: f.id, file: f.file, status: f.status }))}
+              isConverting={isConverting}
+              overallProgress={overallProgress}
+              onStartConversion={handleStartConversion}
+              onDownloadAll={handleDownloadAll}
+              onReset={handleReset}
+            />
+          )}
+          
+          {/* File Preview Grid */}
+          {files.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Files to Convert</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {files.map((file) => (
+                  <Card key={file.id} className="overflow-hidden bg-gradient-card shadow-card border-border/50">
+                    <div className="aspect-square relative overflow-hidden">
+                      {file.fileType?.category === 'image' ? (
+                        <img
+                          src={URL.createObjectURL(file.file)}
+                          alt={file.file.name}
+                          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-muted/50">
+                          <FileType className="h-16 w-16 text-muted-foreground" />
                         </div>
                       )}
                       
-                      {file.status === 'completed' && (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="absolute top-2 right-2 h-8 w-8 p-0"
+                        onClick={() => handleRemoveFile(file.id)}
+                      >
+                        <Info className="h-4 w-4" />
+                      </Button>
+                      
+                      <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded px-2 py-1">
+                        {getStatusIcon(file.status)}
+                        <span className="text-xs font-medium">
+                          {file.status}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <CardContent className="p-4 space-y-3">
+                      <div className="space-y-2">
+                        <h4 className="font-medium text-sm truncate" title={file.file.name}>
+                          {file.file.name}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          {getFileTypeBadge(file.fileType)}
+                          <span className="text-xs text-muted-foreground">
+                            {(file.file.size / 1024 / 1024).toFixed(2)} MB
+                          </span>
+                        </div>
+                      </div>
+                      
+                      {file.status === 'completed' && file.converted && (
                         <Button
-                          onClick={() => handleDownloadFile(file)}
-                          className="w-full hover:shadow-glow"
                           size="sm"
+                          className="w-full"
+                          onClick={() => handleDownloadFile(file)}
                         >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download {selectedFormat.toUpperCase()}
+                          Download
                         </Button>
                       )}
                       
                       {file.status === 'error' && (
-                        <div className="text-sm text-destructive">
+                        <div className="text-xs text-red-500">
                           Conversion failed
                         </div>
                       )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
           )}
           
@@ -493,10 +497,19 @@ const AudioConverter = () => {
               <Button 
                 variant="outline" 
                 size="lg"
-                onClick={handleFileUpload}
+                onClick={() => {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.multiple = true;
+                  input.onchange = (e) => {
+                    const files = Array.from((e.target as HTMLInputElement).files || []);
+                    handleFilesSelected(files);
+                  };
+                  input.click();
+                }}
                 className="hover:shadow-glow"
               >
-                Add More Audio Files
+                Add More Files
               </Button>
             </div>
           )}
@@ -506,4 +519,4 @@ const AudioConverter = () => {
   );
 };
 
-export default AudioConverter;
+export default UniversalConverter;

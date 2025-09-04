@@ -1,40 +1,31 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { UniversalFileUpload } from '@/components/UniversalFileUpload';
+import { ImagePreview } from '@/components/ImagePreview';
+import { SmartFormatSelector } from '@/components/SmartFormatSelector';
+import { ConversionControls } from '@/components/ConversionControls';
 import { Button } from '@/components/ui/button';
+import { ImageUpload, ImageFormat } from '@/components/ImageUpload';
+import { 
+  ConversionFile, 
+  convertImage, 
+  createPreviewUrl, 
+  downloadBlob, 
+  getFileExtension, 
+  generateConvertedFilename 
+} from '@/utils/imageConverter';
+import { downloadMultipleFiles } from '@/utils/zipDownload';
+import { toast } from 'sonner';
+import { Zap, Image as ImageIcon, Upload, Download, X, RefreshCw, Play, Video, Music, Package } from 'lucide-react';
+import { AnimatedFileType } from '@/components/AnimatedFileType';
+import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { toast } from 'sonner';
-import { 
-  Music, 
-  Upload, 
-  Download, 
-  X, 
-  RefreshCw, 
-  Play, 
-  Zap,
-  Image as ImageIcon,
-  Video,
-  Package
-} from 'lucide-react';
-import { FileTypeNavigation } from '@/components/FileTypeNavigation';
-import { AnimatedFileType } from '@/components/AnimatedFileType';
-import { AudioFormatSelector, AudioFormat } from '@/components/AudioFormatSelector';
-import { ConversionControls } from '@/components/ConversionControls';
-import { generateConvertedFilename } from '@/utils/imageConverter';
 
-interface ConversionFile {
-  id: string;
-  file: File;
-  preview: string;
-  progress: number;
-  status: 'pending' | 'converting' | 'completed' | 'error';
-  converted?: Blob;
-}
-
-const AudioConverter = () => {
+const ImageConverter = () => {
   const navigate = useNavigate();
   const [files, setFiles] = useState<ConversionFile[]>([]);
-  const [selectedFormat, setSelectedFormat] = useState<AudioFormat>('mp3');
+  const [selectedFormat, setSelectedFormat] = useState<ImageFormat>('png');
   const [isConverting, setIsConverting] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
 
@@ -42,20 +33,20 @@ const AudioConverter = () => {
     const conversionFiles: ConversionFile[] = newFiles.map(file => ({
       id: crypto.randomUUID(),
       file,
-      preview: URL.createObjectURL(file),
+      preview: createPreviewUrl(file),
       progress: 0,
       status: 'pending' as const
     }));
     
     setFiles(prev => [...prev, ...conversionFiles]);
-    toast.success(`Added ${newFiles.length} audio file(s) for conversion`);
+    toast.success(`Added ${newFiles.length} image(s) for conversion`);
   }, []);
 
   const handleFileUpload = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
-    input.accept = 'audio/*';
+    input.accept = 'image/*';
     input.onchange = (e) => {
       const files = Array.from((e.target as HTMLInputElement).files || []);
       handleFilesSelected(files);
@@ -79,39 +70,38 @@ const AudioConverter = () => {
     setIsConverting(true);
     setOverallProgress(0);
     
-    // Simulate conversion process (in real app, this would use Web Audio API or similar)
     try {
       const totalFiles = files.length;
       let completedFiles = 0;
       
-      const conversions = files.map(async (file) => {
+      // Convert files in parallel with progress tracking
+      const conversions = files.map(async (file, index) => {
         setFiles(prev => prev.map(f => 
           f.id === file.id ? { ...f, status: 'converting', progress: 0 } : f
         ));
         
-        // Simulate conversion progress
-        for (let i = 0; i <= 100; i += 10) {
-          await new Promise(resolve => setTimeout(resolve, 200));
+        try {
+          const converted = await convertImage(file.file, selectedFormat);
+          
           setFiles(prev => prev.map(f => 
-            f.id === file.id ? { ...f, progress: i } : f
+            f.id === file.id 
+              ? { ...f, status: 'completed', progress: 100, converted }
+              : f
+          ));
+          
+          completedFiles++;
+          setOverallProgress((completedFiles / totalFiles) * 100);
+          
+        } catch (error) {
+          console.error(`Failed to convert ${file.file.name}:`, error);
+          setFiles(prev => prev.map(f => 
+            f.id === file.id ? { ...f, status: 'error', progress: 0 } : f
           ));
         }
-        
-        // Create a mock converted blob (in real app, this would be the actual converted audio)
-        const converted = new Blob([file.file], { type: `audio/${selectedFormat}` });
-        
-        setFiles(prev => prev.map(f => 
-          f.id === file.id 
-            ? { ...f, status: 'completed', progress: 100, converted }
-            : f
-        ));
-        
-        completedFiles++;
-        setOverallProgress((completedFiles / totalFiles) * 100);
       });
       
       await Promise.all(conversions);
-      toast.success(`Conversion complete! ${completedFiles} audio files converted.`);
+      toast.success(`Conversion complete! ${completedFiles} files converted.`);
       
     } catch (error) {
       toast.error('Conversion failed. Please try again.');
@@ -124,16 +114,9 @@ const AudioConverter = () => {
   const handleDownloadFile = useCallback((file: ConversionFile) => {
     if (!file.converted) return;
     
-    const newName = generateConvertedFilename(file.file.name, selectedFormat);
-    
-    const url = URL.createObjectURL(file.converted);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = newName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const filename = generateConvertedFilename(file.file.name, selectedFormat);
+    downloadBlob(file.converted, filename);
+    toast.success(`Downloaded ${filename}`);
   }, [selectedFormat]);
 
   const handleDownloadAll = useCallback(async () => {
@@ -146,25 +129,24 @@ const AudioConverter = () => {
     }
     
     try {
-      // Download multiple files individually since we don't have ZIP functionality for audio
-      completedFiles.forEach(file => {
-        handleDownloadFile(file);
-      });
-      toast.success(`Downloaded ${completedFiles.length} files`);
+      await downloadMultipleFiles(completedFiles, selectedFormat);
+      toast.success(`Downloaded ${completedFiles.length} files as ZIP`);
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Failed to download files. Please try again.');
     }
-  }, [files, handleDownloadFile]);
+  }, [files, selectedFormat, handleDownloadFile]);
 
   const handleReset = useCallback(() => {
-    files.forEach(file => {
-      URL.revokeObjectURL(file.preview);
+    setFiles(prev => {
+      prev.forEach(file => URL.revokeObjectURL(file.preview));
+      return [];
     });
-    setFiles([]);
+    setSelectedFormat('png');
+    setIsConverting(false);
     setOverallProgress(0);
-    toast.success('Cleared all files');
-  }, [files]);
+    toast.success('Cleared all images');
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -189,7 +171,7 @@ const AudioConverter = () => {
             
             <div className="hidden md:flex items-center space-x-6">
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Music className="h-4 w-4" />
+                <ImageIcon className="h-4 w-4" />
                 <span>All Formats</span>
               </div>
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
@@ -214,9 +196,9 @@ const AudioConverter = () => {
             </div>
             <div className="animate-fade-in-up">
               <h1 className="text-4xl font-bold">
-                Audio <span className="text-primary">File Converter</span>
+                Image <span className="text-primary">File Converter</span>
               </h1>
-              <p className="text-muted-foreground text-sm">Convert audio between formats with ease</p>
+              <p className="text-muted-foreground text-sm">Convert images between formats with ease</p>
             </div>
           </div>
         </div>
@@ -324,7 +306,7 @@ const AudioConverter = () => {
               <input
                 type="file"
                 multiple
-                accept="audio/*"
+                accept="image/*"
                 onChange={(e) => {
                   const files = Array.from(e.target.files || []);
                   handleFilesSelected(files);
@@ -335,18 +317,18 @@ const AudioConverter = () => {
               <div className="flex flex-col items-center gap-4">
                 <div className="flex items-center gap-2 text-primary">
                   <Upload className="h-8 w-8" />
-                  <Music className="h-8 w-8" />
+                  <ImageIcon className="h-8 w-8" />
                 </div>
                 
                 <div>
                   <h3 className="text-xl font-semibold mb-2">
-                    Upload Audio Files
+                    Upload Image Files
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    Drag and drop your audio files here, or click to select files
+                    Drag and drop your image files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports MP3, WAV, FLAC, AAC, OGG, WMA, M4A, AIFF and other audio formats
+                    Supports PNG, JPEG, WebP, TIFF, BMP, GIF and other image formats
                   </p>
                 </div>
                 
@@ -359,9 +341,10 @@ const AudioConverter = () => {
           
           {/* Format Selection */}
           {files.length > 0 && (
-            <AudioFormatSelector 
+            <SmartFormatSelector 
+              files={files.map(f => f.file)}
               selectedFormat={selectedFormat}
-              onFormatChange={setSelectedFormat}
+              onFormatChange={(format) => setSelectedFormat(format as ImageFormat)}
             />
           )}
           
@@ -372,7 +355,7 @@ const AudioConverter = () => {
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-semibold">
-                      {files.length} audio file{files.length !== 1 ? 's' : ''} ready for conversion
+                      {files.length} image{files.length !== 1 ? 's' : ''} ready for conversion
                     </h3>
                     <p className="text-muted-foreground">
                       Converting to {selectedFormat.toUpperCase()} format
@@ -391,16 +374,16 @@ const AudioConverter = () => {
                       )}
                       {isConverting ? 'Converting...' : 'Start Conversion'}
                     </Button>
-                    {files.some(f => f.status === 'completed') && (
-                      <Button
-                        onClick={handleDownloadAll}
-                        className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
-                        variant="default"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download All
-                      </Button>
-                    )}
+                                         {files.some(f => f.status === 'completed') && (
+                       <Button
+                         onClick={handleDownloadAll}
+                         className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
+                         variant="default"
+                       >
+                         <Download className="h-4 w-4 mr-2" />
+                         Download All
+                       </Button>
+                     )}
                     <Button variant="outline" onClick={handleReset}>
                       <X className="h-4 w-4 mr-2" />
                       Clear All
@@ -421,71 +404,14 @@ const AudioConverter = () => {
             </Card>
           )}
           
-          {/* Audio Preview Grid */}
-          {files.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {files.map((file) => (
-                <Card key={file.id} className="overflow-hidden hover:shadow-glow transition-all duration-300 bg-gradient-card shadow-card border-border/50">
-                  <CardContent className="p-4">
-                    <div className="aspect-video bg-muted rounded-lg mb-4 relative overflow-hidden flex items-center justify-center">
-                      <Music className="h-16 w-16 text-muted-foreground/30" />
-                      <audio
-                        src={file.preview}
-                        controls
-                        className="absolute inset-0 w-full h-full"
-                      />
-                    </div>
-                    
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-medium truncate flex-1 mr-2">
-                          {file.file.name}
-                        </h4>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveFile(file.id)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      
-                      <div className="text-sm text-muted-foreground">
-                        Size: {(file.file.size / 1024 / 1024).toFixed(2)} MB
-                      </div>
-                      
-                      {file.status === 'converting' && (
-                        <div className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span>Converting...</span>
-                            <span>{file.progress}%</span>
-                          </div>
-                          <Progress value={file.progress} />
-                        </div>
-                      )}
-                      
-                      {file.status === 'completed' && (
-                        <Button
-                          onClick={() => handleDownloadFile(file)}
-                          className="w-full hover:shadow-glow"
-                          size="sm"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download {selectedFormat.toUpperCase()}
-                        </Button>
-                      )}
-                      
-                      {file.status === 'error' && (
-                        <div className="text-sm text-destructive">
-                          Conversion failed
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
+          {/* Image Preview Grid */}
+          <ImagePreview
+            files={files}
+            targetFormat={selectedFormat}
+            onRemoveFile={handleRemoveFile}
+            onDownloadFile={handleDownloadFile}
+            fileGroup="images"
+          />
           
           {/* Add More Files Button */}
           {files.length > 0 && (
@@ -496,7 +422,7 @@ const AudioConverter = () => {
                 onClick={handleFileUpload}
                 className="hover:shadow-glow"
               >
-                Add More Audio Files
+                Add More Images
               </Button>
             </div>
           )}
@@ -506,4 +432,4 @@ const AudioConverter = () => {
   );
 };
 
-export default AudioConverter;
+export default ImageConverter;

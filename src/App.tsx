@@ -3,10 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import Home from "./pages/Home";
+import ImageConverter from "./pages/ImageConverter";
 import VideoConverter from "./pages/VideoConverter";
 import AudioConverter from "./pages/AudioConverter";
-import SmartConverterDemo from "./pages/SmartConverterDemo";
+import UniversalConverter from "./pages/UniversalConverter";
+import YouTubeDownloader from "./pages/YouTubeDownloader";
+import TikTokDownloader from "./pages/TikTokDownloader";
+import ProductFeedDownloader from "./pages/ProductFeedDownloader";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,11 +22,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<SmartConverterDemo />} />
-          <Route path="/allfiles" element={<SmartConverterDemo />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/universal-converter" element={<UniversalConverter />} />
           <Route path="/video" element={<VideoConverter />} />
           <Route path="/audio" element={<AudioConverter />} />
-          <Route path="/images" element={<Index />} />
+          <Route path="/images" element={<ImageConverter />} />
+          <Route path="/youtube" element={<YouTubeDownloader />} />
+          <Route path="/tiktok" element={<TikTokDownloader />} />
+          <Route path="/product-feed-image-downloader" element={<ProductFeedDownloader />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

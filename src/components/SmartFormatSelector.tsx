@@ -216,6 +216,17 @@ const getFormatDescription = (format: string, category: string): string => {
       'csv': 'Comma-separated values',
       'tsv': 'Tab-separated values',
       'log': 'Log file format'
+    },
+    document: {
+      'pdf': 'Portable Document Format',
+      'png': 'Lossless image format',
+      'jpeg': 'Compressed image format',
+      'webp': 'Modern web image format',
+      'tiff': 'High quality image format',
+      'txt': 'Plain text format',
+      'md': 'Markdown format',
+      'html': 'Web markup format',
+      'docx': 'Microsoft Word document'
     }
   };
 

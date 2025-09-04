@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
@@ -6,13 +7,16 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { 
   Video, 
-  Upload, 
   Download, 
   X, 
   RefreshCw, 
   ArrowLeft,
   Play,
-  Zap
+  Zap,
+  Upload,
+  Image as ImageIcon,
+  Music,
+  Package
 } from 'lucide-react';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
@@ -30,6 +34,7 @@ interface ConversionFile {
 }
 
 const VideoConverter = () => {
+  const navigate = useNavigate();
   const [files, setFiles] = useState<ConversionFile[]>([]);
   const [selectedFormat, setSelectedFormat] = useState<VideoFormat>('mp4');
   const [isConverting, setIsConverting] = useState(false);
@@ -134,6 +139,27 @@ const VideoConverter = () => {
     URL.revokeObjectURL(url);
   }, [selectedFormat]);
 
+  const handleDownloadAll = useCallback(async () => {
+    const completedFiles = files.filter(f => f.status === 'completed' && f.converted);
+    if (completedFiles.length === 0) return;
+    
+    if (completedFiles.length === 1) {
+      handleDownloadFile(completedFiles[0]);
+      return;
+    }
+    
+    try {
+      // Download multiple files individually since we don't have ZIP functionality for videos
+      completedFiles.forEach(file => {
+        handleDownloadFile(file);
+      });
+      toast.success(`Downloaded ${completedFiles.length} files`);
+    } catch (error) {
+      console.error('Download error:', error);
+      toast.error('Failed to download files. Please try again.');
+    }
+  }, [files, handleDownloadFile]);
+
   const handleReset = useCallback(() => {
     files.forEach(file => {
       URL.revokeObjectURL(file.preview);
@@ -145,32 +171,148 @@ const VideoConverter = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Global Header */}
+      <div className="bg-background border-b border-border">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+            >
+              <div className="animate-fade-in">
+                <AnimatedFileType />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">
+                  File Converter <span className="text-primary">Buddy</span>
+                </h1>
+                <p className="text-muted-foreground text-xs">Convert files with ease</p>
+              </div>
+            </button>
+            
+            <div className="hidden md:flex items-center space-x-6">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Video className="h-4 w-4" />
+                <span>All Formats</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Zap className="h-4 w-4" />
+                <span>Bulk Convert</span>
+              </div>
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <Upload className="h-4 w-4" />
+                <span>High Quality</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Hero Section */}
-      <div className="bg-gradient-hero">
-        <div className="container mx-auto px-4 py-16">
-          <div className="text-center space-y-6">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <Zap className="h-12 w-12 text-primary-foreground" />
-              <Video className="h-12 w-12 text-primary-foreground" />
+      <div className="bg-background">
+        <div className="container mx-auto px-6 py-12">
+          <div className="flex items-center space-x-4">
+            <div className="animate-fade-in">
+              <AnimatedFileType />
             </div>
-            
-            <h1 className="text-5xl font-bold text-primary-foreground">
-              File Converter Buddy
-            </h1>
-            
-            <p className="text-xl text-primary-foreground/80 max-w-2xl mx-auto">
-              Convert your <AnimatedFileType fileType="videos" /> to any format instantly. Upload multiple files, 
-              choose your preferred format, and download converted files in bulk.
-            </p>
-            
-            <div className="flex flex-wrap justify-center gap-4 text-primary-foreground/60">
-              <span>• Supports all major formats</span>
-              <span>• Bulk conversion</span>
-              <span>• High quality output</span>
-              <span>• Lightning-fast conversion</span>
+            <div className="animate-fade-in-up">
+              <h1 className="text-4xl font-bold">
+                Video <span className="text-primary">File Converter</span>
+              </h1>
+              <p className="text-muted-foreground text-sm">Convert videos between formats with ease</p>
             </div>
-            
-            <FileTypeNavigation className="mt-8" />
+          </div>
+        </div>
+      </div>
+
+      {/* Tool Navigation */}
+      <div className="bg-background border-b border-border">
+        <div className="container mx-auto px-6 py-8">
+          <h2 className="text-xl font-semibold mb-6 animate-fade-in-up delay-300">Choose Your Tool</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button
+              onClick={() => navigate('/images')}
+              className="group p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-blue-500/20 bg-blue-500/10 animate-fade-in-up"
+              style={{ animationDelay: '0.4s' }}
+            >
+              <div className="flex items-center space-x-4">
+                <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                  <ImageIcon className="h-6 w-6 text-blue-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    <span className="hidden md:inline">Image File Converter</span>
+                    <span className="md:hidden">Images</span>
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    JPG, PNG, WebP and more
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => navigate('/video')}
+              className="group p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-purple-500/20 bg-purple-500/10 animate-fade-in-up"
+              style={{ animationDelay: '0.5s' }}
+            >
+              <div className="flex items-center space-x-4">
+                <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                  <Video className="h-6 w-6 text-purple-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    <span className="hidden md:inline">Video File Converter</span>
+                    <span className="md:hidden">Video</span>
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    MP4, AVI, MOV and more
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => navigate('/audio')}
+              className="group p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-green-500/20 bg-green-500/10 animate-fade-in-up"
+              style={{ animationDelay: '0.6s' }}
+            >
+              <div className="flex items-center space-x-4">
+                <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                  <Music className="h-6 w-6 text-green-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    <span className="hidden md:inline">Audio File Converter</span>
+                    <span className="md:hidden">Audio</span>
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    MP3, WAV, FLAC and more
+                  </p>
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => navigate('/product-feed-image-downloader')}
+              className="group p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-orange-500/20 bg-orange-500/10 animate-fade-in-up"
+              style={{ animationDelay: '0.7s' }}
+            >
+              <div className="flex items-center space-x-4">
+                <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                  <Package className="h-6 w-6 text-orange-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                    <span className="hidden md:inline">Product Feed Image Downloader</span>
+                    <span className="md:hidden">Product Feed</span>
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    Easily download product feed images in the format you need
+                  </p>
+                </div>
+              </div>
+            </button>
           </div>
         </div>
       </div>
@@ -201,13 +343,13 @@ const VideoConverter = () => {
                 
                 <div>
                   <h3 className="text-xl font-semibold mb-2">
-                    Upload Videos
+                    Upload Video Files
                   </h3>
                   <p className="text-muted-foreground mb-4">
                     Drag and drop your video files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports MP4, AVI, MOV, WMV, FLV, WebM, MKV and other video formats
+                    Supports MP4, AVI, MOV, WMV, FLV, MKV, WebM and other video formats
                   </p>
                 </div>
                 
@@ -252,6 +394,16 @@ const VideoConverter = () => {
                       )}
                       {isConverting ? 'Converting...' : 'Start Conversion'}
                     </Button>
+                    {files.some(f => f.status === 'completed') && (
+                      <Button
+                        onClick={handleDownloadAll}
+                        className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
+                        variant="default"
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download All
+                      </Button>
+                    )}
                     <Button variant="outline" onClick={handleReset}>
                       <X className="h-4 w-4 mr-2" />
                       Clear All
