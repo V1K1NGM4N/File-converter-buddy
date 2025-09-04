@@ -213,7 +213,7 @@ const VideoConverter = () => {
         <div className="container mx-auto px-6 py-12">
           <div className="flex items-center space-x-4">
             <div className="animate-fade-in">
-              <AnimatedFileType />
+              <AnimatedFileType fileType="videos" />
             </div>
             <div className="animate-fade-in-up">
               <h1 className="text-4xl font-bold">
