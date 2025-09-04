@@ -953,7 +953,7 @@ const ProductFeedDownloader: React.FC = () => {
                         <Separator className="my-4" />
 
                         {/* Action Buttons - always at bottom */}
-                        <div className="space-y-2">
+                        <div className="space-y-2 pb-4">
                           <div className="flex gap-2">
                             <select
                               value={imageFormat}
