@@ -1,13 +1,5 @@
-[33m8d4dcf9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Add SEO, GTM, and branding updates
-[33m2c161b7[m Revert spacing changes
-[33md25d738[m Fix: Consistent spacing in description
 [33m8b168cc[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Major UI/UX improvements and CORS error reduction
 [33m081c556[m feat: unify UI across all pages and make /allfiles the front page - Update Index, AudioConverter, and SmartConverterDemo pages to match VideoConverter UI - Implement consistent hero section layout and upload area styling - Add unified gradient backgrounds and consistent spacing - Make /allfiles the main landing page
 [33m052e49b[m Merge remote changes and clean up duplicate folder structure
 [33md9d269f[m feat: Add comprehensive file conversion capabilities
 [33ma0c33f8[m Apply local edits
-[33m8d4dcf9[m Add SEO, GTM, and branding updates
-[33m2c161b7[m Revert spacing changes
-[33md25d738[m Fix: Consistent spacing in description
-[33m691610c[m Revert animated text to static
-[33m8beaf2f[m Change text page logos

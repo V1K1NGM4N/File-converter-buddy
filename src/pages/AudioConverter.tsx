@@ -177,7 +177,7 @@ const AudioConverter = () => {
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
               <div className="animate-fade-in">
-                <AnimatedFileType />
+                <AnimatedFileType fileType="files" />
               </div>
               <div>
                 <h1 className="text-xl font-bold">

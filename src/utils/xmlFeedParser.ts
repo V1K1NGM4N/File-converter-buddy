@@ -306,101 +306,36 @@ export class XMLFeedParser {
 }
 
 /**
- * Sleep utility for delays
- */
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-/**
- * Multiple CORS proxy options
- */
-const CORS_PROXIES = [
-  'https://api.allorigins.win/raw?url=',
-  'https://cors-anywhere.herokuapp.com/',
-  'https://api.codetabs.com/v1/proxy?quest=',
-  'https://thingproxy.freeboard.io/fetch/'
-];
-
-/**
- * Enhanced fetch with retry logic and multiple proxy fallbacks
- */
-async function fetchWithRetry(url: string, maxRetries: number = 3): Promise<Response> {
-  const headers = {
-    'Accept': 'application/xml, text/xml, */*',
-    'Accept-Language': 'en-US,en;q=0.9',
-    'Cache-Control': 'no-cache',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-  };
-
-  // Try direct fetch first
-  for (let attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      console.log(`Direct fetch attempt ${attempt + 1}/${maxRetries} for: ${url}`);
-      const response = await fetch(url, {
-        method: 'GET',
-        headers,
-        signal: AbortSignal.timeout(15000) // 15 second timeout
-      });
-      
-      if (response.ok) {
-        console.log('Direct fetch successful!');
-        return response;
-      }
-      
-      console.warn(`Direct fetch failed with status: ${response.status}`);
-    } catch (error) {
-      console.warn(`Direct fetch attempt ${attempt + 1} failed:`, error);
-    }
-    
-    // Wait before retry (exponential backoff)
-    if (attempt < maxRetries - 1) {
-      const delay = Math.pow(2, attempt) * 1000; // 1s, 2s, 4s
-      console.log(`Waiting ${delay}ms before retry...`);
-      await sleep(delay);
-    }
-  }
-
-  // If direct fetch fails, try CORS proxies
-  console.log('Direct fetch failed, trying CORS proxies...');
-  
-  for (const proxy of CORS_PROXIES) {
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        const proxyUrl = proxy + encodeURIComponent(url);
-        console.log(`CORS proxy attempt ${attempt + 1}/${maxRetries} with: ${proxy}`);
-        
-        const response = await fetch(proxyUrl, {
-          method: 'GET',
-          headers,
-          signal: AbortSignal.timeout(20000) // 20 second timeout for proxies
-        });
-        
-        if (response.ok) {
-          console.log(`CORS proxy successful with: ${proxy}`);
-          return response;
-        }
-        
-        console.warn(`CORS proxy failed with status: ${response.status}`);
-      } catch (error) {
-        console.warn(`CORS proxy attempt ${attempt + 1} failed with ${proxy}:`, error);
-      }
-      
-      // Wait before retry
-      if (attempt < maxRetries - 1) {
-        const delay = Math.pow(2, attempt) * 1000;
-        await sleep(delay);
-      }
-    }
-  }
-
-  throw new Error('All fetch attempts failed. Please try again or paste the XML content directly.');
-}
-
-/**
  * Fetches XML content from URL and parses it
  */
 export async function fetchAndParseXMLFeed(url: string, onProgress?: (current: number, total: number, imagesFound: number) => void, onInitialScope?: (products: number, images: number) => void): Promise<ParsedFeed> {
   try {
-    const response = await fetchWithRetry(url);
+    // Try direct fetch first
+    let response: Response;
+    try {
+      response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/xml, text/xml, */*',
+          'User-Agent': 'Mozilla/5.0 (compatible; ProductFeedParser/1.0)'
+        }
+      });
+    } catch (corsError) {
+      // If CORS fails, try with a CORS proxy
+      console.warn('Direct fetch failed, trying CORS proxy:', corsError);
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+      response = await fetch(proxyUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/xml, text/xml, */*',
+          'User-Agent': 'Mozilla/5.0 (compatible; ProductFeedParser/1.0)'
+        }
+      });
+    }
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch feed: ${response.status} ${response.statusText}`);
+    }
 
     const xmlContent = await response.text();
     

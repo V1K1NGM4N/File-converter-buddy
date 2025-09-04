@@ -58,7 +58,7 @@ const Home = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
             <div className="animate-fade-in">
-              <AnimatedFileType />
+              <AnimatedFileType fileType="files" />
             </div>
             <div className="animate-fade-in-up">
               <h1 className="text-3xl font-bold">

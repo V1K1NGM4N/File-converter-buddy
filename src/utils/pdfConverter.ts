@@ -1,4 +1,4 @@
-/**
+how/**
  * PDF conversion utilities using pdfjs-dist for real PDF processing
  */
 

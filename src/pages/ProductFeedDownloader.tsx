@@ -414,7 +414,7 @@ const ProductFeedDownloader: React.FC = () => {
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
               <div className="animate-fade-in">
-                <AnimatedFileType />
+                <AnimatedFileType fileType="files" />
               </div>
               <div>
                 <h1 className="text-xl font-bold">
@@ -448,7 +448,7 @@ const ProductFeedDownloader: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div className="animate-fade-in">
-                <AnimatedFileType />
+                <AnimatedFileType fileType="files" />
               </div>
               <div className="animate-fade-in-up">
                 <h1 className="text-4xl font-bold">
