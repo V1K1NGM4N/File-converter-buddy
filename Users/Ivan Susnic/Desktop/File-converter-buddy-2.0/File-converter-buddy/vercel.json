@@ -1,19 +1,10 @@
 {
   "name": "file-converter-buddy",
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "chmod +x build.sh && ./build.sh",
   "installCommand": "npm ci",
   "outputDirectory": "dist",
   "framework": null,
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    }
-  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ],
