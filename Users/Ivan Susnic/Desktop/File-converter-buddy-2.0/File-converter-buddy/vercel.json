@@ -2,8 +2,8 @@
   "name": "file-converter-buddy",
   "version": 2,
   "buildCommand": "npm run build",
+  "installCommand": "npm ci",
   "outputDirectory": "dist",
-  "installCommand": "npm install",
   "framework": "vite",
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
