@@ -12,7 +12,8 @@
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
     "deploy": "npm run build && vercel --prod",
-    "deploy:preview": "npm run build && vercel"
+    "deploy:preview": "npm run build && vercel",
+    "vercel-build": "npm run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
