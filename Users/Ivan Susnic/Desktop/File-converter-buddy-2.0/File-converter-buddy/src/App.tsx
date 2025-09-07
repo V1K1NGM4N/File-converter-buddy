@@ -11,6 +11,7 @@ import AudioConverter from "./pages/AudioConverter";
 import UniversalConverter from "./pages/UniversalConverter";
 import ProductFeedDownloader from "./pages/ProductFeedDownloader";
 import Blog from "./pages/Blog";
+import CompleteGuideToImageFileFormats from "./pages/blog/CompleteGuideToImageFileFormats";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/complete-guide-to-image-file-formats" element={<CompleteGuideToImageFileFormats />} />
           <Route path="/universal-converter" element={<UniversalConverter />} />
           <Route path="/video" element={<VideoConverter />} />
           <Route path="/audio" element={<AudioConverter />} />

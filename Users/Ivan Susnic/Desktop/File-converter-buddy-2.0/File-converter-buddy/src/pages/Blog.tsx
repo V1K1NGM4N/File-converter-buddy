@@ -65,12 +65,31 @@ const Blog = () => {
           <h1 className="text-4xl font-bold mb-8">Blog</h1>
           
           <div className="space-y-8">
-            <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg p-8">
-              <h2 className="text-2xl font-semibold mb-4">Coming Soon</h2>
-              <p className="text-muted-foreground">
-                We're working on creating valuable content about file conversion, 
-                productivity tips, and more. Stay tuned for our first blog posts!
-              </p>
+            {/* Latest Blog Post */}
+            <div 
+              className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg p-8 hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 transition-all duration-200 cursor-pointer"
+              onClick={() => navigate('/blog/complete-guide-to-image-file-formats')}
+            >
+              <div className="flex items-start justify-between mb-4">
+                <div>
+                  <h2 className="text-2xl font-semibold mb-2">
+                    Complete Guide to Image File Formats: JPEG vs PNG vs WebP vs GIF
+                  </h2>
+                  <p className="text-muted-foreground mb-4">
+                    Everything you need to know about image formats, their differences, and when to use each one for optimal results.
+                  </p>
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4">
+                    <span>September 2025</span>
+                    <span>•</span>
+                    <span>15 min read</span>
+                    <span>•</span>
+                    <span>File Conversion</span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-primary text-primary-foreground px-6 py-2 rounded-md inline-block">
+                Read More
+              </div>
             </div>
             
             <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg p-8">
