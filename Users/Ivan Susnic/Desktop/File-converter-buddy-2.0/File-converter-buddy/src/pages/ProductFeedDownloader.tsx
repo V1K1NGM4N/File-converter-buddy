@@ -557,7 +557,7 @@ const ProductFeedDownloader: React.FC = () => {
                     <span className="hidden md:inline">Image File Converter</span>
                     <span className="md:hidden">Images</span>
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground hidden sm:block">
                     JPG, PNG, WebP and more
                   </p>
                 </div>
@@ -578,7 +578,7 @@ const ProductFeedDownloader: React.FC = () => {
                     <span className="hidden md:inline">Video File Converter</span>
                     <span className="md:hidden">Video</span>
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground hidden sm:block">
                     MP4, AVI, MOV and more
                   </p>
                 </div>
@@ -599,7 +599,7 @@ const ProductFeedDownloader: React.FC = () => {
                     <span className="hidden md:inline">Audio File Converter</span>
                     <span className="md:hidden">Audio</span>
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground hidden sm:block">
                     MP3, WAV, FLAC and more
                   </p>
                 </div>
@@ -620,7 +620,7 @@ const ProductFeedDownloader: React.FC = () => {
                     <span className="hidden md:inline">Product Feed Image Downloader</span>
                     <span className="md:hidden">Product Feed</span>
                   </h3>
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-muted-foreground hidden sm:block">
                     Easily download product feed images in the format you need
                   </p>
                 </div>
