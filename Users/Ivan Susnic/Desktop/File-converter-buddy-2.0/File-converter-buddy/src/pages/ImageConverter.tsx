@@ -15,6 +15,9 @@ import {
   generateConvertedFilename 
 } from '@/utils/imageConverter';
 import { downloadMultipleFilesAsZip } from '@/utils/zipDownload';
+import { trackConversion } from '@/utils/conversionTracker';
+import { trackUserConversion } from '@/utils/userConversionTracker';
+import { useUser } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 import { Zap, Image as ImageIcon, Upload, Download, X, RefreshCw, Play, Video, Music, Package } from 'lucide-react';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
@@ -26,6 +29,7 @@ import { useFilePersistence } from '@/hooks/useFilePersistence';
 
 const ImageConverter = () => {
   const navigate = useNavigate();
+  const { user } = useUser();
   const { files, updateFiles, clearFiles } = useFilePersistence('imageConverterFiles');
   const [selectedFormat, setSelectedFormat] = useState<ImageFormat>('png');
   const [isConverting, setIsConverting] = useState(false);
@@ -108,6 +112,19 @@ const ImageConverter = () => {
       });
       
       await Promise.all(conversions);
+      
+      // Track successful conversions
+      const successfulConversions = currentFiles.filter(f => f.status === 'completed').length;
+      if (successfulConversions > 0) {
+        // Track global conversions
+        trackConversion('images', successfulConversions);
+        
+        // Track user-specific conversions
+        if (user?.id) {
+          trackUserConversion(user.id, 'images', successfulConversions);
+        }
+      }
+      
       toast.success(`Conversion complete! ${completedFiles} files converted.`);
       
     } catch (error) {

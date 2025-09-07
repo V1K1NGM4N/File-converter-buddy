@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
+import { trackConversion } from '@/utils/conversionTracker';
 import { 
   Video, 
   Download, 
@@ -141,6 +142,13 @@ const VideoConverter = () => {
       });
       
       await Promise.all(conversions);
+      
+      // Track successful conversions
+      const successfulConversions = currentFiles.filter(f => f.status === 'completed').length;
+      if (successfulConversions > 0) {
+        trackConversion('videos', successfulConversions);
+      }
+      
       toast.success(`Conversion complete! ${completedFiles} videos converted.`);
       
     } catch (error) {

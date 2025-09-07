@@ -26,6 +26,7 @@ import {
   Music
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { trackConversion } from '@/utils/conversionTracker';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 import { 
@@ -360,6 +361,9 @@ const ProductFeedDownloader: React.FC = () => {
       });
       setDownloadProgress(100);
 
+      // Track successful downloads
+      trackConversion('productFeeds', totalImages);
+      
       toast.success(`Successfully downloaded ${totalImages} images from ${productsWithImages.length} products in organized structure`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to download images";

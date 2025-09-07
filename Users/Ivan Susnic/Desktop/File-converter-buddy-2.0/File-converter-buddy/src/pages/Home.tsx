@@ -1,11 +1,31 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Image as ImageIcon, Video, Music, Package, Zap, Shield, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { getFormattedStats } from '@/utils/conversionTracker';
+import { getUserUsageDisplay } from '@/utils/userConversionTracker';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';
 
 const Home = () => {
   const navigate = useNavigate();
+  const { user } = useUser();
+  const [conversionStats, setConversionStats] = useState({
+    totalFiles: '0',
+    totalDownloads: '0',
+    lastConversion: 'Never'
+  });
+  const [userStats, setUserStats] = useState<any>(null);
+
+  useEffect(() => {
+    const stats = getFormattedStats();
+    setConversionStats(stats);
+    
+    // Get user-specific stats if logged in
+    if (user?.id) {
+      const userUsageStats = getUserUsageDisplay(user.id);
+      setUserStats(userUsageStats);
+    }
+  }, [user?.id]);
 
   const tools = [
     {
@@ -138,18 +158,37 @@ const Home = () => {
             <div className="bg-muted/30 rounded-xl p-6">
               <h3 className="font-semibold mb-4">Quick Stats</h3>
               <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Supported Formats</span>
-                  <span className="text-sm font-medium">Huge range</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Max File Size</span>
-                  <span className="text-sm font-medium">500MB</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-muted-foreground">Processing Speed</span>
-                  <span className="text-sm font-medium">Fast</span>
-                </div>
+                {userStats ? (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Your Conversions</span>
+                      <span className="text-sm font-medium">{userStats.totalFiles}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">This Month</span>
+                      <span className="text-sm font-medium">{userStats.monthlyUsage}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Usage</span>
+                      <span className="text-sm font-medium text-green-600">Unlimited</span>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Files Converted</span>
+                      <span className="text-sm font-medium">{conversionStats.totalFiles}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Downloads</span>
+                      <span className="text-sm font-medium">{conversionStats.totalDownloads}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Last Used</span>
+                      <span className="text-sm font-medium">{conversionStats.lastConversion}</span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
