@@ -109,30 +109,21 @@ export const ImagePreview = ({
                 {ProtectedDownloadButton ? (
                   <ProtectedDownloadButton file={file}>
                     <Button
-                      variant="secondary"
-                      size="sm"
+                      onClick={() => onDownloadFile(file)}
                       disabled={file.status !== 'completed' || !file.converted}
-                      className={cn(
-                        "h-8",
-                        file.status === 'completed' && "hover:shadow-glow"
-                      )}
+                      variant="outline"
                     >
-                      <Download className="h-3 w-3 mr-1" />
+                      <Download className="h-4 w-4 mr-2" />
                       Download
                     </Button>
                   </ProtectedDownloadButton>
                 ) : (
                   <Button
-                    variant="secondary"
-                    size="sm"
                     onClick={() => onDownloadFile(file)}
                     disabled={file.status !== 'completed' || !file.converted}
-                    className={cn(
-                      "h-8",
-                      file.status === 'completed' && "hover:shadow-glow"
-                    )}
+                    variant="outline"
                   >
-                    <Download className="h-3 w-3 mr-1" />
+                    <Download className="h-4 w-4 mr-2" />
                     Download
                   </Button>
                 )}

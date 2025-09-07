@@ -14,14 +14,18 @@ import {
   Zap,
   Image as ImageIcon,
   Video,
-  Package
+  Package,
+  Clock
 } from 'lucide-react';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
-import { AudioFormatSelector, AudioFormat } from '@/components/AudioFormatSelector';
+import { SmartFormatSelector } from '@/components/SmartFormatSelector';
 import { ConversionControls } from '@/components/ConversionControls';
 import { generateConvertedFilename } from '@/utils/imageConverter';
 import { downloadMultipleFilesAsZip } from '@/utils/zipDownload';
+import { useFilePersistence } from '@/hooks/useFilePersistence';
+import { detectFileType } from '@/utils/fileTypeDetector';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
 
 interface ConversionFile {
   id: string;
@@ -34,23 +38,43 @@ interface ConversionFile {
 
 const AudioConverter = () => {
   const navigate = useNavigate();
-  const [files, setFiles] = useState<ConversionFile[]>([]);
-  const [selectedFormat, setSelectedFormat] = useState<AudioFormat>('mp3');
+  const { files, updateFiles, clearFiles } = useFilePersistence('audioConverterFiles');
+  const [selectedFormat, setSelectedFormat] = useState<string>('mp3');
   const [isConverting, setIsConverting] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
 
   const handleFilesSelected = useCallback((newFiles: File[]) => {
-    const conversionFiles: ConversionFile[] = newFiles.map(file => ({
+    // Check if any files are already in the target format
+    const alreadyInTargetFormat = newFiles.filter(file => {
+      const fileType = detectFileType(file);
+      return fileType?.extension === selectedFormat;
+    });
+    
+    if (alreadyInTargetFormat.length > 0) {
+      toast.warning(`${alreadyInTargetFormat.length} file(s) are already in ${selectedFormat.toUpperCase()} format and will be skipped`);
+    }
+    
+    const filesToConvert = newFiles.filter(file => {
+      const fileType = detectFileType(file);
+      return fileType?.extension !== selectedFormat;
+    });
+    
+    if (filesToConvert.length === 0) {
+      toast.info('No files need conversion - all files are already in the target format');
+      return;
+    }
+    
+    const conversionFiles: ConversionFile[] = filesToConvert.map(file => ({
       id: crypto.randomUUID(),
       file,
-      preview: URL.createObjectURL(file),
+      preview: '', // Will be set by the persistence hook
       progress: 0,
       status: 'pending' as const
     }));
     
-    setFiles(prev => [...prev, ...conversionFiles]);
-    toast.success(`Added ${newFiles.length} audio file(s) for conversion`);
-  }, []);
+    updateFiles([...files, ...conversionFiles]);
+    toast.success(`Added ${filesToConvert.length} audio file(s) for conversion`);
+  }, [files, updateFiles, selectedFormat]);
 
   const handleFileUpload = () => {
     const input = document.createElement('input');
@@ -65,14 +89,12 @@ const AudioConverter = () => {
   };
 
   const handleRemoveFile = useCallback((id: string) => {
-    setFiles(prev => {
-      const file = prev.find(f => f.id === id);
-      if (file) {
-        URL.revokeObjectURL(file.preview);
-      }
-      return prev.filter(f => f.id !== id);
-    });
-  }, []);
+    const file = files.find(f => f.id === id);
+    if (file) {
+      URL.revokeObjectURL(file.preview);
+    }
+    updateFiles(files.filter(f => f.id !== id));
+  }, [files, updateFiles]);
 
   const handleStartConversion = useCallback(async () => {
     if (files.length === 0) return;
@@ -85,27 +107,31 @@ const AudioConverter = () => {
       const totalFiles = files.length;
       let completedFiles = 0;
       
+      let currentFiles = [...files];
       const conversions = files.map(async (file) => {
-        setFiles(prev => prev.map(f => 
+        currentFiles = currentFiles.map(f => 
           f.id === file.id ? { ...f, status: 'converting', progress: 0 } : f
-        ));
+        );
+        updateFiles(currentFiles);
         
         // Simulate conversion progress
         for (let i = 0; i <= 100; i += 10) {
           await new Promise(resolve => setTimeout(resolve, 200));
-          setFiles(prev => prev.map(f => 
+          currentFiles = currentFiles.map(f => 
             f.id === file.id ? { ...f, progress: i } : f
-          ));
+          );
+          updateFiles(currentFiles);
         }
         
         // Create a mock converted blob (in real app, this would be the actual converted audio)
         const converted = new Blob([file.file], { type: `audio/${selectedFormat}` });
         
-        setFiles(prev => prev.map(f => 
+        currentFiles = currentFiles.map(f => 
           f.id === file.id 
             ? { ...f, status: 'completed', progress: 100, converted }
             : f
-        ));
+        );
+        updateFiles(currentFiles);
         
         completedFiles++;
         setOverallProgress((completedFiles / totalFiles) * 100);
@@ -205,10 +231,10 @@ const AudioConverter = () => {
     files.forEach(file => {
       URL.revokeObjectURL(file.preview);
     });
-    setFiles([]);
+    clearFiles();
     setOverallProgress(0);
     toast.success('Cleared all files');
-  }, [files]);
+  }, [files, clearFiles]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -239,6 +265,25 @@ const AudioConverter = () => {
               >
                 Blog
               </button>
+              
+              {/* Authentication */}
+              <div className="flex items-center space-x-2">
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button className="px-4 py-2 text-sm border border-input bg-background rounded-md hover:bg-accent">
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                </SignedOut>
+                <SignedIn>
+                  <UserButton afterSignOutUrl="/" />
+                </SignedIn>
+              </div>
             </div>
           </div>
         </div>
@@ -398,7 +443,8 @@ const AudioConverter = () => {
           
           {/* Format Selection */}
           {files.length > 0 && (
-            <AudioFormatSelector 
+            <SmartFormatSelector 
+              files={files.map(f => f.file)}
               selectedFormat={selectedFormat}
               onFormatChange={setSelectedFormat}
             />
@@ -473,6 +519,14 @@ const AudioConverter = () => {
                         controls
                         className="absolute inset-0 w-full h-full"
                       />
+                      
+                      {/* Status Overlay */}
+                      <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded px-2 py-1">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-xs font-medium">
+                          {file.status}
+                        </span>
+                      </div>
                     </div>
                     
                     <div className="space-y-3">
@@ -503,16 +557,21 @@ const AudioConverter = () => {
                         </div>
                       )}
                       
-                      {file.status === 'completed' && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-muted-foreground">
+                          → .{selectedFormat}
+                        </span>
+                        
                         <Button
                           onClick={() => handleDownloadFile(file)}
-                          className="w-full hover:shadow-glow"
+                          disabled={file.status !== 'completed' || !file.converted}
+                          variant="outline"
                           size="sm"
                         >
                           <Download className="h-4 w-4 mr-2" />
-                          Download {selectedFormat.toUpperCase()}
+                          Download
                         </Button>
-                      )}
+                      </div>
                       
                       {file.status === 'error' && (
                         <div className="text-sm text-destructive">

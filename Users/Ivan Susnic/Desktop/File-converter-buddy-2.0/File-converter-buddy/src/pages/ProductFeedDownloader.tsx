@@ -36,30 +36,42 @@ import {
   ParsedFeed,
   XMLFeedParser
 } from '@/utils/xmlFeedParser';
+import { useProductFeedPersistence } from '@/hooks/useProductFeedPersistence';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
 
 const ProductFeedDownloader: React.FC = () => {
   const navigate = useNavigate();
-  const [feedUrl, setFeedUrl] = useState('');
-  const [xmlContent, setXmlContent] = useState('');
-  const [inputMode, setInputMode] = useState<'url' | 'xml'>('url');
+  const { state, updateState } = useProductFeedPersistence('productFeedDownloader');
+  
+  // Destructure state for easier access
+  const {
+    feedUrl,
+    xmlContent,
+    inputMode,
+    parsedFeed,
+    searchQuery,
+    selectedCategory,
+    selectedProducts: selectedProductsArray,
+    imageFormat,
+    currentPage,
+    itemsPerPage
+  } = state;
+  
+  // Convert selectedProducts array to Set for compatibility
+  const selectedProducts = new Set(selectedProductsArray);
+  
+  // Local state that doesn't need persistence
   const [isLoading, setIsLoading] = useState(false);
-  const [parsedFeed, setParsedFeed] = useState<ParsedFeed | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [downloadingImages, setDownloadingImages] = useState<Set<string>>(new Set());
   const [downloadProgress, setDownloadProgress] = useState(0);
-  const [imageFormat, setImageFormat] = useState<'jpg' | 'png' | 'webp' | 'original'>('original');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
-  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [showCorsWarning, setShowCorsWarning] = useState(false);
   const [parsingProgress, setParsingProgress] = useState(0);
   const [currentMessage, setCurrentMessage] = useState(0);
   const [currentMessages, setCurrentMessages] = useState<string[]>([]);
   const [parsingStats, setParsingStats] = useState({ current: 0, total: 0, images: 0 });
   const [totalScope, setTotalScope] = useState({ products: 0, images: 0 });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(15);
 
   // Fun messages to show during parsing
   const getParsingMessages = (estimatedTime: number) => {
@@ -228,7 +240,7 @@ const ProductFeedDownloader: React.FC = () => {
       
       // Small delay to show 100% completion
       setTimeout(() => {
-        setParsedFeed(feed);
+        updateState({ parsedFeed: feed });
         toast.success(`Parsed ${feed.totalCount} products from feed`);
       }, 300);
       
@@ -445,46 +457,49 @@ const ProductFeedDownloader: React.FC = () => {
   };
 
   const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-    setSelectedProducts(new Set()); // Clear selection when changing pages
+    updateState({ currentPage: page, selectedProducts: [] }); // Clear selection when changing pages
   };
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
-    setItemsPerPage(newItemsPerPage);
-    setCurrentPage(1); // Reset to first page when changing items per page
-    setSelectedProducts(new Set()); // Clear selection when changing items per page
+    updateState({ 
+      itemsPerPage: newItemsPerPage, 
+      currentPage: 1, 
+      selectedProducts: [] 
+    }); // Reset to first page and clear selection when changing items per page
   };
 
   const handleSearchChange = (query: string) => {
-    setSearchQuery(query);
-    setCurrentPage(1);
-    setSelectedProducts(new Set()); // Clear selection when searching
+    updateState({ 
+      searchQuery: query, 
+      currentPage: 1, 
+      selectedProducts: [] 
+    }); // Clear selection when searching
   };
 
   const handleCategoryChange = (category: string) => {
-    setSelectedCategory(category);
-    setCurrentPage(1);
-    setSelectedProducts(new Set()); // Clear selection when filtering
+    updateState({ 
+      selectedCategory: category, 
+      currentPage: 1, 
+      selectedProducts: [] 
+    }); // Clear selection when filtering
   };
 
   const handleProductToggle = (productId: string) => {
-    setSelectedProducts(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(productId)) {
-        newSet.delete(productId);
-      } else {
-        newSet.add(productId);
-      }
-      return newSet;
-    });
+    const newSet = new Set(selectedProducts);
+    if (newSet.has(productId)) {
+      newSet.delete(productId);
+    } else {
+      newSet.add(productId);
+    }
+    updateState({ selectedProducts: Array.from(newSet) });
   };
 
   const handleSelectAllProducts = () => {
-    setSelectedProducts(new Set(paginatedProducts.map(product => product.id)));
+    updateState({ selectedProducts: paginatedProducts.map(product => product.id) });
   };
 
   const handleSelectNoneProducts = () => {
-    setSelectedProducts(new Set());
+    updateState({ selectedProducts: [] });
   };
 
   const handleDownloadSelectedProducts = async () => {
@@ -582,6 +597,25 @@ const ProductFeedDownloader: React.FC = () => {
               >
                 Blog
               </button>
+              
+              {/* Authentication */}
+              <div className="flex items-center space-x-2">
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button className="px-4 py-2 text-sm border border-input bg-background rounded-md hover:bg-accent">
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                </SignedOut>
+                <SignedIn>
+                  <UserButton afterSignOutUrl="/" />
+                </SignedIn>
+              </div>
             </div>
           </div>
         </div>
@@ -741,7 +775,7 @@ const ProductFeedDownloader: React.FC = () => {
                     variant={inputMode === 'url' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => {
-                      setInputMode('url');
+                      updateState({ inputMode: 'url' });
                       setShowCorsWarning(false);
                     }}
                   >
@@ -751,7 +785,7 @@ const ProductFeedDownloader: React.FC = () => {
                     variant={inputMode === 'xml' ? 'default' : 'outline'}
                     size="sm"
                     onClick={() => {
-                      setInputMode('xml');
+                      updateState({ inputMode: 'xml' });
                       setShowCorsWarning(false);
                     }}
                   >
@@ -764,7 +798,7 @@ const ProductFeedDownloader: React.FC = () => {
                     <div className="flex gap-3">
                       <Input
                         value={feedUrl}
-                        onChange={(e) => setFeedUrl(e.target.value)}
+                        onChange={(e) => updateState({ feedUrl: e.target.value })}
                         placeholder="Add your XML product feed URL..."
                         className="flex-1"
                       />
@@ -791,7 +825,7 @@ const ProductFeedDownloader: React.FC = () => {
                     <div className="w-full space-y-3">
                       <textarea
                         value={xmlContent}
-                        onChange={(e) => setXmlContent(e.target.value)}
+                        onChange={(e) => updateState({ xmlContent: e.target.value })}
                         placeholder="Paste your XML content here... (You can paste just the <item> elements or the complete XML feed)"
                         className="w-full h-24 p-3 border border-input bg-background rounded-md text-sm resize-vertical"
                       />
@@ -981,7 +1015,7 @@ const ProductFeedDownloader: React.FC = () => {
               <div className="flex items-center gap-2">
                 <select
                   value={imageFormat}
-                  onChange={(e) => setImageFormat(e.target.value as 'jpg' | 'png' | 'webp' | 'original')}
+                  onChange={(e) => updateState({ imageFormat: e.target.value as 'jpg' | 'png' | 'webp' | 'original' })}
                   className="px-3 py-2 border border-input bg-background rounded-md text-sm"
                 >
                   <option value="original">Original Format</option>
@@ -994,14 +1028,16 @@ const ProductFeedDownloader: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => {
-                    setParsedFeed(null);
-                    setSearchQuery('');
-                    setSelectedCategory('');
+                    updateState({
+                      parsedFeed: null,
+                      searchQuery: '',
+                      selectedCategory: '',
+                      feedUrl: '',
+                      xmlContent: '',
+                      inputMode: 'url',
+                      selectedProducts: []
+                    });
                     setDownloadProgress(0);
-                    setFeedUrl('');
-                    setXmlContent('');
-                    setInputMode('url');
-                    setSelectedProducts(new Set());
                   }}
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
@@ -1103,7 +1139,7 @@ const ProductFeedDownloader: React.FC = () => {
                       className="overflow-hidden bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 h-full flex flex-col relative"
                     >
                       {/* Selection Checkbox */}
-                      <div className="absolute top-3 left-3 z-10">
+                      <div className="absolute top-6 left-6 z-10">
                         <input
                           type="checkbox"
                           checked={selectedProducts.has(product.id)}
@@ -1116,8 +1152,8 @@ const ProductFeedDownloader: React.FC = () => {
                       </div>
                       
                       {/* Header */}
-                      <div className="p-6 pb-3 cursor-pointer" onClick={() => handleProductClick(product)}>
-                        <div className="flex items-center gap-3 mb-2">
+                      <div className="pt-5 px-6 pb-3 cursor-pointer" onClick={() => handleProductClick(product)}>
+                        <div className="flex items-start gap-3 mb-2 ml-8">
                           <h3 className="text-lg font-semibold line-clamp-2 flex-1">
                             {product.title}
                           </h3>
@@ -1179,7 +1215,7 @@ const ProductFeedDownloader: React.FC = () => {
                           <div className="flex gap-2">
                             <select
                               value={imageFormat}
-                              onChange={(e) => setImageFormat(e.target.value as 'jpg' | 'png' | 'webp' | 'original')}
+                              onChange={(e) => updateState({ imageFormat: e.target.value as 'jpg' | 'png' | 'webp' | 'original' })}
                               className="px-2 py-1 border border-input bg-background rounded text-xs"
                             >
                               <option value="original">Original</option>
@@ -1416,7 +1452,7 @@ const ProductFeedDownloader: React.FC = () => {
               <div className="flex items-center gap-2">
                 <select
                   value={imageFormat}
-                  onChange={(e) => setImageFormat(e.target.value as 'jpg' | 'png' | 'webp' | 'original')}
+                  onChange={(e) => updateState({ imageFormat: e.target.value as 'jpg' | 'png' | 'webp' | 'original' })}
                   className="px-3 py-2 border border-input bg-background rounded-md text-sm"
                 >
                   <option value="original">Original Format</option>

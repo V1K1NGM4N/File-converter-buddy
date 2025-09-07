@@ -136,7 +136,7 @@ const ImageConverter = () => {
         </SignedIn>
         <SignedOut>
           <SignInButton mode="modal">
-            <button className="w-full hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600 h-8">
+            <button>
               {children}
             </button>
           </SignInButton>

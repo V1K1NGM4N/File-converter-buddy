@@ -55,8 +55,8 @@
     --shadow-upload: inset 0 2px 10px hsl(0 0% 0% / 0.1);
 
     /* Animation variables */
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --transition-smooth: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.25s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --sidebar-background: 0 0% 98%;
 
@@ -155,34 +155,34 @@
 }
 
 .animate-fade-in {
-  animation: fadeIn 1s ease-out;
+  animation: fadeIn 0.5s ease-out;
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.8s ease-out forwards;
+  animation: fadeInUp 0.4s ease-out forwards;
   opacity: 0;
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 1.5s ease-in-out infinite;
 }
 
 .delay-100 {
-  animation-delay: 0.1s;
+  animation-delay: 0.05s;
 }
 
 .delay-200 {
-  animation-delay: 0.2s;
+  animation-delay: 0.1s;
 }
 
 .delay-300 {
-  animation-delay: 0.3s;
+  animation-delay: 0.15s;
 }
 
 .delay-400 {
-  animation-delay: 0.4s;
+  animation-delay: 0.2s;
 }
 
 .delay-500 {
-  animation-delay: 0.5s;
+  animation-delay: 0.25s;
 }
