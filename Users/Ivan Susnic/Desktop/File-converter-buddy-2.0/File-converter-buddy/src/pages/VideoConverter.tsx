@@ -242,12 +242,6 @@ const VideoConverter = () => {
               >
                 Blog
               </button>
-              <button
-                onClick={() => navigate('/blog')}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
-              >
-                Join for free use
-              </button>
             </div>
           </div>
         </div>

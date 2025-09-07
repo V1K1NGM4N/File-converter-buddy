@@ -1,6 +1,19 @@
 import { createRoot } from 'react-dom/client'
-import App from './App-fallback.tsx'
+import { ClerkProvider } from '@clerk/clerk-react'
+import App from './App.tsx'
 import './index.css'
 
-// Temporarily using fallback app to test if Clerk is causing the black screen
-createRoot(document.getElementById("root")!).render(<App />);
+// Get the Clerk publishable key from environment variables
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+
+if (!PUBLISHABLE_KEY) {
+  console.error('Missing Clerk Publishable Key')
+  // Render app without ClerkProvider if key is missing
+  createRoot(document.getElementById("root")!).render(<App />);
+} else {
+  createRoot(document.getElementById("root")!).render(
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+      <App />
+    </ClerkProvider>
+  );
+}

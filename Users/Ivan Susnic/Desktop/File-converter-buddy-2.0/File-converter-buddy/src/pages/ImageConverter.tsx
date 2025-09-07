@@ -22,10 +22,11 @@ import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
+import { useFilePersistence } from '@/hooks/useFilePersistence';
 
 const ImageConverter = () => {
   const navigate = useNavigate();
-  const [files, setFiles] = useState<ConversionFile[]>([]);
+  const { files, updateFiles, clearFiles } = useFilePersistence('imageConverterFiles');
   const [selectedFormat, setSelectedFormat] = useState<ImageFormat>('png');
   const [isConverting, setIsConverting] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
@@ -34,14 +35,14 @@ const ImageConverter = () => {
     const conversionFiles: ConversionFile[] = newFiles.map(file => ({
       id: crypto.randomUUID(),
       file,
-      preview: createPreviewUrl(file),
+      preview: '', // Will be set by the persistence hook
       progress: 0,
       status: 'pending' as const
     }));
     
-    setFiles(prev => [...prev, ...conversionFiles]);
+    updateFiles([...files, ...conversionFiles]);
     toast.success(`Added ${newFiles.length} image(s) for conversion`);
-  }, []);
+  }, [files, updateFiles]);
 
   const handleFileUpload = () => {
     const input = document.createElement('input');
@@ -56,14 +57,12 @@ const ImageConverter = () => {
   };
 
   const handleRemoveFile = useCallback((id: string) => {
-    setFiles(prev => {
-      const file = prev.find(f => f.id === id);
-      if (file) {
-        URL.revokeObjectURL(file.preview);
-      }
-      return prev.filter(f => f.id !== id);
-    });
-  }, []);
+    const file = files.find(f => f.id === id);
+    if (file) {
+      URL.revokeObjectURL(file.preview);
+    }
+    updateFiles(files.filter(f => f.id !== id));
+  }, [files, updateFiles]);
 
   const handleStartConversion = useCallback(async () => {
     if (files.length === 0) return;
@@ -74,30 +73,37 @@ const ImageConverter = () => {
     try {
       const totalFiles = files.length;
       let completedFiles = 0;
+      let currentFiles = [...files];
       
       // Convert files in parallel with progress tracking
       const conversions = files.map(async (file, index) => {
-        setFiles(prev => prev.map(f => 
+        // Update status to converting
+        currentFiles = currentFiles.map(f => 
           f.id === file.id ? { ...f, status: 'converting', progress: 0 } : f
-        ));
+        );
+        updateFiles(currentFiles);
         
         try {
           const converted = await convertImage(file.file, selectedFormat);
           
-          setFiles(prev => prev.map(f => 
+          // Update status to completed
+          currentFiles = currentFiles.map(f => 
             f.id === file.id 
               ? { ...f, status: 'completed', progress: 100, converted }
               : f
-          ));
+          );
+          updateFiles(currentFiles);
           
           completedFiles++;
           setOverallProgress((completedFiles / totalFiles) * 100);
           
         } catch (error) {
           console.error(`Failed to convert ${file.file.name}:`, error);
-          setFiles(prev => prev.map(f => 
+          // Update status to error
+          currentFiles = currentFiles.map(f => 
             f.id === file.id ? { ...f, status: 'error', progress: 0 } : f
-          ));
+          );
+          updateFiles(currentFiles);
         }
       });
       
@@ -110,7 +116,7 @@ const ImageConverter = () => {
     } finally {
       setIsConverting(false);
     }
-  }, [files, selectedFormat]);
+  }, [files, selectedFormat, updateFiles]);
 
   const handleDownloadFile = useCallback((file: ConversionFile) => {
     if (!file.converted) return;
@@ -171,15 +177,13 @@ const ImageConverter = () => {
   }, [files, selectedFormat, handleDownloadFile]);
 
   const handleReset = useCallback(() => {
-    setFiles(prev => {
-      prev.forEach(file => URL.revokeObjectURL(file.preview));
-      return [];
-    });
+    files.forEach(file => URL.revokeObjectURL(file.preview));
+    clearFiles();
     setSelectedFormat('png');
     setIsConverting(false);
     setOverallProgress(0);
     toast.success('Cleared all images');
-  }, []);
+  }, [files, clearFiles]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -209,12 +213,6 @@ const ImageConverter = () => {
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 Blog
-              </button>
-              <button
-                onClick={() => navigate('/blog')}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
-              >
-                Join for free use
               </button>
               
               {/* Authentication */}

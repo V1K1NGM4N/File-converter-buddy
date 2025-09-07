@@ -221,7 +221,7 @@ const AudioConverter = () => {
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
               <div className="animate-fade-in">
-                <AnimatedFileType fileType="audio" />
+                <AnimatedFileType />
               </div>
               <div>
                 <h1 className="text-xl font-bold">
@@ -239,12 +239,6 @@ const AudioConverter = () => {
               >
                 Blog
               </button>
-              <button
-                onClick={() => navigate('/blog')}
-                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
-              >
-                Join for free use
-              </button>
             </div>
           </div>
         </div>
@@ -255,7 +249,7 @@ const AudioConverter = () => {
         <div className="container mx-auto px-6 py-12">
           <div className="flex items-center space-x-4">
             <div className="animate-fade-in">
-              <AnimatedFileType fileType="audio" />
+              <AnimatedFileType />
             </div>
             <div className="animate-fade-in-up">
               <h1 className="text-4xl font-bold">
