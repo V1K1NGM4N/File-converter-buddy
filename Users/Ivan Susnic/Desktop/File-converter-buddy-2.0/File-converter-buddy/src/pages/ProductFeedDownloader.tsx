@@ -276,10 +276,10 @@ const ProductFeedDownloader: React.FC = () => {
       
       await downloadImagesAsZip(imageDownloads, {
         createFolderStructure: true,
-        groupByProduct: true
+        groupByProduct: false
       });
       
-      toast.success(`Successfully downloaded ${product.images.length} images for "${product.title}" in organized folders`);
+      toast.success(`Successfully downloaded ${product.images.length} images for "${product.title}" in organized structure`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to download images";
       
@@ -344,11 +344,11 @@ const ProductFeedDownloader: React.FC = () => {
       // Download all images as a single ZIP file with organized folder structure
       await downloadImagesAsZip(allImageDownloads, {
         createFolderStructure: true,
-        groupByProduct: true
+        groupByProduct: false
       });
       setDownloadProgress(100);
 
-      toast.success(`Successfully downloaded ${totalImages} images from ${productsWithImages.length} products in organized folders`);
+      toast.success(`Successfully downloaded ${totalImages} images from ${productsWithImages.length} products in organized structure`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to download images";
       
@@ -425,10 +425,10 @@ const ProductFeedDownloader: React.FC = () => {
       toast.info(`Starting download of ${imagesToDownload.length} selected images for "${selectedProduct.title}"...`);
       await downloadImagesAsZip(imageDownloads, {
         createFolderStructure: true,
-        groupByProduct: true
+        groupByProduct: false
       });
       
-      toast.success(`Successfully downloaded ${imagesToDownload.length} images for "${selectedProduct.title}" in organized folders`);
+      toast.success(`Successfully downloaded ${imagesToDownload.length} images for "${selectedProduct.title}" in organized structure`);
       setSelectedProduct(null);
       setSelectedImages(new Set());
     } catch (error) {
@@ -527,14 +527,14 @@ const ProductFeedDownloader: React.FC = () => {
         allImageDownloads.push(...productImages);
       }
 
-      // Download all images as a single ZIP file with organized structure
+      // Download all images as a single ZIP file with flat structure
       await downloadImagesAsZip(allImageDownloads, {
         createFolderStructure: true,
-        groupByProduct: true
+        groupByProduct: false
       });
       setDownloadProgress(100);
 
-      toast.success(`Successfully downloaded ${totalImages} images from ${productsWithImages.length} selected products in organized folders`);
+      toast.success(`Successfully downloaded ${totalImages} images from ${productsWithImages.length} selected products`);
       setSelectedProducts(new Set()); // Clear selection after successful download
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to download images";
