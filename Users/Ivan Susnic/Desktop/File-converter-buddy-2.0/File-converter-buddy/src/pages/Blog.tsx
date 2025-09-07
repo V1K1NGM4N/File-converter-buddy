@@ -63,6 +63,7 @@ const Blog = () => {
       <div className="container mx-auto px-6 py-12">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold mb-8">Blog</h1>
+          {/* Updated: All 19 blog posts now available */}
           
           <div className="space-y-8">
             {/* Product Feed Image Downloader Posts */}
