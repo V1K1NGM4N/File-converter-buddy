@@ -122,18 +122,20 @@ const ImageConverter = () => {
 
   const ProtectedDownloadButton = ({ file, children }: { file: ConversionFile, children: React.ReactNode }) => {
     return (
-      <SignedIn>
-        <button onClick={() => handleDownloadFile(file)}>
-          {children}
-        </button>
-      </SignedIn>
-      <SignedOut>
-        <SignInButton mode="modal">
-          <button className="w-full hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600 h-8">
+      <>
+        <SignedIn>
+          <button onClick={() => handleDownloadFile(file)}>
             {children}
           </button>
-        </SignInButton>
-      </SignedOut>
+        </SignedIn>
+        <SignedOut>
+          <SignInButton mode="modal">
+            <button className="w-full hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600 h-8">
+              {children}
+            </button>
+          </SignInButton>
+        </SignedOut>
+      </>
     );
   };
 
