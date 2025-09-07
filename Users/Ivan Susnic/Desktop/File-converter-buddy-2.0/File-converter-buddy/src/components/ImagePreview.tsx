@@ -11,6 +11,7 @@ interface ImagePreviewProps {
   onRemoveFile: (id: string) => void;
   onDownloadFile: (file: ConversionFile) => void;
   fileGroup?: string;
+  ProtectedDownloadButton?: React.ComponentType<{ file: ConversionFile; children: React.ReactNode }>;
 }
 
 export const ImagePreview = ({ 
@@ -18,7 +19,8 @@ export const ImagePreview = ({
   targetFormat, 
   onRemoveFile, 
   onDownloadFile,
-  fileGroup = 'images'
+  fileGroup = 'images',
+  ProtectedDownloadButton
 }: ImagePreviewProps) => {
   if (files.length === 0) return null;
 
@@ -104,19 +106,36 @@ export const ImagePreview = ({
                   → .{getFileExtension(targetFormat as any)}
                 </span>
                 
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onDownloadFile(file)}
-                  disabled={file.status !== 'completed' || !file.converted}
-                  className={cn(
-                    "h-8",
-                    file.status === 'completed' && "hover:shadow-glow"
-                  )}
-                >
-                  <Download className="h-3 w-3 mr-1" />
-                  Download
-                </Button>
+                {ProtectedDownloadButton ? (
+                  <ProtectedDownloadButton file={file}>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      disabled={file.status !== 'completed' || !file.converted}
+                      className={cn(
+                        "h-8",
+                        file.status === 'completed' && "hover:shadow-glow"
+                      )}
+                    >
+                      <Download className="h-3 w-3 mr-1" />
+                      Download
+                    </Button>
+                  </ProtectedDownloadButton>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => onDownloadFile(file)}
+                    disabled={file.status !== 'completed' || !file.converted}
+                    className={cn(
+                      "h-8",
+                      file.status === 'completed' && "hover:shadow-glow"
+                    )}
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Download
+                  </Button>
+                )}
               </div>
             </div>
           </Card>

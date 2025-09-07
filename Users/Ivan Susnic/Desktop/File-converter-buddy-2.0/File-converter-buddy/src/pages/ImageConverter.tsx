@@ -21,6 +21,7 @@ import { AnimatedFileType } from '@/components/AnimatedFileType';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
 
 const ImageConverter = () => {
   const navigate = useNavigate();
@@ -119,6 +120,23 @@ const ImageConverter = () => {
     toast.success(`Downloaded ${filename}`);
   }, [selectedFormat]);
 
+  const ProtectedDownloadButton = ({ file, children }: { file: ConversionFile, children: React.ReactNode }) => {
+    return (
+      <SignedIn>
+        <button onClick={() => handleDownloadFile(file)}>
+          {children}
+        </button>
+      </SignedIn>
+      <SignedOut>
+        <SignInButton mode="modal">
+          <button className="w-full hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600 h-8">
+            {children}
+          </button>
+        </SignInButton>
+      </SignedOut>
+    );
+  };
+
   const handleDownloadAll = useCallback(async () => {
     const completedFiles = files.filter(f => f.status === 'completed' && f.converted);
     if (completedFiles.length === 0) return;
@@ -182,18 +200,37 @@ const ImageConverter = () => {
               </div>
             </button>
             
-            <div className="hidden md:flex items-center space-x-6">
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <ImageIcon className="h-4 w-4" />
-                <span>All Formats</span>
+            <div className="flex items-center space-x-6">
+              {/* Free for All Users */}
+              <div className="flex items-center space-x-2 text-sm text-green-600 font-medium">
+                <span>🆓 Free for All Users</span>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Zap className="h-4 w-4" />
-                <span>Bulk Convert</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Upload className="h-4 w-4" />
-                <span>High Quality</span>
+              
+              {/* Blog Link */}
+              <button 
+                onClick={() => navigate('/blog')}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Blog
+              </button>
+              
+              {/* Authentication */}
+              <div className="flex items-center space-x-2">
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+                      Sign In
+                    </button>
+                  </SignInButton>
+                  <SignUpButton mode="modal">
+                    <button className="px-4 py-2 text-sm border border-input bg-background rounded-md hover:bg-accent">
+                      Sign Up
+                    </button>
+                  </SignUpButton>
+                </SignedOut>
+                <SignedIn>
+                  <UserButton afterSignOutUrl="/" />
+                </SignedIn>
               </div>
             </div>
           </div>
@@ -388,14 +425,29 @@ const ImageConverter = () => {
                       {isConverting ? 'Converting...' : 'Start Conversion'}
                     </Button>
                                          {files.some(f => f.status === 'completed') && (
-                       <Button
-                         onClick={handleDownloadAll}
-                         className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
-                         variant="default"
-                       >
-                         <Download className="h-4 w-4 mr-2" />
-                         Download All
-                       </Button>
+                       <SignedIn>
+                         <Button
+                           onClick={handleDownloadAll}
+                           className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
+                           variant="default"
+                         >
+                           <Download className="h-4 w-4 mr-2" />
+                           Download All
+                         </Button>
+                       </SignedIn>
+                     )}
+                     {files.some(f => f.status === 'completed') && (
+                       <SignedOut>
+                         <SignInButton mode="modal">
+                           <Button
+                             className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
+                             variant="default"
+                           >
+                             <Download className="h-4 w-4 mr-2" />
+                             Download All
+                           </Button>
+                         </SignInButton>
+                       </SignedOut>
                      )}
                     <Button variant="outline" onClick={handleReset}>
                       <X className="h-4 w-4 mr-2" />
@@ -424,6 +476,7 @@ const ImageConverter = () => {
             onRemoveFile={handleRemoveFile}
             onDownloadFile={handleDownloadFile}
             fileGroup="images"
+            ProtectedDownloadButton={ProtectedDownloadButton}
           />
           
           {/* Add More Files Button */}

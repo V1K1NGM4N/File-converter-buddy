@@ -2,6 +2,7 @@ import React from 'react';
 import { Image as ImageIcon, Video, Music, Package, Zap, Shield, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -69,15 +70,37 @@ const Home = () => {
           </div>
           
           <div className="flex items-center space-x-6 animate-fade-in-up delay-200">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <Icon className="h-4 w-4" />
-                  <span>{feature.text}</span>
-                </div>
-              );
-            })}
+            {/* Free for All Users */}
+            <div className="flex items-center space-x-2 text-sm text-green-600 font-medium">
+              <span>🆓 Free for All Users</span>
+            </div>
+            
+            {/* Blog Link */}
+            <button 
+              onClick={() => navigate('/blog')}
+              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+            >
+              Blog
+            </button>
+            
+            {/* Authentication */}
+            <div className="flex items-center space-x-2">
+              <SignedOut>
+                <SignInButton mode="modal">
+                  <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
+                    Sign In
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="px-4 py-2 text-sm border border-input bg-background rounded-md hover:bg-accent">
+                    Sign Up
+                  </button>
+                </SignUpButton>
+              </SignedOut>
+              <SignedIn>
+                <UserButton afterSignOutUrl="/" />
+              </SignedIn>
+            </div>
           </div>
         </div>
 
