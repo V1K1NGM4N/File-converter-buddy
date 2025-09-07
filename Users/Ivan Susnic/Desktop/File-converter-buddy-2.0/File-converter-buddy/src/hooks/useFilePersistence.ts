@@ -81,9 +81,11 @@ export const useFilePersistence = (storageKey: string) => {
             let previewData = '';
             if (file.preview.startsWith('data:')) {
               previewData = file.preview.split(',')[1];
+            } else if (file.preview.startsWith('blob:')) {
+              // For blob URLs, we'll use the file data as preview
+              previewData = fileData;
             } else {
-              // If it's a blob URL, we need to convert it to base64
-              // For now, we'll use the file data as preview
+              // Fallback to file data
               previewData = fileData;
             }
             
@@ -133,8 +135,20 @@ export const useFilePersistence = (storageKey: string) => {
 
   // Update files and persist
   const updateFiles = useCallback((newFiles: ConversionFile[]) => {
-    setFiles(newFiles);
-    saveFiles(newFiles);
+    // Ensure all files have proper previews
+    const filesWithPreviews = newFiles.map(file => {
+      if (!file.preview) {
+        // Create preview from file if not set
+        return {
+          ...file,
+          preview: URL.createObjectURL(file.file)
+        };
+      }
+      return file;
+    });
+    
+    setFiles(filesWithPreviews);
+    saveFiles(filesWithPreviews);
   }, [saveFiles]);
 
   // Clear all files

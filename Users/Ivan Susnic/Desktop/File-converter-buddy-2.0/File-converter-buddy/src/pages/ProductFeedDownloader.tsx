@@ -1117,27 +1117,20 @@ const ProductFeedDownloader: React.FC = () => {
                       
                       {/* Header */}
                       <div className="p-6 pb-3 cursor-pointer" onClick={() => handleProductClick(product)}>
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="text-lg font-semibold line-clamp-2 mb-2">
-                              {product.title}
-                            </h3>
-                            {product.brand && (
-                              <Badge variant="secondary" className="mb-2">
-                                {product.brand}
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="flex flex-col gap-1 ml-2">
-                            <Badge variant="outline" className="text-xs">
-                              {product.images.length} images
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold line-clamp-2 flex-1">
+                            {product.title}
+                          </h3>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <Badge variant="outline" className="text-xs">
+                            {product.images.length} images
+                          </Badge>
+                          {product.brand && (
+                            <Badge variant="secondary" className="text-xs">
+                              {product.brand}
                             </Badge>
-                            {product.price && (
-                              <Badge variant="default" className="text-xs">
-                                {product.price} {product.currency}
-                              </Badge>
-                            )}
-                          </div>
+                          )}
                         </div>
                       </div>
                       
@@ -1172,30 +1165,11 @@ const ProductFeedDownloader: React.FC = () => {
                           )}
 
                           {/* Product Details */}
-                          <div className="space-y-2 text-sm">
-                            {product.category && (
-                              <div>
-                                <span className="font-medium">Category:</span> {product.category}
-                              </div>
-                            )}
-                            {product.color && (
-                              <div>
-                                <span className="font-medium">Color:</span> {product.color}
-                              </div>
-                            )}
-                            {product.availability && (
-                              <div>
-                                <span className="font-medium">Availability:</span> 
-                                <span className={`ml-1 px-2 py-1 rounded text-xs ${
-                                  product.availability === 'in_stock' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : 'bg-red-100 text-red-800'
-                                }`}>
-                                  {product.availability === 'in_stock' ? 'In Stock' : product.availability}
-                                </span>
-                              </div>
-                            )}
-                          </div>
+                          {product.category && (
+                            <div className="text-sm">
+                              <span className="font-medium">Category:</span> {product.category}
+                            </div>
+                          )}
                         </div>
 
                         <Separator className="my-4" />
