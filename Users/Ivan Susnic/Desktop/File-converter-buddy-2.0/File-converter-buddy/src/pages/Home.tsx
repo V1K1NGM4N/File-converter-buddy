@@ -160,31 +160,56 @@ const Home = () => {
               <div className="space-y-3">
                 {userStats ? (
                   <>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Your Conversions</span>
-                      <span className="text-sm font-medium">{userStats.totalFiles}</span>
+                    {/* User's Personal Stats */}
+                    <div className="border-b border-border/50 pb-3 mb-3">
+                      <p className="text-xs text-muted-foreground mb-2">Your Usage</p>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Your Total</span>
+                          <span className="text-sm font-medium">{userStats.totalFiles}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">This Month</span>
+                          <span className="text-sm font-medium">{userStats.monthlyUsage}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Usage</span>
+                          <span className="text-sm font-medium text-green-600">Unlimited</span>
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">This Month</span>
-                      <span className="text-sm font-medium">{userStats.monthlyUsage}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Usage</span>
-                      <span className="text-sm font-medium text-green-600">Unlimited</span>
+                    
+                    {/* Global Stats */}
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-2">All Users</p>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Total Downloads</span>
+                          <span className="text-sm font-medium">{conversionStats.totalDownloads}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Files Converted</span>
+                          <span className="text-sm font-medium">{conversionStats.totalFiles}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-muted-foreground">Last Activity</span>
+                          <span className="text-sm font-medium">{conversionStats.lastConversion}</span>
+                        </div>
+                      </div>
                     </div>
                   </>
                 ) : (
                   <>
                     <div className="flex justify-between">
+                      <span className="text-sm text-muted-foreground">Total Downloads</span>
+                      <span className="text-sm font-medium">{conversionStats.totalDownloads}</span>
+                    </div>
+                    <div className="flex justify-between">
                       <span className="text-sm text-muted-foreground">Files Converted</span>
                       <span className="text-sm font-medium">{conversionStats.totalFiles}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Downloads</span>
-                      <span className="text-sm font-medium">{conversionStats.totalDownloads}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Last Used</span>
+                      <span className="text-sm text-muted-foreground">Last Activity</span>
                       <span className="text-sm font-medium">{conversionStats.lastConversion}</span>
                     </div>
                   </>
