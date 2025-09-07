@@ -1,4 +1,4 @@
- thimport React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -51,6 +51,7 @@ const ProductFeedDownloader: React.FC = () => {
   const [imageFormat, setImageFormat] = useState<'jpg' | 'png' | 'webp' | 'original'>('original');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
   const [showCorsWarning, setShowCorsWarning] = useState(false);
   const [parsingProgress, setParsingProgress] = useState(0);
   const [currentMessage, setCurrentMessage] = useState(0);
@@ -445,21 +446,111 @@ const ProductFeedDownloader: React.FC = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    setSelectedProducts(new Set()); // Clear selection when changing pages
   };
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
     setCurrentPage(1); // Reset to first page when changing items per page
+    setSelectedProducts(new Set()); // Clear selection when changing items per page
   };
 
   const handleSearchChange = (query: string) => {
     setSearchQuery(query);
     setCurrentPage(1);
+    setSelectedProducts(new Set()); // Clear selection when searching
   };
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
     setCurrentPage(1);
+    setSelectedProducts(new Set()); // Clear selection when filtering
+  };
+
+  const handleProductToggle = (productId: string) => {
+    setSelectedProducts(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(productId)) {
+        newSet.delete(productId);
+      } else {
+        newSet.add(productId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAllProducts = () => {
+    setSelectedProducts(new Set(paginatedProducts.map(product => product.id)));
+  };
+
+  const handleSelectNoneProducts = () => {
+    setSelectedProducts(new Set());
+  };
+
+  const handleDownloadSelectedProducts = async () => {
+    if (selectedProducts.size === 0) {
+      toast.error("No products selected to download");
+      return;
+    }
+
+    const selectedProductsList = paginatedProducts.filter(product => selectedProducts.has(product.id));
+    const productsWithImages = selectedProductsList.filter(product => product.images.length > 0);
+    
+    if (productsWithImages.length === 0) {
+      toast.error("Selected products have no images to download");
+      return;
+    }
+
+    setDownloadProgress(0);
+    const totalImages = productsWithImages.reduce((sum, product) => sum + product.images.length, 0);
+
+    try {
+      // Detect Mac and show appropriate message
+      const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      
+      if (isMac && isSafari) {
+        toast.info(`Starting download of ${totalImages} images from ${productsWithImages.length} selected products... (Safari on Mac detected - download may open in new tab)`);
+      } else {
+        toast.info(`Starting download of ${totalImages} images from ${productsWithImages.length} selected products...`);
+      }
+      
+      // Collect all images from selected products
+      const allImageDownloads: Array<{ url: string; filename: string; productTitle: string }> = [];
+      
+      for (const product of productsWithImages) {
+        const productImages = product.images.map((image, index) => ({
+          url: image.url,
+          filename: `${sanitizeFilename(product.title)}_${index + 1}.${imageFormat === 'original' ? 'jpg' : imageFormat}`,
+          productTitle: product.title
+        }));
+        allImageDownloads.push(...productImages);
+      }
+
+      // Download all images as a single ZIP file with organized structure
+      await downloadImagesAsZip(allImageDownloads, {
+        createFolderStructure: true,
+        groupByProduct: true
+      });
+      setDownloadProgress(100);
+
+      toast.success(`Successfully downloaded ${totalImages} images from ${productsWithImages.length} selected products in organized folders`);
+      setSelectedProducts(new Set()); // Clear selection after successful download
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to download images";
+      
+      // Provide Mac-specific error guidance
+      const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+      if (isMac && errorMessage.includes('Failed to create ZIP file')) {
+        toast.error(`Selected products download failed on Mac: ${errorMessage}. Try using Chrome or Firefox instead of Safari.`);
+      } else {
+        toast.error(`Selected products download failed: ${errorMessage}`);
+      }
+      
+      console.error('Selected products download error:', error);
+    } finally {
+      setDownloadProgress(0);
+    }
   };
 
   return (
@@ -885,6 +976,11 @@ const ProductFeedDownloader: React.FC = () => {
                 <span className="text-sm font-medium text-muted-foreground">
                   Total Images: {filteredProducts.reduce((sum, p) => sum + p.images.length, 0)}
                 </span>
+                {selectedProducts.size > 0 && (
+                  <span className="text-sm font-medium text-primary">
+                    Selected: {selectedProducts.size}
+                  </span>
+                )}
               </div>
               
               <div className="flex items-center gap-2">
@@ -910,11 +1006,23 @@ const ProductFeedDownloader: React.FC = () => {
                     setFeedUrl('');
                     setXmlContent('');
                     setInputMode('url');
+                    setSelectedProducts(new Set());
                   }}
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
                   Reset
                 </Button>
+                
+                {selectedProducts.size > 0 && (
+                  <Button
+                    onClick={handleDownloadSelectedProducts}
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    <DownloadCloud className="h-4 w-4 mr-2" />
+                    Download Selected ({selectedProducts.size})
+                  </Button>
+                )}
                 
                 <Button
                   onClick={handleDownloadAllImages}
@@ -939,15 +1047,81 @@ const ProductFeedDownloader: React.FC = () => {
                   </AlertDescription>
                 </Alert>
               ) : (
+                <>
+                  {/* Selection Controls */}
+                  <div className="flex items-center justify-between p-4 bg-card/20 rounded-lg border border-border/30">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedProducts.size === paginatedProducts.length && paginatedProducts.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              handleSelectAllProducts();
+                            } else {
+                              handleSelectNoneProducts();
+                            }
+                          }}
+                          className="w-4 h-4 text-primary bg-background border-2 border-primary rounded focus:ring-primary"
+                        />
+                        <span className="text-sm font-medium text-muted-foreground">
+                          Select All ({paginatedProducts.length})
+                        </span>
+                      </div>
+                      {selectedProducts.size > 0 && (
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm text-primary">
+                            {selectedProducts.size} selected
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleSelectNoneProducts}
+                            className="text-xs"
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {selectedProducts.size > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">
+                          {selectedProducts.size} products selected
+                        </span>
+                        <Button
+                          onClick={handleDownloadSelectedProducts}
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <DownloadCloud className="h-4 w-4 mr-2" />
+                          Download Selected
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {paginatedProducts.map((product) => (
                     <div 
                       key={product.id} 
-                      className="overflow-hidden bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 h-full flex flex-col"
-                      onClick={() => handleProductClick(product)}
+                      className="overflow-hidden bg-card/50 backdrop-blur-sm border border-border/50 rounded-lg transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-primary/50 h-full flex flex-col relative"
                     >
+                      {/* Selection Checkbox */}
+                      <div className="absolute top-3 left-3 z-10">
+                        <input
+                          type="checkbox"
+                          checked={selectedProducts.has(product.id)}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            handleProductToggle(product.id);
+                          }}
+                          className="w-4 h-4 text-primary bg-background border-2 border-primary rounded focus:ring-primary"
+                        />
+                      </div>
+                      
                       {/* Header */}
-                      <div className="p-6 pb-3">
+                      <div className="p-6 pb-3 cursor-pointer" onClick={() => handleProductClick(product)}>
                         <div className="flex items-start justify-between">
                           <div className="flex-1 min-w-0">
                             <h3 className="text-lg font-semibold line-clamp-2 mb-2">
@@ -1079,6 +1253,7 @@ const ProductFeedDownloader: React.FC = () => {
                     </div>
                   ))}
                 </div>
+                </>
               )}
 
               {/* Pagination Controls */}
