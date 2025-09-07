@@ -11,33 +11,37 @@ const Blog = () => {
       <div className="bg-background border-b border-border">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate('/')}
-              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
-            >
-              <div className="animate-fade-in">
-                <AnimatedFileType />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold">
-                  File Converter <span className="text-primary">Buddy</span>
-                </h1>
-                <p className="text-muted-foreground text-xs">Convert files with ease</p>
-              </div>
-            </button>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
+              >
+                <div className="animate-fade-in">
+                  <AnimatedFileType />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold">
+                    File Converter <span className="text-primary">Buddy</span>
+                  </h1>
+                  <p className="text-muted-foreground text-xs">Convert files with ease</p>
+                </div>
+              </button>
+              
+            </div>
             
             <div className="flex items-center space-x-6">
-              {/* Free for All Users */}
-              <div className="flex items-center space-x-2 text-sm text-green-600 font-medium">
-                <span>🆓 Free for All Users</span>
-              </div>
-              
               {/* Blog Link */}
               <button 
                 onClick={() => navigate('/blog')}
                 className="text-sm text-muted-foreground hover:text-primary transition-colors"
               >
                 Blog
+              </button>
+              <button
+                onClick={() => navigate('/blog')}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+              >
+                Join for free use
               </button>
             </div>
           </div>

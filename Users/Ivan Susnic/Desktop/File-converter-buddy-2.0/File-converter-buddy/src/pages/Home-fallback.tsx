@@ -61,12 +61,17 @@ const Home = () => {
             </div>
           </div>
           <div className="flex items-center space-x-4 animate-fade-in-right">
-            <span className="text-sm font-medium text-muted-foreground">🆓 Free for All Users</span>
             <button
               onClick={() => navigate('/blog')}
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               Blog
+            </button>
+            <button
+              onClick={() => navigate('/blog')}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+            >
+              Join for free use
             </button>
           </div>
         </div>

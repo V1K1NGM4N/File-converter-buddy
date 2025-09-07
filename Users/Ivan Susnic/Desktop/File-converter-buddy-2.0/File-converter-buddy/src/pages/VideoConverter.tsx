@@ -234,19 +234,20 @@ const VideoConverter = () => {
               </div>
             </button>
             
-            <div className="hidden md:flex items-center space-x-6">
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Video className="h-4 w-4" />
-                <span>All Formats</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Zap className="h-4 w-4" />
-                <span>Bulk Convert</span>
-              </div>
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <Upload className="h-4 w-4" />
-                <span>High Quality</span>
-              </div>
+            <div className="flex items-center space-x-6">
+              {/* Blog Link */}
+              <button 
+                onClick={() => navigate('/blog')}
+                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+              >
+                Blog
+              </button>
+              <button
+                onClick={() => navigate('/blog')}
+                className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+              >
+                Join for free use
+              </button>
             </div>
           </div>
         </div>

@@ -70,17 +70,18 @@ const Home = () => {
           </div>
           
           <div className="flex items-center space-x-6 animate-fade-in-up delay-200">
-            {/* Free for All Users */}
-            <div className="flex items-center space-x-2 text-sm text-green-600 font-medium">
-              <span>🆓 Free for All Users</span>
-            </div>
-            
             {/* Blog Link */}
             <button 
               onClick={() => navigate('/blog')}
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
             >
               Blog
+            </button>
+            <button
+              onClick={() => navigate('/blog')}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-medium"
+            >
+              Join for free use
             </button>
             
             {/* Authentication */}
