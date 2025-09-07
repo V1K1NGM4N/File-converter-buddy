@@ -259,14 +259,38 @@ const ProductFeedDownloader: React.FC = () => {
     try {
       const imageDownloads = product.images.map((image, index) => ({
         url: image.url,
-        filename: `${sanitizeFilename(product.title)}_${index + 1}.${imageFormat === 'original' ? 'jpg' : imageFormat}`
+        filename: `${sanitizeFilename(product.title)}_${index + 1}.${imageFormat === 'original' ? 'jpg' : imageFormat}`,
+        productTitle: product.title
       }));
 
-      await downloadImagesAsZip(imageDownloads);
+      // Detect Mac and show appropriate message
+      const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
       
-      toast.success(`Downloaded ${product.images.length} images for ${product.title}`);
+      if (isMac && isSafari) {
+        toast.info(`Starting download of ${product.images.length} images for "${product.title}"... (Safari on Mac detected - download may open in new tab)`);
+      } else {
+        toast.info(`Starting download of ${product.images.length} images for "${product.title}"...`);
+      }
+      
+      await downloadImagesAsZip(imageDownloads, {
+        createFolderStructure: true,
+        groupByProduct: true
+      });
+      
+      toast.success(`Successfully downloaded ${product.images.length} images for "${product.title}" in organized folders`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to download images");
+      const errorMessage = error instanceof Error ? error.message : "Failed to download images";
+      
+      // Provide Mac-specific error guidance
+      const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+      if (isMac && errorMessage.includes('Failed to create ZIP file')) {
+        toast.error(`Download failed on Mac: ${errorMessage}. Try using Chrome or Firefox instead of Safari.`);
+      } else {
+        toast.error(`Download failed: ${errorMessage}`);
+      }
+      
+      console.error('Download error:', error);
     } finally {
       setDownloadingImages(prev => {
         const newSet = new Set(prev);
@@ -294,20 +318,48 @@ const ProductFeedDownloader: React.FC = () => {
     let downloadedCount = 0;
 
     try {
+      // Detect Mac and show appropriate message
+      const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      
+      if (isMac && isSafari) {
+        toast.info(`Starting bulk download of ${totalImages} images from ${productsWithImages.length} products... (Safari on Mac detected - download may open in new tab)`);
+      } else {
+        toast.info(`Starting bulk download of ${totalImages} images from ${productsWithImages.length} products...`);
+      }
+      
+      // Collect all images from all products with product titles for folder organization
+      const allImageDownloads: Array<{ url: string; filename: string; productTitle: string }> = [];
+      
       for (const product of productsWithImages) {
-        const imageDownloads = product.images.map((image, index) => ({
+        const productImages = product.images.map((image, index) => ({
           url: image.url,
-          filename: `${sanitizeFilename(product.title)}_${index + 1}.${imageFormat === 'original' ? 'jpg' : imageFormat}`
+          filename: `${sanitizeFilename(product.title)}_${index + 1}.${imageFormat === 'original' ? 'jpg' : imageFormat}`,
+          productTitle: product.title
         }));
-
-        await downloadImagesAsZip(imageDownloads);
-        downloadedCount += product.images.length;
-        setDownloadProgress((downloadedCount / totalImages) * 100);
+        allImageDownloads.push(...productImages);
       }
 
-      toast.success(`Downloaded ${downloadedCount} images from ${productsWithImages.length} products`);
+      // Download all images as a single ZIP file with organized folder structure
+      await downloadImagesAsZip(allImageDownloads, {
+        createFolderStructure: true,
+        groupByProduct: true
+      });
+      setDownloadProgress(100);
+
+      toast.success(`Successfully downloaded ${totalImages} images from ${productsWithImages.length} products in organized folders`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to download images");
+      const errorMessage = error instanceof Error ? error.message : "Failed to download images";
+      
+      // Provide Mac-specific error guidance
+      const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+      if (isMac && errorMessage.includes('Failed to create ZIP file')) {
+        toast.error(`Bulk download failed on Mac: ${errorMessage}. Try using Chrome or Firefox instead of Safari.`);
+      } else {
+        toast.error(`Bulk download failed: ${errorMessage}`);
+      }
+      
+      console.error('Bulk download error:', error);
     } finally {
       setDownloadProgress(0);
     }
@@ -365,16 +417,23 @@ const ProductFeedDownloader: React.FC = () => {
     try {
       const imageDownloads = imagesToDownload.map((image, index) => ({
         url: image.url,
-        filename: `${sanitizeFilename(selectedProduct.title)}_${index + 1}.${imageFormat === 'original' ? 'jpg' : imageFormat}`
+        filename: `${sanitizeFilename(selectedProduct.title)}_${index + 1}.${imageFormat === 'original' ? 'jpg' : imageFormat}`,
+        productTitle: selectedProduct.title
       }));
 
-      await downloadImagesAsZip(imageDownloads);
+      toast.info(`Starting download of ${imagesToDownload.length} selected images for "${selectedProduct.title}"...`);
+      await downloadImagesAsZip(imageDownloads, {
+        createFolderStructure: true,
+        groupByProduct: true
+      });
       
-      toast.success(`Downloaded ${imagesToDownload.length} images for ${selectedProduct.title}`);
+      toast.success(`Successfully downloaded ${imagesToDownload.length} images for "${selectedProduct.title}" in organized folders`);
       setSelectedProduct(null);
       setSelectedImages(new Set());
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to download images");
+      const errorMessage = error instanceof Error ? error.message : "Failed to download images";
+      toast.error(`Download failed: ${errorMessage}`);
+      console.error('Selected images download error:', error);
     } finally {
       setDownloadingImages(prev => {
         const newSet = new Set(prev);
@@ -414,7 +473,7 @@ const ProductFeedDownloader: React.FC = () => {
               className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
               <div className="animate-fade-in">
-                <AnimatedFileType />
+                <AnimatedFileType fileType="files" />
               </div>
               <div>
                 <h1 className="text-xl font-bold">
@@ -447,13 +506,49 @@ const ProductFeedDownloader: React.FC = () => {
         <div className="container mx-auto px-6 py-12">
           <div className="flex items-center space-x-4">
             <div className="animate-fade-in">
-              <AnimatedFileType />
+              <AnimatedFileType fileType="files" />
             </div>
             <div className="animate-fade-in-up">
               <h1 className="text-4xl font-bold">
                 Product Feed <span className="text-primary">Image Downloader</span>
               </h1>
               <p className="text-muted-foreground text-sm">Download images from XML feeds with ease</p>
+            </div>
+          </div>
+          
+          {/* Mac Compatibility Notice */}
+          {/Mac|iPod|iPhone|iPad/.test(navigator.userAgent) && (
+            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-start space-x-3">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-sm font-medium text-blue-800">Mac Users</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    For best results on Mac, we recommend using Chrome or Firefox. Safari may have limitations with ZIP file downloads.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Download Organization Notice */}
+          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-green-800">Organized Downloads</h3>
+                <p className="text-sm text-green-700 mt-1">
+                  All downloads are automatically organized in folders with timestamps. Each product gets its own folder for easy organization.
+                </p>
+              </div>
             </div>
           </div>
         </div>

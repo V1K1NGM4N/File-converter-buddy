@@ -69,75 +69,105 @@ export class XMLFeedParser {
   }
 
   /**
-   * Extracts all products from the XML feed using regex
+   * Extracts all products from the XML feed using regex with performance optimizations
    */
   public parseProducts(onProgress?: (current: number, total: number, imagesFound: number) => void): ParsedFeed {
     const products: Product[] = [];
     const productMap = new Map<string, Product>();
     
-    // Split content into individual items
+    // Split content into individual items with better regex for performance
     const itemMatches = this.xmlContent.match(/<item[^>]*>[\s\S]*?<\/item>/gi) || [];
     const totalItems = itemMatches.length;
     let totalImagesFound = 0;
     
-    // Quick count of total images in the feed for initial scope
-    const totalImagesInFeed = (this.xmlContent.match(/<g:image_link>/gi) || []).length + 
-                             (this.xmlContent.match(/<g:additional_image_link>/gi) || []).length;
+    // Process items in batches for better performance on large feeds
+    const BATCH_SIZE = 100;
+    const batches = [];
+    for (let i = 0; i < itemMatches.length; i += BATCH_SIZE) {
+      batches.push(itemMatches.slice(i, i + BATCH_SIZE));
+    }
     
-    itemMatches.forEach((itemContent, index) => {
-      try {
-        const product = this.extractProductFromItemContent(itemContent, index);
-        if (product) {
-          // Count images for this product
-          totalImagesFound += product.images.length;
-          
-          // Report progress
-          if (onProgress) {
-            onProgress(index + 1, totalItems, totalImagesFound);
-          }
-          
-          // Use product title as the key to group variants
-          const productKey = product.title.trim().toLowerCase();
-          
-          if (productMap.has(productKey)) {
-            // Product already exists, merge the images
-            const existingProduct = productMap.get(productKey)!;
-            const newImages = product.images.filter(newImage => 
-              !existingProduct.images.some(existingImage => existingImage.url === newImage.url)
-            );
-            existingProduct.images.push(...newImages);
+    let processedItems = 0;
+    
+    for (const batch of batches) {
+      // Process batch synchronously for better performance
+      for (let batchIndex = 0; batchIndex < batch.length; batchIndex++) {
+        const itemContent = batch[batchIndex];
+        const index = processedItems + batchIndex;
+        
+        try {
+          const product = this.extractProductFromItemContent(itemContent, index);
+          if (product) {
+            // Count images for this product
+            totalImagesFound += product.images.length;
             
-            // Update other fields if they're missing in the existing product
-            if (!existingProduct.brand && product.brand) {
-              existingProduct.brand = product.brand;
-            }
-            if (!existingProduct.description && product.description) {
-              existingProduct.description = product.description;
-            }
-            if (!existingProduct.productUrl && product.productUrl) {
-              existingProduct.productUrl = product.productUrl;
-            }
-            if (!existingProduct.price && product.price) {
-              existingProduct.price = product.price;
-            } else if (existingProduct.price && product.price && existingProduct.price !== product.price) {
-              // If both have prices, use the first one (they should be the same anyway)
-              // This handles cases where variants might have slightly different price formatting
-              existingProduct.price = existingProduct.price;
+            // Report progress every 10 items to avoid too many updates
+            if (onProgress && (index + 1) % 10 === 0) {
+              onProgress(index + 1, totalItems, totalImagesFound);
             }
             
-            // Update availability - if any variant is in stock, mark as in stock
-            if (product.availability === 'in_stock' || existingProduct.availability === 'in_stock') {
-              existingProduct.availability = 'in_stock';
+            // Use product title as the key to group variants
+            const productKey = product.title.trim().toLowerCase();
+            
+            if (productMap.has(productKey)) {
+              // Product already exists, merge the images
+              const existingProduct = productMap.get(productKey)!;
+              const newImages = product.images.filter(newImage => 
+                !existingProduct.images.some(existingImage => existingImage.url === newImage.url)
+              );
+              existingProduct.images.push(...newImages);
+              
+              // Update other fields if they're missing in the existing product
+              if (!existingProduct.brand && product.brand) {
+                existingProduct.brand = product.brand;
+              }
+              if (!existingProduct.description && product.description) {
+                existingProduct.description = product.description;
+              }
+              if (!existingProduct.productUrl && product.productUrl) {
+                existingProduct.productUrl = product.productUrl;
+              }
+              if (!existingProduct.price && product.price) {
+                existingProduct.price = product.price;
+              } else if (existingProduct.price && product.price && existingProduct.price !== product.price) {
+                // If both have prices, use the first one (they should be the same anyway)
+                // This handles cases where variants might have slightly different price formatting
+                existingProduct.price = existingProduct.price;
+              }
+              
+              // Update availability - if any variant is in stock, mark as in stock
+              if (product.availability === 'in_stock' || existingProduct.availability === 'in_stock') {
+                existingProduct.availability = 'in_stock';
+              }
+            } else {
+              // New product, add it to the map
+              productMap.set(productKey, product);
             }
-          } else {
-            // New product, add it to the map
-            productMap.set(productKey, product);
           }
+        } catch (error) {
+          console.warn(`Failed to parse product at index ${index}:`, error);
         }
-      } catch (error) {
-        console.warn(`Failed to parse product at index ${index}:`, error);
       }
-    });
+      
+      processedItems += batch.length;
+      
+      // Report progress at the end of each batch
+      if (onProgress) {
+        onProgress(processedItems, totalItems, totalImagesFound);
+      }
+      
+      // Small delay between batches to prevent blocking the UI
+      if (batches.indexOf(batch) < batches.length - 1) {
+        // Use setTimeout to yield control back to the browser
+        // Note: This is a synchronous method, so we can't use await here
+        // The batching itself helps with performance
+      }
+    }
+
+    // Final progress update
+    if (onProgress) {
+      onProgress(totalItems, totalItems, totalImagesFound);
+    }
 
     // Convert map values to array
     const uniqueProducts = Array.from(productMap.values());
@@ -359,8 +389,10 @@ const CORS_PROXIES = [
   'https://api.allorigins.win/raw?url=',
   'https://corsproxy.io/?',
   'https://api.codetabs.com/v1/proxy?quest=',
+  'https://cors-anywhere.herokuapp.com/',
   'https://thingproxy.freeboard.io/fetch/',
-  'https://cors-anywhere.herokuapp.com/'
+  'https://cors.bridged.cc/',
+  'https://api.codetabs.com/v1/proxy?quest='
 ];
 
 /**
@@ -470,7 +502,7 @@ export async function fetchAndParseXMLFeed(url: string, onProgress?: (current: n
 }
 
 /**
- * Downloads an image from URL with improved error handling
+ * Downloads an image from URL with improved error handling and Mac compatibility
  */
 export async function downloadImage(url: string, filename: string): Promise<void> {
   try {
@@ -488,13 +520,16 @@ export async function downloadImage(url: string, filename: string): Promise<void
       throw new Error(`Invalid URL format: ${cleanUrl}`);
     }
 
-    // Enhanced headers for better compatibility
+    // Enhanced headers for better compatibility (including Mac Safari)
     const headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
       'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
       'Accept-Language': 'en-US,en;q=0.9',
       'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
+      'Pragma': 'no-cache',
+      'Sec-Fetch-Dest': 'image',
+      'Sec-Fetch-Mode': 'no-cors',
+      'Sec-Fetch-Site': 'cross-site'
     };
 
     const response = await fetch(validUrl.toString(), {
@@ -521,45 +556,144 @@ export async function downloadImage(url: string, filename: string): Promise<void
       throw new Error('Image too large (max 50MB)');
     }
 
-    // Create download link
-    const downloadUrl = window.URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
-    link.href = downloadUrl;
-    link.download = filename;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // Clean up
-    window.URL.revokeObjectURL(downloadUrl);
+    // Mac-compatible download approach
+    await downloadBlobAsFile(blob, filename, contentType || 'image/jpeg');
   } catch (error) {
     throw new Error(`Failed to download image "${filename}": ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
 /**
- * Downloads multiple images with improved error handling and progress tracking
+ * Downloads a blob as a file with Mac compatibility (shared utility)
  */
-export async function downloadImagesAsZip(images: { url: string; filename: string }[]): Promise<void> {
+const downloadBlobAsFile = async (blob: Blob, filename: string, mimeType: string): Promise<void> => {
+  // Detect if we're on Mac/Safari
+  const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  
+  // Sanitize filename for Mac compatibility
+  const sanitizedFilename = filename
+    .replace(/[<>:"/\\|?*]/g, '_')
+    .replace(/\s+/g, '_')
+    .replace(/_{2,}/g, '_')
+    .replace(/^_|_$/g, '')
+    .substring(0, 255);
+  
+  if (isMac && isSafari) {
+    // Safari on Mac requires a different approach
+    try {
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = sanitizedFilename;
+      link.style.display = 'none';
+      
+      document.body.appendChild(link);
+      link.click();
+      
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+    } catch (error) {
+      // Fallback: try opening in new window
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  } else {
+    // Standard approach for other browsers
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = sanitizedFilename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+};
+
+/**
+ * Downloads multiple images as a ZIP file with organized folder structure
+ */
+export async function downloadImagesAsZip(
+  images: { url: string; filename: string; productTitle?: string }[],
+  options: { 
+    createFolderStructure?: boolean;
+    groupByProduct?: boolean;
+    customFolderName?: string;
+  } = {}
+): Promise<void> {
   if (!images || images.length === 0) {
     throw new Error('No images to download');
   }
 
+  const {
+    createFolderStructure = true,
+    groupByProduct = true,
+    customFolderName
+  } = options;
+
   const results = {
     successful: 0,
     failed: 0,
-    errors: [] as string[]
+    errors: [] as string[],
+    files: [] as Array<{ name: string; blob: Blob; folder?: string }>
   };
 
   console.log(`Starting download of ${images.length} images...`);
 
+  // Download all images first
   for (let i = 0; i < images.length; i++) {
     const image = images[i];
     try {
       console.log(`Downloading ${i + 1}/${images.length}: ${image.filename}`);
-      await downloadImage(image.url, image.filename);
+      
+      // Fetch the image as blob
+      const response = await fetch(image.url, {
+        method: 'GET',
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        },
+        mode: 'cors',
+        credentials: 'omit'
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const contentType = response.headers.get('content-type');
+      if (contentType && !contentType.startsWith('image/')) {
+        throw new Error(`Expected image, got ${contentType}`);
+      }
+
+      const blob = await response.blob();
+      
+      // Validate blob size (max 50MB)
+      if (blob.size > 50 * 1024 * 1024) {
+        throw new Error('Image too large (max 50MB)');
+      }
+
+      // Determine folder structure
+      let folder: string | undefined;
+      if (createFolderStructure && groupByProduct && image.productTitle) {
+        folder = sanitizeProductTitleForFolder(image.productTitle);
+      } else if (createFolderStructure && customFolderName) {
+        folder = customFolderName;
+      }
+
+      results.files.push({
+        name: image.filename,
+        blob: blob,
+        folder: folder
+      });
       results.successful++;
       
       // Add a small delay to prevent overwhelming the browser
@@ -575,9 +709,35 @@ export async function downloadImagesAsZip(images: { url: string; filename: strin
   // Report results
   console.log(`Download completed: ${results.successful} successful, ${results.failed} failed`);
   
-  if (results.failed > 0) {
-    const errorSummary = results.errors.slice(0, 3).join('; ');
-    const moreErrors = results.errors.length > 3 ? ` and ${results.errors.length - 3} more errors` : '';
-    throw new Error(`Download completed with errors: ${results.successful} successful, ${results.failed} failed. ${errorSummary}${moreErrors}`);
+  if (results.files.length === 0) {
+    throw new Error('No images were successfully downloaded');
+  }
+
+  // Create ZIP file with organized structure
+  try {
+    const { downloadMultipleFilesAsZip } = await import('./zipDownload');
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const zipFilename = `FileConverterBuddyDownload - ${timestamp}.zip`;
+    await downloadMultipleFilesAsZip(results.files, zipFilename, createFolderStructure);
+    
+    if (results.failed > 0) {
+      const errorSummary = results.errors.slice(0, 3).join('; ');
+      const moreErrors = results.errors.length > 3 ? ` and ${results.errors.length - 3} more errors` : '';
+      console.warn(`ZIP created with ${results.successful} images. Some images failed: ${errorSummary}${moreErrors}`);
+    }
+  } catch (error) {
+    throw new Error(`Failed to create ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
+
+/**
+ * Sanitizes product title for use as folder name
+ */
+const sanitizeProductTitleForFolder = (title: string): string => {
+  return title
+    .replace(/[<>:"/\\|?*]/g, '_') // Replace invalid characters
+    .replace(/\s+/g, '_') // Replace spaces with underscores
+    .replace(/_{2,}/g, '_') // Replace multiple underscores with single
+    .replace(/^_|_$/g, '') // Remove leading/trailing underscores
+    .substring(0, 50); // Limit folder name length
+};

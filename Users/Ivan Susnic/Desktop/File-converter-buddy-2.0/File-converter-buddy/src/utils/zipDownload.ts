@@ -1,50 +1,145 @@
-// Simple ZIP creation utility using JSZip-like functionality
-// For a production app, you'd want to use the JSZip library
-// This is a basic implementation for demonstration
+import JSZip from 'jszip';
 
-export class SimpleZip {
-  private files: Array<{ name: string; data: Blob }> = [];
-
-  add(name: string, data: Blob) {
-    this.files.push({ name, data });
+/**
+ * Downloads multiple files as a ZIP archive with organized folder structure
+ */
+export const downloadMultipleFilesAsZip = async (
+  files: Array<{ name: string; blob: Blob; folder?: string }>,
+  zipFilename: string = 'download.zip',
+  createFolderStructure: boolean = true
+): Promise<void> => {
+  if (!files || files.length === 0) {
+    throw new Error('No files to download');
   }
 
-  async generateAsync(): Promise<Blob> {
-    // For a real implementation, this would create a proper ZIP file
-    // For now, we'll create a simple archive-like structure
-    // In a production app, use JSZip library instead
+  try {
+    const zip = new JSZip();
     
-    const formData = new FormData();
-    this.files.forEach(({ name, data }) => {
-      formData.append('files', data, name);
+    // Create timestamped folder name
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const baseFolderName = `FileConverterBuddyDownload - ${timestamp}`;
+    
+    // Add all files to the ZIP with organized structure
+    files.forEach(({ name, blob, folder }) => {
+      // Sanitize filename for Mac compatibility
+      const sanitizedName = sanitizeFilenameForMac(name);
+      
+      // Create folder path
+      let filePath: string;
+      if (createFolderStructure) {
+        if (folder) {
+          // Use custom folder if provided
+          const sanitizedFolder = sanitizeFilenameForMac(folder);
+          filePath = `${baseFolderName}/${sanitizedFolder}/${sanitizedName}`;
+        } else {
+          // Default to base folder
+          filePath = `${baseFolderName}/${sanitizedName}`;
+        }
+      } else {
+        // No folder structure, just the filename
+        filePath = sanitizedName;
+      }
+      
+      zip.file(filePath, blob);
     });
-    
-    // Return the first file as a fallback
-    // In production, you'd use JSZip here
-    return this.files[0]?.data || new Blob();
-  }
 
-  clear() {
-    this.files = [];
-  }
-}
+    // Generate the ZIP file with Mac-compatible settings
+    const zipBlob = await zip.generateAsync({ 
+      type: 'blob',
+      compression: 'DEFLATE',
+      compressionOptions: {
+        level: 6 // Balanced compression
+      },
+      mimeType: 'application/zip' // Explicit MIME type for Mac compatibility
+    });
 
+    // Mac-compatible download approach
+    await downloadBlobAsFile(zipBlob, zipFilename, 'application/zip');
+  } catch (error) {
+    throw new Error(`Failed to create ZIP file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+/**
+ * Sanitizes filename for Mac compatibility
+ */
+const sanitizeFilenameForMac = (filename: string): string => {
+  return filename
+    .replace(/[<>:"/\\|?*]/g, '_') // Replace invalid characters
+    .replace(/\s+/g, '_') // Replace spaces with underscores
+    .replace(/_{2,}/g, '_') // Replace multiple underscores with single
+    .replace(/^_|_$/g, '') // Remove leading/trailing underscores
+    .substring(0, 255); // Mac filename length limit
+};
+
+/**
+ * Downloads a blob as a file with Mac compatibility
+ */
+const downloadBlobAsFile = async (blob: Blob, filename: string, mimeType: string): Promise<void> => {
+  // Detect if we're on Mac/Safari
+  const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  
+  if (isMac && isSafari) {
+    // Safari on Mac requires a different approach
+    try {
+      // Try the modern approach first
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.style.display = 'none';
+      
+      // Add to DOM temporarily
+      document.body.appendChild(link);
+      
+      // Trigger download
+      link.click();
+      
+      // Clean up
+      setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 100);
+    } catch (error) {
+      // Fallback: try opening in new window
+      const url = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  } else {
+    // Standard approach for other browsers
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }
+};
+
+/**
+ * Downloads multiple files individually (fallback method) with Mac compatibility
+ */
 export const downloadMultipleFiles = async (
   files: Array<{ name: string; blob: Blob }>
-) => {
-  // For now, download files individually
-  // In production, create a ZIP file
+): Promise<void> => {
+  if (!files || files.length === 0) {
+    throw new Error('No files to download');
+  }
+
   for (const { name, blob } of files) {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = name;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    // Small delay between downloads
-    await new Promise(resolve => setTimeout(resolve, 100));
+    try {
+      const sanitizedName = sanitizeFilenameForMac(name);
+      await downloadBlobAsFile(blob, sanitizedName, blob.type);
+      
+      // Small delay between downloads to prevent browser blocking
+      await new Promise(resolve => setTimeout(resolve, 200));
+    } catch (error) {
+      console.warn(`Failed to download ${name}:`, error);
+    }
   }
 };
