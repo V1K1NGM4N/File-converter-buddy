@@ -15,9 +15,11 @@ export const downloadMultipleFilesAsZip = async (
   try {
     const zip = new JSZip();
     
-    // Create timestamped folder name
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const baseFolderName = `FileConverterBuddyDownload - ${timestamp}`;
+    // Create timestamped folder name (simplified format)
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10); // YYYY-MM-DD
+    const time = now.toTimeString().slice(0, 5); // HH:MM
+    const baseFolderName = `FileConverterBuddyDownload - ${date} ${time}`;
     
     // Add all files to the ZIP with organized structure
     files.forEach(({ name, blob, folder }) => {

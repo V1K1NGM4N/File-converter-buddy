@@ -716,8 +716,10 @@ export async function downloadImagesAsZip(
   // Create ZIP file with organized structure
   try {
     const { downloadMultipleFilesAsZip } = await import('./zipDownload');
-    const timestamp = new Date().toISOString().slice(0, 10);
-    const zipFilename = `FileConverterBuddyDownload - ${timestamp}.zip`;
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10); // YYYY-MM-DD
+    const time = now.toTimeString().slice(0, 5); // HH:MM
+    const zipFilename = `FileConverterBuddyDownload - ${date} ${time}.zip`;
     await downloadMultipleFilesAsZip(results.files, zipFilename, createFolderStructure);
     
     if (results.failed > 0) {

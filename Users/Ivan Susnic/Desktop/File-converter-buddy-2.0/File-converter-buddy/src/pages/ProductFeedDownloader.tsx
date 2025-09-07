@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+ thimport React, { useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -535,22 +535,6 @@ const ProductFeedDownloader: React.FC = () => {
             </div>
           )}
           
-          {/* Download Organization Notice */}
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm0 4a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1V8z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-green-800">Organized Downloads</h3>
-                <p className="text-sm text-green-700 mt-1">
-                  All downloads are automatically organized in folders with timestamps. Each product gets its own folder for easy organization.
-                </p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
