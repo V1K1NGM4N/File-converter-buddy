@@ -1,3 +1,5 @@
+import { getGlobalStats, updateGlobalStats } from './databaseService'
+
 export interface ConversionStats {
   totalFilesConverted: number;
   totalDownloads: number;
@@ -10,9 +12,10 @@ export interface ConversionStats {
   };
 }
 
+// Fallback to localStorage if Supabase is not available
 const STORAGE_KEY = "fileconverterbuddy_stats";
 
-export const getConversionStats = (): ConversionStats => {
+const getLocalStorageStats = (): ConversionStats => {
   const stored = localStorage.getItem(STORAGE_KEY);
   if (stored) {
     return JSON.parse(stored);
@@ -34,9 +37,37 @@ export const getConversionStats = (): ConversionStats => {
   };
 };
 
-export const trackConversion = (type: "images" | "videos" | "audio" | "productFeeds", fileCount: number = 1) => {
-  const stats = getConversionStats();
+export const getConversionStats = async (): Promise<ConversionStats> => {
+  try {
+    const dbStats = await getGlobalStats();
+    if (dbStats) {
+      return {
+        totalFilesConverted: dbStats.total_files_converted,
+        totalDownloads: dbStats.total_downloads,
+        lastConversionDate: dbStats.last_conversion_date,
+        conversionsByType: dbStats.conversions_by_type
+      };
+    }
+  } catch (error) {
+    console.warn('Failed to fetch from database, using localStorage:', error);
+  }
   
+  return getLocalStorageStats();
+};
+
+export const trackConversion = async (type: "images" | "videos" | "audio" | "productFeeds", fileCount: number = 1) => {
+  try {
+    // Try to update database first
+    const success = await updateGlobalStats(type, fileCount);
+    if (success) {
+      return await getConversionStats();
+    }
+  } catch (error) {
+    console.warn('Failed to update database, using localStorage:', error);
+  }
+  
+  // Fallback to localStorage
+  const stats = getLocalStorageStats();
   stats.totalFilesConverted += fileCount;
   stats.totalDownloads += fileCount;
   stats.lastConversionDate = new Date().toISOString();
@@ -46,8 +77,8 @@ export const trackConversion = (type: "images" | "videos" | "audio" | "productFe
   return stats;
 };
 
-export const getFormattedStats = () => {
-  const stats = getConversionStats();
+export const getFormattedStats = async () => {
+  const stats = await getConversionStats();
   
   const formatNumber = (num: number) => {
     if (num >= 1000000) {

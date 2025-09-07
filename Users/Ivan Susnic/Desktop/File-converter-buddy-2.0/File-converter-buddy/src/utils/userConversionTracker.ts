@@ -1,3 +1,5 @@
+import { getUserStats, createUserStats, updateUserStats } from './databaseService'
+
 export interface UserConversionStats {
   userId: string;
   totalConversions: number;
@@ -16,6 +18,7 @@ export interface UserConversionStats {
 const MONTHLY_LIMIT_FREE = 100;
 const MONTHLY_LIMIT_PREMIUM = 10000;
 
+// Fallback to localStorage if Supabase is not available
 export const getUserStorageKey = (userId: string) => `fileconverterbuddy_user_${userId}`;
 
 export const getUserConversionStats = (userId: string): UserConversionStats => {
