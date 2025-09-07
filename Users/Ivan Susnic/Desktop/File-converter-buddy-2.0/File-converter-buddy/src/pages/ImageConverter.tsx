@@ -14,7 +14,7 @@ import {
   getFileExtension, 
   generateConvertedFilename 
 } from '@/utils/imageConverter';
-import { downloadMultipleFiles } from '@/utils/zipDownload';
+import { downloadMultipleFilesAsZip } from '@/utils/zipDownload';
 import { toast } from 'sonner';
 import { Zap, Image as ImageIcon, Upload, Download, X, RefreshCw, Play, Video, Music, Package } from 'lucide-react';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
@@ -129,8 +129,21 @@ const ImageConverter = () => {
     }
     
     try {
-      await downloadMultipleFiles(completedFiles, selectedFormat);
-      toast.success(`Downloaded ${completedFiles.length} files as ZIP`);
+      // Prepare files for ZIP download with organized structure
+      const filesForZip = completedFiles.map(file => ({
+        name: generateConvertedFilename(file.file.name, getFileExtension(selectedFormat)),
+        blob: file.converted!,
+        folder: 'Converted Images'
+      }));
+      
+      // Create timestamped ZIP filename
+      const now = new Date();
+      const date = now.toISOString().slice(0, 10); // YYYY-MM-DD
+      const time = now.toTimeString().slice(0, 5); // HH:MM
+      const zipFilename = `FileConverterBuddyDownload - ${date} ${time}.zip`;
+      
+      await downloadMultipleFilesAsZip(filesForZip, zipFilename, true);
+      toast.success(`Downloaded ${completedFiles.length} images as organized ZIP`);
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Failed to download files. Please try again.');

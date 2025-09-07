@@ -23,6 +23,7 @@ import { AnimatedFileType } from '@/components/AnimatedFileType';
 import { VideoFormatSelector, VideoFormat } from '@/components/VideoFormatSelector';
 import { ConversionControls } from '@/components/ConversionControls';
 import { generateConvertedFilename } from '@/utils/imageConverter';
+import { downloadMultipleFilesAsZip } from '@/utils/zipDownload';
 
 interface ConversionFile {
   id: string;
@@ -129,14 +130,47 @@ const VideoConverter = () => {
     
     const newName = generateConvertedFilename(file.file.name, selectedFormat);
     
-    const url = URL.createObjectURL(file.converted);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = newName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    // Detect if we're on Mac/Safari for compatibility
+    const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    
+    if (isMac && isSafari) {
+      // Safari on Mac requires a different approach
+      try {
+        const url = URL.createObjectURL(file.converted);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = newName;
+        link.style.display = 'none';
+        
+        // Add to DOM temporarily
+        document.body.appendChild(link);
+        
+        // Trigger download
+        link.click();
+        
+        // Clean up
+        setTimeout(() => {
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }, 100);
+      } catch (error) {
+        // Fallback: try opening in new window
+        const url = URL.createObjectURL(file.converted);
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+    } else {
+      // Standard approach for other browsers
+      const url = URL.createObjectURL(file.converted);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = newName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
   }, [selectedFormat]);
 
   const handleDownloadAll = useCallback(async () => {
@@ -149,16 +183,26 @@ const VideoConverter = () => {
     }
     
     try {
-      // Download multiple files individually since we don't have ZIP functionality for videos
-      completedFiles.forEach(file => {
-        handleDownloadFile(file);
-      });
-      toast.success(`Downloaded ${completedFiles.length} files`);
+      // Prepare files for ZIP download with organized structure
+      const filesForZip = completedFiles.map(file => ({
+        name: generateConvertedFilename(file.file.name, selectedFormat),
+        blob: file.converted!,
+        folder: 'Converted Videos'
+      }));
+      
+      // Create timestamped ZIP filename
+      const now = new Date();
+      const date = now.toISOString().slice(0, 10); // YYYY-MM-DD
+      const time = now.toTimeString().slice(0, 5); // HH:MM
+      const zipFilename = `FileConverterBuddyDownload - ${date} ${time}.zip`;
+      
+      await downloadMultipleFilesAsZip(filesForZip, zipFilename, true);
+      toast.success(`Downloaded ${completedFiles.length} videos as organized ZIP`);
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Failed to download files. Please try again.');
     }
-  }, [files, handleDownloadFile]);
+  }, [files, selectedFormat, handleDownloadFile]);
 
   const handleReset = useCallback(() => {
     files.forEach(file => {
