@@ -184,16 +184,8 @@ const Home = () => {
                       <p className="text-xs text-muted-foreground mb-2">All Users</p>
                       <div className="space-y-2">
                         <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Total Downloads</span>
-                          <span className="text-sm font-medium">{conversionStats.totalDownloads}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Files Converted</span>
-                          <span className="text-sm font-medium">{conversionStats.totalFiles}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Last Activity</span>
-                          <span className="text-sm font-medium">{conversionStats.lastConversion}</span>
+                          <span className="text-sm text-muted-foreground">Files Downloaded</span>
+                          <span className="text-lg font-bold">{conversionStats.totalDownloads}</span>
                         </div>
                       </div>
                     </div>
@@ -201,16 +193,8 @@ const Home = () => {
                 ) : (
                   <>
                     <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Total Downloads</span>
-                      <span className="text-sm font-medium">{conversionStats.totalDownloads}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Files Converted</span>
-                      <span className="text-sm font-medium">{conversionStats.totalFiles}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Last Activity</span>
-                      <span className="text-sm font-medium">{conversionStats.lastConversion}</span>
+                      <span className="text-sm text-muted-foreground">Files Downloaded</span>
+                      <span className="text-lg font-bold">{conversionStats.totalDownloads}</span>
                     </div>
                   </>
                 )}
