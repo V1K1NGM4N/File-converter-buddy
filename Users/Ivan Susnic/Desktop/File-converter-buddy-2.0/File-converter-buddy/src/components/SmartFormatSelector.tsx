@@ -39,10 +39,10 @@ export const SmartFormatSelector = ({
   const compatibleFormats = getCompatibleFormats(fileTypeInfo);
   
   // Group formats into main (most common) and other formats
-  // Only show "More" dropdown if there are 4 or more total formats
-  const shouldShowMore = compatibleFormats.length >= 4;
-  const mainFormats = shouldShowMore ? compatibleFormats.slice(0, 2) : compatibleFormats;
-  const otherFormats = shouldShowMore ? compatibleFormats.slice(2) : [];
+  // Show 3 main formats, then "More" dropdown for the rest
+  const shouldShowMore = compatibleFormats.length > 3;
+  const mainFormats = shouldShowMore ? compatibleFormats.slice(0, 3) : compatibleFormats;
+  const otherFormats = shouldShowMore ? compatibleFormats.slice(3) : [];
   
   // Get current file extension for display
   const currentExtension = fileTypeInfo.extensions[0]?.toUpperCase() || 'Unknown';
@@ -77,12 +77,7 @@ export const SmartFormatSelector = ({
       </div>
       
       {/* Format Selection */}
-      <div className={`grid grid-cols-1 gap-3 ${
-        mainFormats.length === 1 ? 'md:grid-cols-1' :
-        mainFormats.length === 2 ? 'md:grid-cols-2' :
-        mainFormats.length === 3 ? 'md:grid-cols-3' :
-        'md:grid-cols-3'
-      }`}>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {mainFormats.map((format) => (
           <Button
             key={format}
@@ -101,14 +96,17 @@ export const SmartFormatSelector = ({
             </span>
           </Button>
         ))}
-        
-        {otherFormats.length > 0 && (
+      </div>
+      
+      {/* More Formats Dropdown - Only show if there are additional formats */}
+      {otherFormats.length > 0 && (
+        <div className="mt-3">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant={selectedOtherFormat ? 'hero' : 'secondary'}
                 className={cn(
-                  "h-auto p-4 flex flex-col items-center gap-2 text-left",
+                  "h-auto p-4 flex flex-col items-center gap-2 text-left w-full",
                   selectedOtherFormat && "ring-2 ring-primary ring-offset-2 ring-offset-background"
                 )}
               >
@@ -133,8 +131,8 @@ export const SmartFormatSelector = ({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
-      </div>
+        </div>
+      )}
       
       {/* Conversion Info */}
       <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
