@@ -160,7 +160,9 @@ const getFileExtension = (filename: string): string => {
 // Check if format conversion is needed
 export const needsConversion = (file: File, targetFormat: VideoFormat): boolean => {
   const currentExtension = getFileExtension(file.name).toLowerCase();
-  return currentExtension !== targetFormat;
+  const needsConv = currentExtension !== targetFormat;
+  console.log(`needsConversion: ${file.name} (${currentExtension}) -> ${targetFormat} = ${needsConv}`);
+  return needsConv;
 };
 
 // Get supported input formats

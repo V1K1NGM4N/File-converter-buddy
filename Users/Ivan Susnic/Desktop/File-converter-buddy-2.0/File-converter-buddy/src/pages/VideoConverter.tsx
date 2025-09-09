@@ -43,31 +43,18 @@ interface ConversionFile {
 const VideoConverter = () => {
   const navigate = useNavigate();
   const { files, updateFiles, clearFiles } = useFilePersistence('videoConverterFiles');
-  const [selectedFormat, setSelectedFormat] = useState<string>('mp4');
+  const [selectedFormat, setSelectedFormat] = useState<string>('avi');
   const [isConverting, setIsConverting] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
 
 
   const handleFilesSelected = useCallback((newFiles: File[]) => {
-    // Check if any files are already in the target format
-    const alreadyInTargetFormat = newFiles.filter(file => {
-      return !needsConversion(file, selectedFormat as VideoFormat);
-    });
+    // Debug logging
+    console.log('Selected format:', selectedFormat);
+    console.log('New files:', newFiles.map(f => ({ name: f.name, type: f.type })));
     
-    if (alreadyInTargetFormat.length > 0) {
-      toast.warning(`${alreadyInTargetFormat.length} file(s) are already in ${selectedFormat.toUpperCase()} format and will be skipped`);
-    }
-    
-    const filesToConvert = newFiles.filter(file => {
-      return needsConversion(file, selectedFormat as VideoFormat);
-    });
-    
-    if (filesToConvert.length === 0) {
-      toast.info('No files need conversion - all files are already in the target format');
-      return;
-    }
-    
-    const conversionFiles: ConversionFile[] = filesToConvert.map(file => ({
+    // Always add files first, then let user choose format
+    const conversionFiles: ConversionFile[] = newFiles.map(file => ({
       id: crypto.randomUUID(),
       file,
       preview: '', // Will be set by the persistence hook
@@ -76,8 +63,8 @@ const VideoConverter = () => {
     }));
     
     updateFiles([...files, ...conversionFiles]);
-    toast.success(`Added ${filesToConvert.length} video(s) for conversion`);
-  }, [files, updateFiles, selectedFormat]);
+    toast.success(`Added ${newFiles.length} video(s) for conversion`);
+  }, [files, updateFiles]);
 
   const handleFileUpload = () => {
     const input = document.createElement('input');
@@ -102,16 +89,38 @@ const VideoConverter = () => {
   const handleStartConversion = useCallback(async () => {
     if (files.length === 0) return;
     
+    // Check if any files are already in the target format
+    const alreadyInTargetFormat = files.filter(file => {
+      const needsConv = needsConversion(file.file, selectedFormat as VideoFormat);
+      console.log(`File ${file.file.name}: needs conversion = ${needsConv}`);
+      return !needsConv;
+    });
+    
+    if (alreadyInTargetFormat.length > 0) {
+      toast.warning(`${alreadyInTargetFormat.length} file(s) are already in ${selectedFormat.toUpperCase()} format and will be skipped`);
+    }
+    
+    const filesToConvert = files.filter(file => {
+      return needsConversion(file.file, selectedFormat as VideoFormat);
+    });
+    
+    console.log('Files to convert:', filesToConvert.length);
+    
+    if (filesToConvert.length === 0) {
+      toast.info('No files need conversion - all files are already in the target format');
+      setIsConverting(false);
+      return;
+    }
+    
     setIsConverting(true);
     setOverallProgress(0);
     
-    // Simulate conversion process (in real app, this would use FFmpeg.js or similar)
     try {
-      const totalFiles = files.length;
+      const totalFiles = filesToConvert.length;
       let completedFiles = 0;
       
       let currentFiles = [...files];
-      const conversions = files.map(async (file) => {
+      const conversions = filesToConvert.map(async (file) => {
         currentFiles = currentFiles.map(f => 
           f.id === file.id ? { ...f, status: 'converting', progress: 0 } : f
         );
