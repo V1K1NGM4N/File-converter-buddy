@@ -512,14 +512,29 @@ const VideoConverter = () => {
                       {isConverting ? 'Converting...' : 'Start Conversion'}
                     </Button>
                     {files.some(f => f.status === 'completed') && (
-                      <Button
-                        onClick={handleDownloadAll}
-                        className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
-                        variant="default"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download All
-                      </Button>
+                      <>
+                        <SignedIn>
+                          <Button
+                            onClick={handleDownloadAll}
+                            className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
+                            variant="default"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download All
+                          </Button>
+                        </SignedIn>
+                        <SignedOut>
+                          <SignInButton mode="modal">
+                            <Button
+                              className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
+                              variant="default"
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download All
+                            </Button>
+                          </SignInButton>
+                        </SignedOut>
+                      </>
                     )}
                     <Button variant="outline" onClick={handleReset}>
                       <X className="h-4 w-4 mr-2" />
@@ -600,15 +615,29 @@ const VideoConverter = () => {
                           → .{selectedFormat}
                         </span>
                         
-                        <Button
-                          onClick={() => handleDownloadFile(file)}
-                          disabled={file.status !== 'completed' || !file.converted}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
+                        <SignedIn>
+                          <Button
+                            onClick={() => handleDownloadFile(file)}
+                            disabled={file.status !== 'completed' || !file.converted}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                          </Button>
+                        </SignedIn>
+                        <SignedOut>
+                          <SignInButton mode="modal">
+                            <Button
+                              disabled={file.status !== 'completed' || !file.converted}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </Button>
+                          </SignInButton>
+                        </SignedOut>
                       </div>
                       
                       {file.status === 'error' && (
