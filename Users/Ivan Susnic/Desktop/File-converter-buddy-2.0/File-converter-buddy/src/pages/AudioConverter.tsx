@@ -545,15 +545,32 @@ const AudioConverter = () => {
               {files.map((file) => (
                 <Card key={file.id} className="overflow-hidden hover:shadow-glow transition-all duration-300 bg-gradient-card shadow-card border-border/50">
                   <CardContent className="p-4">
-                    <div className="aspect-video bg-muted rounded-lg mb-4 relative overflow-hidden">
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Music className="h-16 w-16 text-muted-foreground/30" />
+                    <div className="aspect-video bg-gradient-to-br from-green-500/10 to-blue-500/10 rounded-lg mb-4 relative overflow-hidden border border-green-500/20">
+                      {/* Audio Waveform Visualization */}
+                      <div className="w-full h-full flex items-center justify-center p-4">
+                        <div className="flex items-end space-x-1 h-20">
+                          {Array.from({ length: 20 }, (_, i) => (
+                            <div
+                              key={i}
+                              className="bg-gradient-to-t from-green-500 to-blue-500 rounded-full opacity-60 animate-waveform"
+                              style={{
+                                width: '3px',
+                                height: `${Math.random() * 60 + 20}px`,
+                                animationDelay: `${i * 0.1}s`
+                              }}
+                            />
+                          ))}
+                        </div>
                       </div>
-                      <audio
-                        src={file.preview}
-                        controls
-                        className="absolute bottom-0 left-0 right-0 w-full"
-                      />
+                      
+                      {/* Audio Controls */}
+                      <div className="absolute bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm p-2">
+                        <audio
+                          src={file.preview}
+                          controls
+                          className="w-full h-8"
+                        />
+                      </div>
                       
                       {/* Status Overlay */}
                       <div className="absolute top-2 left-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded px-2 py-1">
@@ -561,6 +578,11 @@ const AudioConverter = () => {
                         <span className="text-xs font-medium">
                           {file.status}
                         </span>
+                      </div>
+                      
+                      {/* Audio Icon Overlay */}
+                      <div className="absolute top-2 right-2 p-2 bg-background/80 backdrop-blur-sm rounded-full">
+                        <Music className="h-4 w-4 text-green-500" />
                       </div>
                     </div>
                     
