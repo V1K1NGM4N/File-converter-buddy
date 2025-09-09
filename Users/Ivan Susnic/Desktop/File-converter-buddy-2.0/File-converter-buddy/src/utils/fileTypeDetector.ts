@@ -10,76 +10,48 @@ export interface FileTypeInfo {
 
 // File type definitions with compatible conversion formats
 export const FILE_TYPES: Record<string, FileTypeInfo> = {
-  // Image formats
+  // Image formats - only reliable formats that work consistently
   'image/jpeg': {
     category: 'image',
     mimeType: 'image/jpeg',
     extensions: ['jpg', 'jpeg'],
-    compatibleFormats: ['png', 'webp', 'tiff', 'gif', 'bmp', 'svg', 'ico', 'heic', 'avif'],
+    compatibleFormats: ['png', 'webp'],
     description: 'JPEG image file'
   },
   'image/png': {
     category: 'image',
     mimeType: 'image/png',
     extensions: ['png'],
-    compatibleFormats: ['jpeg', 'webp', 'tiff', 'gif', 'bmp', 'svg', 'ico', 'heic', 'avif'],
+    compatibleFormats: ['jpeg', 'webp'],
     description: 'PNG image file'
   },
   'image/webp': {
     category: 'image',
     mimeType: 'image/webp',
     extensions: ['webp'],
-    compatibleFormats: ['jpeg', 'png', 'tiff', 'gif', 'bmp', 'svg', 'ico', 'heic', 'avif'],
+    compatibleFormats: ['jpeg', 'png'],
     description: 'WebP image file'
-  },
-  'image/tiff': {
-    category: 'image',
-    mimeType: 'image/tiff',
-    extensions: ['tiff', 'tif'],
-    compatibleFormats: ['jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'ico', 'heic', 'avif'],
-    description: 'TIFF image file'
   },
   'image/gif': {
     category: 'image',
     mimeType: 'image/gif',
     extensions: ['gif'],
-    compatibleFormats: ['jpeg', 'png', 'webp', 'tiff', 'bmp', 'svg', 'ico', 'heic', 'avif'],
+    compatibleFormats: ['jpeg', 'png', 'webp'],
     description: 'GIF image file'
   },
   'image/bmp': {
     category: 'image',
     mimeType: 'image/bmp',
     extensions: ['bmp'],
-    compatibleFormats: ['jpeg', 'png', 'webp', 'tiff', 'gif', 'svg', 'ico', 'heic', 'avif'],
+    compatibleFormats: ['jpeg', 'png', 'webp'],
     description: 'BMP image file'
   },
   'image/svg+xml': {
     category: 'image',
     mimeType: 'image/svg+xml',
     extensions: ['svg'],
-    compatibleFormats: ['jpeg', 'png', 'webp', 'tiff', 'gif', 'bmp', 'ico', 'heic', 'avif'],
+    compatibleFormats: ['jpeg', 'png', 'webp'],
     description: 'SVG vector image file'
-  },
-  'image/x-icon': {
-    category: 'image',
-    mimeType: 'image/x-icon',
-    extensions: ['ico'],
-    compatibleFormats: ['jpeg', 'png', 'webp', 'tiff', 'gif', 'bmp', 'svg', 'heic', 'avif'],
-    description: 'ICO icon file'
-  },
-  'image/heic': {
-    category: 'image',
-    mimeType: 'image/heic',
-    extensions: ['heic', 'heif'],
-    compatibleFormats: ['jpeg', 'png', 'webp', 'tiff', 'gif', 'bmp', 'svg', 'ico', 'avif'],
-    description: 'HEIC image file'
-  },
-  'image/avif': {
-    category: 'image',
-    mimeType: 'image/avif',
-    extensions: ['avif'],
-    compatibleFormats: ['jpeg', 'png', 'webp', 'tiff', 'gif', 'bmp', 'svg', 'ico', 'heic'],
-    description: 'AVIF image file'
   },
 
   // Video formats - Can be converted to other video formats or audio formats (for audio extraction)

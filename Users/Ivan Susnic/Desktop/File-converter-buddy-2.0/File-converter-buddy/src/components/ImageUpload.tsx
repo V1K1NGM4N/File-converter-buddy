@@ -34,15 +34,8 @@ const mainFormats: Array<{ value: ImageFormat; label: string; description: strin
   }
 ];
 
-const otherFormats: Array<{ value: ImageFormat; label: string }> = [
-  { value: 'gif', label: 'GIF' },
-  { value: 'bmp', label: 'BMP' },
-  { value: 'tiff', label: 'TIFF' },
-  { value: 'svg', label: 'SVG' },
-  { value: 'ico', label: 'ICO' },
-  { value: 'heic', label: 'HEIC' },
-  { value: 'avif', label: 'AVIF' }
-];
+// No other formats - only reliable formats that work consistently
+const otherFormats: Array<{ value: ImageFormat; label: string }> = [];
 
 export const ImageUpload = ({ 
   onFilesSelected, 

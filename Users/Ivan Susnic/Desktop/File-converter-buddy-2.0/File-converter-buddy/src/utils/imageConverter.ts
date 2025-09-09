@@ -1,12 +1,6 @@
-export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'tiff' | 'gif' | 'bmp' | 'svg' | 'ico' | 'heic' | 'avif';
+export type ImageFormat = 'png' | 'jpeg' | 'webp';
 
-// Import heic2any for HEIC support
-import heic2any from 'heic2any';
-
-// Ensure heic2any is available
-if (typeof window !== 'undefined' && !(window as any).heic2any) {
-  (window as any).heic2any = heic2any;
-}
+// Reliable image converter - only supports formats that work consistently
 
 
 
@@ -26,31 +20,15 @@ export const convertImage = async (
   format: ImageFormat, 
   quality: number = 0.9
 ): Promise<Blob> => {
-  console.log(`Starting image conversion: ${file.name} (${file.type}) to ${format}`);
+  console.log(`Starting reliable image conversion: ${file.name} (${file.type}) to ${format}`);
   
-  // Handle HEIC files specially
-  if (file.type === 'image/heic' || file.type === 'image/heif' || 
-      file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-    console.log('Detected HEIC/HEIF file, using HEIC converter');
-    try {
-      return await convertHEICImage(file, format, quality);
-    } catch (error) {
-      console.error('HEIC conversion failed:', error);
-      throw error;
-    }
+  // Check if file is already in target format
+  if (file.type === getMimeType(format)) {
+    console.log('File already in target format, returning original');
+    return file;
   }
   
-  // Handle AVIF files (limited browser support)
-  if (file.type === 'image/avif' || file.name.toLowerCase().endsWith('.avif')) {
-    return convertAVIFImage(file, format, quality);
-  }
-  
-  // Handle SVG files specially
-  if (file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg')) {
-    return convertSVGImage(file, format, quality);
-  }
-  
-  // Standard image conversion for other formats
+  // Standard image conversion using canvas (reliable approach)
   return new Promise((resolve, reject) => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
@@ -72,6 +50,7 @@ export const convertImage = async (
       canvas.toBlob(
         (blob) => {
           if (blob) {
+            console.log(`Conversion successful: ${blob.size} bytes, type: ${blob.type}`);
             resolve(blob);
           } else {
             reject(new Error('Failed to convert image'));
@@ -82,152 +61,14 @@ export const convertImage = async (
       );
     };
     
-    img.onerror = () => reject(new Error('Failed to load image'));
+    img.onerror = () => reject(new Error('Failed to load image - browser may not support this format'));
     img.src = URL.createObjectURL(file);
   });
 };
 
-// Convert HEIC files using heic2any library
-const convertHEICImage = async (
-  file: File, 
-  format: ImageFormat, 
-  quality: number = 0.9
-): Promise<Blob> => {
-  try {
-    console.log(`Converting HEIC file: ${file.name} to ${format}`);
-    console.log(`File size: ${file.size} bytes, File type: ${file.type}`);
-    
-    // Validate file
-    if (!file || file.size === 0) {
-      throw new Error('Invalid HEIC file');
-    }
-    
-    // Prepare conversion options
-    const conversionOptions: any = {
-      blob: file,
-      multiple: false
-    };
-    
-    // Set output type based on target format
-    if (format === 'jpeg') {
-      conversionOptions.toType = 'image/jpeg';
-      conversionOptions.quality = quality;
-    } else if (format === 'png') {
-      conversionOptions.toType = 'image/png';
-    } else if (format === 'gif') {
-      conversionOptions.toType = 'image/gif';
-    } else {
-      // For other formats, convert to PNG first
-      conversionOptions.toType = 'image/png';
-    }
-    
-    console.log('HEIC conversion options:', conversionOptions);
-    
-    const result = await heic2any(conversionOptions);
-    
-    console.log('HEIC conversion result:', result);
-    
-    // heic2any returns a single blob or array of blobs
-    const blob = Array.isArray(result) ? result[0] : result;
-    
-    if (!blob) {
-      throw new Error('HEIC conversion returned no data');
-    }
-    
-    console.log(`HEIC conversion successful: ${blob.size} bytes, type: ${blob.type}`);
-    return blob;
-    
-  } catch (error) {
-    console.error('HEIC conversion error:', error);
-    throw new Error(`Failed to convert HEIC image: ${error instanceof Error ? error.message : 'Unknown error'}`);
-  }
-};
+// Reliable image conversion - only supports formats that work consistently
 
-// Convert AVIF files (fallback for browsers with limited AVIF support)
-const convertAVIFImage = async (
-  file: File, 
-  format: ImageFormat, 
-  quality: number = 0.9
-): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    
-    img.onload = () => {
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      
-      if (!ctx) {
-        reject(new Error('Could not get canvas context'));
-        return;
-      }
-      
-      ctx.drawImage(img, 0, 0);
-      
-      const mimeType = getMimeType(format);
-      
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Failed to convert AVIF image'));
-          }
-        },
-        mimeType,
-        format === 'jpeg' ? quality : undefined
-      );
-    };
-    
-    img.onerror = () => reject(new Error('Failed to load AVIF image - browser may not support AVIF format'));
-    img.src = URL.createObjectURL(file);
-  });
-};
-
-// Convert SVG files
-const convertSVGImage = async (
-  file: File, 
-  format: ImageFormat, 
-  quality: number = 0.9
-): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    
-    img.onload = () => {
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      
-      if (!ctx) {
-        reject(new Error('Could not get canvas context'));
-        return;
-      }
-      
-      ctx.drawImage(img, 0, 0);
-      
-      const mimeType = getMimeType(format);
-      
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            resolve(blob);
-          } else {
-            reject(new Error('Failed to convert SVG image'));
-          }
-        },
-        mimeType,
-        format === 'jpeg' ? quality : undefined
-      );
-    };
-    
-    img.onerror = () => reject(new Error('Failed to load SVG image'));
-    img.src = URL.createObjectURL(file);
-  });
-};
-
-// Get proper MIME type for format
+// Get proper MIME type for format (only reliable formats)
 const getMimeType = (format: ImageFormat): string => {
   switch (format) {
     case 'jpeg':
@@ -236,20 +77,6 @@ const getMimeType = (format: ImageFormat): string => {
       return 'image/png';
     case 'webp':
       return 'image/webp';
-    case 'tiff':
-      return 'image/tiff';
-    case 'gif':
-      return 'image/gif';
-    case 'bmp':
-      return 'image/bmp';
-    case 'svg':
-      return 'image/svg+xml';
-    case 'ico':
-      return 'image/x-icon';
-    case 'heic':
-      return 'image/heic';
-    case 'avif':
-      return 'image/avif';
     default:
       return 'image/png';
   }
@@ -311,20 +138,6 @@ export const getFileExtension = (format: ImageFormat): string => {
       return 'png';
     case 'webp':
       return 'webp';
-    case 'tiff':
-      return 'tiff';
-    case 'gif':
-      return 'gif';
-    case 'bmp':
-      return 'bmp';
-    case 'svg':
-      return 'svg';
-    case 'ico':
-      return 'ico';
-    case 'heic':
-      return 'heic';
-    case 'avif':
-      return 'avif';
     default:
       return format;
   }

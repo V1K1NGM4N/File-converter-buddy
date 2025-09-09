@@ -52,7 +52,7 @@ const ImageConverter = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
-    input.accept = 'image/*,.heic,.heif';
+    input.accept = 'image/jpeg,image/png,image/webp,image/gif,image/bmp,image/svg+xml';
     input.onchange = (e) => {
       const files = Array.from((e.target as HTMLInputElement).files || []);
       handleFilesSelected(files);
@@ -374,7 +374,7 @@ const ImageConverter = () => {
               <input
                 type="file"
                 multiple
-                accept="image/*,.heic,.heif"
+                accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/svg+xml"
                 onChange={(e) => {
                   const files = Array.from(e.target.files || []);
                   handleFilesSelected(files);
@@ -396,7 +396,7 @@ const ImageConverter = () => {
                     Drag and drop your image files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports PNG, JPEG, WebP, TIFF, BMP, GIF, HEIC, AVIF and other image formats
+                    Supports PNG, JPEG, WebP, GIF, BMP, SVG formats (reliable conversion)
                   </p>
                 </div>
                 
