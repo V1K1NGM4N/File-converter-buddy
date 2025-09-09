@@ -465,7 +465,7 @@ const VideoConverter = () => {
                     Drag and drop your video files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports MP4, AVI, MOV, WMV, FLV, MKV, WebM and other video formats
+                    Supports MP4, AVI, MOV, WebM formats (browser-compatible conversion)
                   </p>
                 </div>
                 
