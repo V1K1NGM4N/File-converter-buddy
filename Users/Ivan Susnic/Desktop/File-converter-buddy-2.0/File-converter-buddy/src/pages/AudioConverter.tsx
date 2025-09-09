@@ -41,30 +41,17 @@ interface ConversionFile {
 const AudioConverter = () => {
   const navigate = useNavigate();
   const { files, updateFiles, clearFiles } = useFilePersistence('audioConverterFiles');
-  const [selectedFormat, setSelectedFormat] = useState<string>('mp3');
+  const [selectedFormat, setSelectedFormat] = useState<string>('wav');
   const [isConverting, setIsConverting] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
 
   const handleFilesSelected = useCallback((newFiles: File[]) => {
-    // Check if any files are already in the target format
-    const alreadyInTargetFormat = newFiles.filter(file => {
-      return !needsConversion(file, selectedFormat as AudioFormat);
-    });
+    // Debug logging
+    console.log('Selected format:', selectedFormat);
+    console.log('New files:', newFiles.map(f => ({ name: f.name, type: f.type })));
     
-    if (alreadyInTargetFormat.length > 0) {
-      toast.warning(`${alreadyInTargetFormat.length} file(s) are already in ${selectedFormat.toUpperCase()} format and will be skipped`);
-    }
-    
-    const filesToConvert = newFiles.filter(file => {
-      return needsConversion(file, selectedFormat as AudioFormat);
-    });
-    
-    if (filesToConvert.length === 0) {
-      toast.info('No files need conversion - all files are already in the target format');
-      return;
-    }
-    
-    const conversionFiles: ConversionFile[] = filesToConvert.map(file => ({
+    // Always add files first, then let user choose format
+    const conversionFiles: ConversionFile[] = newFiles.map(file => ({
       id: crypto.randomUUID(),
       file,
       preview: '', // Will be set by the persistence hook
@@ -73,8 +60,8 @@ const AudioConverter = () => {
     }));
     
     updateFiles([...files, ...conversionFiles]);
-    toast.success(`Added ${filesToConvert.length} audio file(s) for conversion`);
-  }, [files, updateFiles, selectedFormat]);
+    toast.success(`Added ${newFiles.length} audio file(s) for conversion`);
+  }, [files, updateFiles]);
 
   const handleFileUpload = () => {
     const input = document.createElement('input');
@@ -99,16 +86,38 @@ const AudioConverter = () => {
   const handleStartConversion = useCallback(async () => {
     if (files.length === 0) return;
     
+    // Check if any files are already in the target format
+    const alreadyInTargetFormat = files.filter(file => {
+      const needsConv = needsConversion(file.file, selectedFormat as AudioFormat);
+      console.log(`File ${file.file.name}: needs conversion = ${needsConv}`);
+      return !needsConv;
+    });
+    
+    if (alreadyInTargetFormat.length > 0) {
+      toast.warning(`${alreadyInTargetFormat.length} file(s) are already in ${selectedFormat.toUpperCase()} format and will be skipped`);
+    }
+    
+    const filesToConvert = files.filter(file => {
+      return needsConversion(file.file, selectedFormat as AudioFormat);
+    });
+    
+    console.log('Files to convert:', filesToConvert.length);
+    
+    if (filesToConvert.length === 0) {
+      toast.info('No files need conversion - all files are already in the target format');
+      setIsConverting(false);
+      return;
+    }
+    
     setIsConverting(true);
     setOverallProgress(0);
     
-    // Simulate conversion process (in real app, this would use Web Audio API or similar)
     try {
-      const totalFiles = files.length;
+      const totalFiles = filesToConvert.length;
       let completedFiles = 0;
       
       let currentFiles = [...files];
-      const conversions = files.map(async (file) => {
+      const conversions = filesToConvert.map(async (file) => {
         currentFiles = currentFiles.map(f => 
           f.id === file.id ? { ...f, status: 'converting', progress: 0 } : f
         );
@@ -439,7 +448,7 @@ const AudioConverter = () => {
                     Drag and drop your audio files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports MP3, WAV, FLAC, AAC, OGG, WMA, M4A, AIFF and other audio formats
+                    Supports MP3, WAV, AAC, OGG, FLAC, M4A, WMA formats (browser-compatible conversion)
                   </p>
                 </div>
                 
@@ -486,14 +495,29 @@ const AudioConverter = () => {
                       {isConverting ? 'Converting...' : 'Start Conversion'}
                     </Button>
                     {files.some(f => f.status === 'completed') && (
-                      <Button
-                        onClick={handleDownloadAll}
-                        className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
-                        variant="default"
-                      >
-                        <Download className="h-4 w-4 mr-2" />
-                        Download All
-                      </Button>
+                      <>
+                        <SignedIn>
+                          <Button
+                            onClick={handleDownloadAll}
+                            className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
+                            variant="default"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download All
+                          </Button>
+                        </SignedIn>
+                        <SignedOut>
+                          <SignInButton mode="modal">
+                            <Button
+                              className="hover:shadow-glow bg-green-600 hover:bg-green-700 text-white border-green-600"
+                              variant="default"
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download All
+                            </Button>
+                          </SignInButton>
+                        </SignedOut>
+                      </>
                     )}
                     <Button variant="outline" onClick={handleReset}>
                       <X className="h-4 w-4 mr-2" />
@@ -571,15 +595,29 @@ const AudioConverter = () => {
                           → .{selectedFormat}
                         </span>
                         
-                        <Button
-                          onClick={() => handleDownloadFile(file)}
-                          disabled={file.status !== 'completed' || !file.converted}
-                          variant="outline"
-                          size="sm"
-                        >
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
+                        <SignedIn>
+                          <Button
+                            onClick={() => handleDownloadFile(file)}
+                            disabled={file.status !== 'completed' || !file.converted}
+                            variant="outline"
+                            size="sm"
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            Download
+                          </Button>
+                        </SignedIn>
+                        <SignedOut>
+                          <SignInButton mode="modal">
+                            <Button
+                              disabled={file.status !== 'completed' || !file.converted}
+                              variant="outline"
+                              size="sm"
+                            >
+                              <Download className="h-4 w-4 mr-2" />
+                              Download
+                            </Button>
+                          </SignInButton>
+                        </SignedOut>
                       </div>
                       
                       {file.status === 'error' && (
