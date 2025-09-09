@@ -3,7 +3,7 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 let ffmpeg: FFmpeg | null = null;
 
-export type VideoFormat = 'mp4' | 'avi' | 'mov' | 'wmv' | 'flv' | 'webm' | 'mkv' | '3gp';
+export type VideoFormat = 'mp4' | 'avi' | 'mov' | 'webm';
 
 export interface VideoConversionOptions {
   quality?: 'low' | 'medium' | 'high';
@@ -151,10 +151,10 @@ const buildFFmpegCommand = (
       command.push('-c:v', 'libvpx-vp9', '-c:a', 'libopus');
       break;
     case 'avi':
-      command.push('-c:v', 'libx264', '-c:a', 'mp3');
+      command.push('-c:v', 'libx264', '-c:a', 'aac');
       break;
     case 'mov':
-      command.push('-c:v', 'libx264', '-c:a', 'aac');
+      command.push('-c:v', 'libx264', '-c:a', 'aac', '-f', 'mov');
       break;
     case 'wmv':
       command.push('-c:v', 'wmv2', '-c:a', 'wmav2');
@@ -187,12 +187,12 @@ export const needsConversion = (file: File, targetFormat: VideoFormat): boolean 
   return needsConv;
 };
 
-// Get supported input formats
+// Get supported input formats - Limited to reliable formats
 export const getSupportedInputFormats = (): string[] => {
-  return ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', '3gp', 'm4v', 'mpg', 'mpeg'];
+  return ['mp4', 'avi', 'mov', 'webm'];
 };
 
-// Get supported output formats
+// Get supported output formats - Limited to reliable formats
 export const getSupportedOutputFormats = (): VideoFormat[] => {
-  return ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', '3gp'];
+  return ['mp4', 'avi', 'mov', 'webm'];
 };

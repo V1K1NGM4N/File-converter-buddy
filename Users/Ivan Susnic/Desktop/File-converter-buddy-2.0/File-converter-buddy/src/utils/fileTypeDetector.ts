@@ -82,26 +82,26 @@ export const FILE_TYPES: Record<string, FileTypeInfo> = {
     description: 'AVIF image file'
   },
 
-  // Video formats
+  // Video formats - Limited to reliable formats that work with FFmpeg.js
   'video/mp4': {
     category: 'video',
     mimeType: 'video/mp4',
     extensions: ['mp4'],
-    compatibleFormats: ['avi', 'mov', 'wmv', 'flv', 'webm', 'mkv', '3gp', 'ogv', 'm4v', 'ts', 'vob', 'asf', 'rm', 'rmvb', 'swf'],
+    compatibleFormats: ['webm', 'avi', 'mov'],
     description: 'MP4 video file'
   },
   'video/avi': {
     category: 'video',
     mimeType: 'video/avi',
     extensions: ['avi'],
-    compatibleFormats: ['mp4', 'mov', 'wmv', 'flv', 'webm', 'mkv', '3gp', 'ogv', 'm4v', 'ts', 'vob', 'asf', 'rm', 'rmvb', 'swf'],
+    compatibleFormats: ['mp4', 'webm', 'mov'],
     description: 'AVI video file'
   },
   'video/quicktime': {
     category: 'video',
     mimeType: 'video/quicktime',
     extensions: ['mov'],
-    compatibleFormats: ['mp4', 'avi', 'wmv', 'flv', 'webm', 'mkv', '3gp', 'ogv', 'm4v', 'ts', 'vob', 'asf', 'rm', 'rmvb', 'swf'],
+    compatibleFormats: ['mp4', 'webm', 'avi'],
     description: 'QuickTime video file'
   },
   'video/x-ms-wmv': {
@@ -122,7 +122,7 @@ export const FILE_TYPES: Record<string, FileTypeInfo> = {
     category: 'video',
     mimeType: 'video/webm',
     extensions: ['webm'],
-    compatibleFormats: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', '3gp', 'ogv', 'm4v', 'ts', 'vob', 'asf', 'rm', 'rmvb', 'swf'],
+    compatibleFormats: ['mp4', 'avi', 'mov'],
     description: 'WebM video file'
   },
   'video/x-matroska': {
