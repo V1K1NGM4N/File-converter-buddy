@@ -3,6 +3,11 @@ export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'tiff' | 'gif' | 'bmp' | 'sv
 // Import heic2any for HEIC support
 import heic2any from 'heic2any';
 
+// Ensure heic2any is available
+if (typeof window !== 'undefined' && !(window as any).heic2any) {
+  (window as any).heic2any = heic2any;
+}
+
 
 
 
@@ -21,10 +26,18 @@ export const convertImage = async (
   format: ImageFormat, 
   quality: number = 0.9
 ): Promise<Blob> => {
+  console.log(`Starting image conversion: ${file.name} (${file.type}) to ${format}`);
+  
   // Handle HEIC files specially
   if (file.type === 'image/heic' || file.type === 'image/heif' || 
       file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-    return convertHEICImage(file, format, quality);
+    console.log('Detected HEIC/HEIF file, using HEIC converter');
+    try {
+      return await convertHEICImage(file, format, quality);
+    } catch (error) {
+      console.error('HEIC conversion failed:', error);
+      throw error;
+    }
   }
   
   // Handle AVIF files (limited browser support)
@@ -81,17 +94,51 @@ const convertHEICImage = async (
   quality: number = 0.9
 ): Promise<Blob> => {
   try {
-    const result = await heic2any({
+    console.log(`Converting HEIC file: ${file.name} to ${format}`);
+    console.log(`File size: ${file.size} bytes, File type: ${file.type}`);
+    
+    // Validate file
+    if (!file || file.size === 0) {
+      throw new Error('Invalid HEIC file');
+    }
+    
+    // Prepare conversion options
+    const conversionOptions: any = {
       blob: file,
-      toType: getMimeType(format) as 'image/png' | 'image/jpeg' | 'image/gif',
-      quality: format === 'jpeg' ? quality : 0.92,
       multiple: false
-    });
+    };
+    
+    // Set output type based on target format
+    if (format === 'jpeg') {
+      conversionOptions.toType = 'image/jpeg';
+      conversionOptions.quality = quality;
+    } else if (format === 'png') {
+      conversionOptions.toType = 'image/png';
+    } else if (format === 'gif') {
+      conversionOptions.toType = 'image/gif';
+    } else {
+      // For other formats, convert to PNG first
+      conversionOptions.toType = 'image/png';
+    }
+    
+    console.log('HEIC conversion options:', conversionOptions);
+    
+    const result = await heic2any(conversionOptions);
+    
+    console.log('HEIC conversion result:', result);
     
     // heic2any returns a single blob or array of blobs
     const blob = Array.isArray(result) ? result[0] : result;
+    
+    if (!blob) {
+      throw new Error('HEIC conversion returned no data');
+    }
+    
+    console.log(`HEIC conversion successful: ${blob.size} bytes, type: ${blob.type}`);
     return blob;
+    
   } catch (error) {
+    console.error('HEIC conversion error:', error);
     throw new Error(`Failed to convert HEIC image: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 };
