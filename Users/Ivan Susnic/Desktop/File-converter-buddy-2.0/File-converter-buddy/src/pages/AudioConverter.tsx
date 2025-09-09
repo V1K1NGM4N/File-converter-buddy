@@ -545,16 +545,18 @@ const AudioConverter = () => {
               {files.map((file) => (
                 <Card key={file.id} className="overflow-hidden hover:shadow-glow transition-all duration-300 bg-gradient-card shadow-card border-border/50">
                   <CardContent className="p-4">
-                    <div className="aspect-video bg-muted rounded-lg mb-4 relative overflow-hidden flex items-center justify-center">
-                      <Music className="h-16 w-16 text-muted-foreground/30" />
+                    <div className="aspect-video bg-muted rounded-lg mb-4 relative overflow-hidden">
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Music className="h-16 w-16 text-muted-foreground/30" />
+                      </div>
                       <audio
                         src={file.preview}
                         controls
-                        className="absolute inset-0 w-full h-full"
+                        className="absolute bottom-0 left-0 right-0 w-full"
                       />
                       
                       {/* Status Overlay */}
-                      <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded px-2 py-1">
+                      <div className="absolute top-2 left-2 flex items-center gap-1 bg-background/80 backdrop-blur-sm rounded px-2 py-1">
                         <Clock className="h-4 w-4 text-muted-foreground" />
                         <span className="text-xs font-medium">
                           {file.status}
