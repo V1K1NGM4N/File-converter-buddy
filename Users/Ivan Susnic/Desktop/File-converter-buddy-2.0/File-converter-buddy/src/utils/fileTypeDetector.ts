@@ -53,6 +53,13 @@ export const FILE_TYPES: Record<string, FileTypeInfo> = {
     compatibleFormats: ['jpeg', 'png', 'webp'],
     description: 'SVG vector image file'
   },
+  'image/heic': {
+    category: 'image',
+    mimeType: 'image/heic',
+    extensions: ['heic', 'heif'],
+    compatibleFormats: ['jpeg', 'png', 'webp'],
+    description: 'HEIC image file'
+  },
 
   // Video formats - Can be converted to other video formats or audio formats (for audio extraction)
   'video/mp4': {

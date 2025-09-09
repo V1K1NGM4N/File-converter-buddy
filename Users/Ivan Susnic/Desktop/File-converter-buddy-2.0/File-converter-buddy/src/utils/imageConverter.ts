@@ -1,6 +1,7 @@
 export type ImageFormat = 'png' | 'jpeg' | 'webp';
 
-// Reliable image converter - only supports formats that work consistently
+// Import heic-to for better HEIC support
+import { heicTo } from 'heic-to';
 
 
 
@@ -26,6 +27,18 @@ export const convertImage = async (
   if (file.type === getMimeType(format)) {
     console.log('File already in target format, returning original');
     return file;
+  }
+  
+  // Handle HEIC files with heic-to library
+  if (file.type === 'image/heic' || file.type === 'image/heif' || 
+      file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
+    console.log('Detected HEIC/HEIF file, using heic-to converter');
+    try {
+      return await convertHEICImage(file, format, quality);
+    } catch (error) {
+      console.error('HEIC conversion failed:', error);
+      throw new Error(`Failed to convert HEIC image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   }
   
   // Standard image conversion using canvas (reliable approach)
@@ -66,7 +79,91 @@ export const convertImage = async (
   });
 };
 
-// Reliable image conversion - only supports formats that work consistently
+// Convert HEIC files using heic-to library (more reliable than heic2any)
+const convertHEICImage = async (
+  file: File, 
+  format: ImageFormat, 
+  quality: number = 0.9
+): Promise<Blob> => {
+  try {
+    console.log(`Converting HEIC file: ${file.name} to ${format}`);
+    console.log(`File size: ${file.size} bytes, File type: ${file.type}`);
+    
+    // Validate file
+    if (!file || file.size === 0) {
+      throw new Error('Invalid HEIC file');
+    }
+    
+    // Check if file is actually HEIC
+    const isHeic = await heicTo.isHeic(file);
+    if (!isHeic) {
+      throw new Error('File is not a valid HEIC/HEIF file');
+    }
+    
+    // Convert HEIC to target format
+    let targetType: 'image/jpeg' | 'image/png';
+    if (format === 'jpeg') {
+      targetType = 'image/jpeg';
+    } else {
+      targetType = 'image/png'; // Convert to PNG for other formats, then use canvas
+    }
+    
+    console.log(`Converting HEIC to ${targetType} with quality ${quality}`);
+    
+    const convertedBlob = await heicTo({
+      blob: file,
+      type: targetType,
+      quality: quality
+    });
+    
+    console.log(`HEIC conversion successful: ${convertedBlob.size} bytes, type: ${convertedBlob.type}`);
+    
+    // If target format is not JPEG or PNG, convert using canvas
+    if (format !== 'jpeg' && format !== 'png') {
+      return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+        
+        img.onload = () => {
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+          
+          ctx.drawImage(img, 0, 0);
+          
+          const mimeType = getMimeType(format);
+          
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                console.log(`Final conversion successful: ${blob.size} bytes, type: ${blob.type}`);
+                resolve(blob);
+              } else {
+                reject(new Error('Failed to convert HEIC to final format'));
+              }
+            },
+            mimeType,
+            format === 'jpeg' ? quality : undefined
+          );
+        };
+        
+        img.onerror = () => reject(new Error('Failed to load converted HEIC image'));
+        img.src = URL.createObjectURL(convertedBlob);
+      });
+    }
+    
+    return convertedBlob;
+    
+  } catch (error) {
+    console.error('HEIC conversion error:', error);
+    throw new Error(`Failed to convert HEIC image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
 
 // Get proper MIME type for format (only reliable formats)
 const getMimeType = (format: ImageFormat): string => {

@@ -43,11 +43,13 @@ const ImageConverter = () => {
       'image/webp',
       'image/gif',
       'image/bmp',
-      'image/svg+xml'
+      'image/svg+xml',
+      'image/heic',
+      'image/heif'
     ];
     
     const reliableExtensions = [
-      '.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg'
+      '.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg', '.heic', '.heif'
     ];
     
     // Check MIME type
@@ -70,7 +72,7 @@ const ImageConverter = () => {
     const rejectedFiles = newFiles.filter(file => !isReliableImageFormat(file));
     
     if (rejectedFiles.length > 0) {
-      toast.error(`Skipped ${rejectedFiles.length} unsupported file(s). Only JPEG, PNG, WebP, GIF, BMP, and SVG are supported.`);
+      toast.error(`Skipped ${rejectedFiles.length} unsupported file(s). Only JPEG, PNG, WebP, GIF, BMP, SVG, and HEIC are supported.`);
     }
     
     if (reliableFiles.length === 0) {
@@ -437,7 +439,7 @@ const ImageConverter = () => {
                     Drag and drop your image files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports PNG, JPEG, WebP, GIF, BMP, SVG formats
+                    Supports PNG, JPEG, WebP, GIF, BMP, SVG, HEIC formats
                   </p>
                 </div>
                 
