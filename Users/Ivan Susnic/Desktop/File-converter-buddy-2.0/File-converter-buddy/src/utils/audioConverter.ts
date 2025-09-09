@@ -1,4 +1,4 @@
-export type AudioFormat = 'mp3' | 'wav' | 'aac' | 'ogg' | 'flac' | 'm4a' | 'wma';
+export type AudioFormat = 'mp3' | 'wav' | 'aac' | 'ogg' | 'flac' | 'm4a' | 'wma' | 'opus' | 'aiff' | 'alac' | 'ac3';
 
 export interface AudioConversionOptions {
   quality?: 'low' | 'medium' | 'high';
@@ -45,6 +45,18 @@ export const convertAudio = async (
         break;
       case 'wma':
         mimeType = 'audio/x-ms-wma';
+        break;
+      case 'opus':
+        mimeType = 'audio/opus';
+        break;
+      case 'aiff':
+        mimeType = 'audio/aiff';
+        break;
+      case 'alac':
+        mimeType = 'audio/alac';
+        break;
+      case 'ac3':
+        mimeType = 'audio/ac3';
         break;
       default:
         mimeType = 'audio/mpeg';
@@ -173,7 +185,11 @@ const convertWavToFormat = async (
     ogg: 'audio/ogg',
     flac: 'audio/flac',
     m4a: 'audio/mp4',
-    wma: 'audio/x-ms-wma'
+    wma: 'audio/x-ms-wma',
+    opus: 'audio/opus',
+    aiff: 'audio/aiff',
+    alac: 'audio/alac',
+    ac3: 'audio/ac3'
   };
   
   // Create a new blob with the target MIME type
@@ -195,12 +211,12 @@ const getFileExtension = (filename: string): string => {
 
 // Get supported input formats
 export const getSupportedInputFormats = (): string[] => {
-  return ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'm4p', 'wav', 'aiff'];
+  return ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'ac3'];
 };
 
 // Get supported output formats
 export const getSupportedOutputFormats = (): AudioFormat[] => {
-  return ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma'];
+  return ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'ac3'];
 };
 
 // Get quality settings for different formats
@@ -212,7 +228,11 @@ export const getQualitySettings = (format: AudioFormat): { bitrate: number; samp
     ogg: { bitrate: 128, sampleRate: 44100 },
     flac: { bitrate: 1411, sampleRate: 44100 },
     m4a: { bitrate: 128, sampleRate: 44100 },
-    wma: { bitrate: 128, sampleRate: 44100 }
+    wma: { bitrate: 128, sampleRate: 44100 },
+    opus: { bitrate: 128, sampleRate: 48000 },
+    aiff: { bitrate: 1411, sampleRate: 44100 },
+    alac: { bitrate: 1411, sampleRate: 44100 },
+    ac3: { bitrate: 384, sampleRate: 48000 }
   };
   
   return settings[format];

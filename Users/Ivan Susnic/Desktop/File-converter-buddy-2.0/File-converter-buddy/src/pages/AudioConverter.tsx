@@ -386,7 +386,7 @@ const AudioConverter = () => {
                     <span className="md:hidden">Audio</span>
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    MP3, WAV, FLAC and more
+                    MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS, AIFF, ALAC, AC3
                   </p>
                 </div>
               </div>
@@ -448,7 +448,7 @@ const AudioConverter = () => {
                     Drag and drop your audio files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports MP3, WAV, AAC, OGG, FLAC, M4A, WMA formats (browser-compatible conversion)
+                    Supports MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS, AIFF, ALAC, AC3 formats (browser-compatible conversion)
                   </p>
                 </div>
                 

@@ -169,6 +169,48 @@ export const FILE_TYPES: Record<string, FileTypeInfo> = {
     compatibleFormats: ['mp3', 'wav', 'aac', 'ogg', 'wma', 'm4a', 'opus', 'aiff', 'alac', 'ac3'],
     description: 'FLAC audio file'
   },
+  'audio/mp4': {
+    category: 'audio',
+    mimeType: 'audio/mp4',
+    extensions: ['m4a', 'm4p'],
+    compatibleFormats: ['mp3', 'wav', 'aac', 'ogg', 'flac', 'wma', 'opus', 'aiff', 'alac', 'ac3'],
+    description: 'MP4 audio file (M4A)'
+  },
+  'audio/x-ms-wma': {
+    category: 'audio',
+    mimeType: 'audio/x-ms-wma',
+    extensions: ['wma'],
+    compatibleFormats: ['mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'opus', 'aiff', 'alac', 'ac3'],
+    description: 'Windows Media Audio file'
+  },
+  'audio/opus': {
+    category: 'audio',
+    mimeType: 'audio/opus',
+    extensions: ['opus'],
+    compatibleFormats: ['mp3', 'wav', 'aac', 'ogg', 'flac', 'wma', 'm4a', 'aiff', 'alac', 'ac3'],
+    description: 'Opus audio file'
+  },
+  'audio/aiff': {
+    category: 'audio',
+    mimeType: 'audio/aiff',
+    extensions: ['aiff', 'aif'],
+    compatibleFormats: ['mp3', 'wav', 'aac', 'ogg', 'flac', 'wma', 'm4a', 'opus', 'alac', 'ac3'],
+    description: 'AIFF audio file'
+  },
+  'audio/alac': {
+    category: 'audio',
+    mimeType: 'audio/alac',
+    extensions: ['alac'],
+    compatibleFormats: ['mp3', 'wav', 'aac', 'ogg', 'flac', 'wma', 'm4a', 'opus', 'aiff', 'ac3'],
+    description: 'Apple Lossless audio file'
+  },
+  'audio/ac3': {
+    category: 'audio',
+    mimeType: 'audio/ac3',
+    extensions: ['ac3'],
+    compatibleFormats: ['mp3', 'wav', 'aac', 'ogg', 'flac', 'wma', 'm4a', 'opus', 'aiff', 'alac'],
+    description: 'Dolby Digital AC-3 audio file'
+  },
 
   // Archive formats
   'application/zip': {
