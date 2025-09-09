@@ -67,11 +67,19 @@ const ImageConverter = () => {
   };
 
   const handleFilesSelected = useCallback((newFiles: File[]) => {
+    console.log('📁 handleFilesSelected called with', newFiles.length, 'files');
+    newFiles.forEach(file => {
+      console.log('📄 File:', file.name, 'Type:', file.type, 'Size:', file.size);
+    });
+    
     // Filter to only reliable formats
     const reliableFiles = newFiles.filter(isReliableImageFormat);
     const rejectedFiles = newFiles.filter(file => !isReliableImageFormat(file));
     
+    console.log('✅ Reliable files:', reliableFiles.length, 'Rejected files:', rejectedFiles.length);
+    
     if (rejectedFiles.length > 0) {
+      console.log('❌ Rejected files:', rejectedFiles.map(f => `${f.name} (${f.type})`));
       toast.error(`Skipped ${rejectedFiles.length} unsupported file(s). Only JPEG, PNG, WebP, GIF, BMP, SVG, and HEIC are supported.`);
     }
     
@@ -87,6 +95,7 @@ const ImageConverter = () => {
       status: 'pending' as const
     }));
     
+    console.log('🔄 Calling updateFiles with', conversionFiles.length, 'conversion files');
     updateFiles([...files, ...conversionFiles]);
     toast.success(`Added ${reliableFiles.length} image(s) for conversion`);
   }, [files, updateFiles]);

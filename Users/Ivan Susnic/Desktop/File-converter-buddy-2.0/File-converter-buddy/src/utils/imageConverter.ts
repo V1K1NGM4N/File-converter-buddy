@@ -1,4 +1,4 @@
-export type ImageFormat = 'png' | 'jpeg' | 'webp';
+export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'gif' | 'bmp' | 'tiff' | 'svg' | 'ico' | 'heic' | 'avif';
 
 // Import heic-to for better HEIC support
 import { heicTo } from 'heic-to';
@@ -94,8 +94,9 @@ const convertHEICImage = async (
       throw new Error('Invalid HEIC file');
     }
     
-    // Check if file is actually HEIC
-    const isHeic = await heicTo.isHeic(file);
+    // Check if file is actually HEIC by extension and type
+    const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || 
+                   file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
     if (!isHeic) {
       throw new Error('File is not a valid HEIC/HEIF file');
     }
@@ -148,7 +149,7 @@ const convertHEICImage = async (
               }
             },
             mimeType,
-            format === 'jpeg' ? quality : undefined
+            (format as string) === 'jpeg' ? quality : undefined
           );
         };
         
@@ -165,7 +166,7 @@ const convertHEICImage = async (
   }
 };
 
-// Get proper MIME type for format (only reliable formats)
+// Get proper MIME type for format
 const getMimeType = (format: ImageFormat): string => {
   switch (format) {
     case 'jpeg':
@@ -174,6 +175,20 @@ const getMimeType = (format: ImageFormat): string => {
       return 'image/png';
     case 'webp':
       return 'image/webp';
+    case 'gif':
+      return 'image/gif';
+    case 'bmp':
+      return 'image/bmp';
+    case 'tiff':
+      return 'image/tiff';
+    case 'svg':
+      return 'image/svg+xml';
+    case 'ico':
+      return 'image/x-icon';
+    case 'heic':
+      return 'image/heic';
+    case 'avif':
+      return 'image/avif';
     default:
       return 'image/png';
   }
@@ -235,6 +250,20 @@ export const getFileExtension = (format: ImageFormat): string => {
       return 'png';
     case 'webp':
       return 'webp';
+    case 'gif':
+      return 'gif';
+    case 'bmp':
+      return 'bmp';
+    case 'tiff':
+      return 'tiff';
+    case 'svg':
+      return 'svg';
+    case 'ico':
+      return 'ico';
+    case 'heic':
+      return 'heic';
+    case 'avif':
+      return 'avif';
     default:
       return format;
   }
