@@ -39,8 +39,10 @@ export const SmartFormatSelector = ({
   const compatibleFormats = getCompatibleFormats(fileTypeInfo);
   
   // Group formats into main (most common) and other formats
-  const mainFormats = compatibleFormats.slice(0, 2);
-  const otherFormats = compatibleFormats.slice(2);
+  // Only show "More" dropdown if there are 4 or more total formats
+  const shouldShowMore = compatibleFormats.length >= 4;
+  const mainFormats = shouldShowMore ? compatibleFormats.slice(0, 2) : compatibleFormats;
+  const otherFormats = shouldShowMore ? compatibleFormats.slice(2) : [];
   
   // Get current file extension for display
   const currentExtension = fileTypeInfo.extensions[0]?.toUpperCase() || 'Unknown';
@@ -75,7 +77,12 @@ export const SmartFormatSelector = ({
       </div>
       
       {/* Format Selection */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className={`grid grid-cols-1 gap-3 ${
+        mainFormats.length === 1 ? 'md:grid-cols-1' :
+        mainFormats.length === 2 ? 'md:grid-cols-2' :
+        mainFormats.length === 3 ? 'md:grid-cols-3' :
+        'md:grid-cols-3'
+      }`}>
         {mainFormats.map((format) => (
           <Button
             key={format}
