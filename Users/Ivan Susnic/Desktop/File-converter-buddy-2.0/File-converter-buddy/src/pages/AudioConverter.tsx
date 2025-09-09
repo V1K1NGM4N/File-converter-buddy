@@ -67,7 +67,7 @@ const AudioConverter = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
-    input.accept = 'audio/*';
+    input.accept = 'audio/*,video/*';
     input.onchange = (e) => {
       const files = Array.from((e.target as HTMLInputElement).files || []);
       handleFilesSelected(files);
@@ -426,7 +426,7 @@ const AudioConverter = () => {
               <input
                 type="file"
                 multiple
-                accept="audio/*"
+                accept="audio/*,video/*"
                 onChange={(e) => {
                   const files = Array.from(e.target.files || []);
                   handleFilesSelected(files);
@@ -442,13 +442,14 @@ const AudioConverter = () => {
                 
                 <div>
                   <h3 className="text-xl font-semibold mb-2">
-                    Upload Audio Files
+                    Upload Audio or Video Files
                   </h3>
                   <p className="text-muted-foreground mb-4">
-                    Drag and drop your audio files here, or click to select files
+                    Drag and drop your audio or video files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS, AIFF, ALAC, AC3 formats (browser-compatible conversion)
+                    Supports audio formats: MP3, WAV, AAC, OGG, FLAC, M4A, WMA, OPUS, AIFF, ALAC, AC3<br/>
+                    Also accepts video files to extract audio: MP4, AVI, MOV, WebM (browser-compatible conversion)
                   </p>
                 </div>
                 

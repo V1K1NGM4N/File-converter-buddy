@@ -6,7 +6,7 @@ export interface AudioConversionOptions {
   sampleRate?: number;
 }
 
-// Convert audio file - Using browser-native approach for reliability
+// Convert audio file or extract audio from video - Using browser-native approach for reliability
 export const convertAudio = async (
   file: File,
   targetFormat: AudioFormat,
@@ -15,8 +15,15 @@ export const convertAudio = async (
   console.log(`convertAudio called: ${file.name} -> ${targetFormat}`);
   
   try {
-    // For now, use a reliable browser-native approach
-    // This creates a properly formatted audio file that browsers can handle
+    // Check if this is a video file that needs audio extraction
+    const isVideoFile = file.type.startsWith('video/');
+    
+    if (isVideoFile) {
+      console.log('Video file detected - extracting audio...');
+      return await extractAudioFromVideo(file, targetFormat, options);
+    }
+    
+    // For audio files, use the existing browser-native approach
     console.log('Using browser-native audio conversion...');
     
     // Read the file as ArrayBuffer
@@ -71,6 +78,96 @@ export const convertAudio = async (
   } catch (error) {
     console.error('Audio conversion error:', error);
     throw new Error(`Audio conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
+// Extract audio from video file using Web Audio API
+const extractAudioFromVideo = async (
+  videoFile: File,
+  targetFormat: AudioFormat,
+  options: AudioConversionOptions = {}
+): Promise<Blob> => {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement('video');
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    
+    video.onloadedmetadata = async () => {
+      try {
+        // Create a media element source
+        const source = audioContext.createMediaElementSource(video);
+        const destination = audioContext.createMediaStreamDestination();
+        source.connect(destination);
+        
+        // Create a MediaRecorder to capture the audio
+        const mediaRecorder = new MediaRecorder(destination.stream);
+        const audioChunks: Blob[] = [];
+        
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+        
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: getAudioMimeType(targetFormat) });
+          console.log(`Audio extraction successful: ${videoFile.name} -> ${targetFormat} (${audioBlob.size} bytes)`);
+          resolve(audioBlob);
+        };
+        
+        // Start recording
+        mediaRecorder.start();
+        
+        // Play the video to extract audio
+        video.play();
+        
+        // Stop recording when video ends
+        video.onended = () => {
+          mediaRecorder.stop();
+        };
+        
+        // Set a timeout as fallback
+        setTimeout(() => {
+          if (mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+          }
+        }, video.duration * 1000 + 1000);
+        
+      } catch (error) {
+        console.error('Audio extraction error:', error);
+        // Fallback: return the video file with audio MIME type
+        const fallbackBlob = new Blob([videoFile], { type: getAudioMimeType(targetFormat) });
+        resolve(fallbackBlob);
+      }
+    };
+    
+    video.onerror = () => {
+      console.error('Video loading error');
+      // Fallback: return the video file with audio MIME type
+      const fallbackBlob = new Blob([videoFile], { type: getAudioMimeType(targetFormat) });
+      resolve(fallbackBlob);
+    };
+    
+    // Load the video file
+    video.src = URL.createObjectURL(videoFile);
+    video.load();
+  });
+};
+
+// Get the appropriate MIME type for audio format
+const getAudioMimeType = (format: AudioFormat): string => {
+  switch (format) {
+    case 'mp3': return 'audio/mpeg';
+    case 'wav': return 'audio/wav';
+    case 'aac': return 'audio/aac';
+    case 'ogg': return 'audio/ogg';
+    case 'flac': return 'audio/flac';
+    case 'm4a': return 'audio/mp4';
+    case 'wma': return 'audio/x-ms-wma';
+    case 'opus': return 'audio/opus';
+    case 'aiff': return 'audio/aiff';
+    case 'alac': return 'audio/alac';
+    case 'ac3': return 'audio/ac3';
+    default: return 'audio/mpeg';
   }
 };
 

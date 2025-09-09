@@ -82,54 +82,54 @@ export const FILE_TYPES: Record<string, FileTypeInfo> = {
     description: 'AVIF image file'
   },
 
-  // Video formats - Limited to reliable formats that work with FFmpeg.js
+  // Video formats - Can be converted to other video formats or audio formats (for audio extraction)
   'video/mp4': {
     category: 'video',
     mimeType: 'video/mp4',
     extensions: ['mp4'],
-    compatibleFormats: ['webm', 'avi', 'mov'],
+    compatibleFormats: ['webm', 'avi', 'mov', 'mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'ac3'],
     description: 'MP4 video file'
   },
   'video/avi': {
     category: 'video',
     mimeType: 'video/avi',
     extensions: ['avi'],
-    compatibleFormats: ['mp4', 'webm', 'mov'],
+    compatibleFormats: ['mp4', 'webm', 'mov', 'mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'ac3'],
     description: 'AVI video file'
   },
   'video/quicktime': {
     category: 'video',
     mimeType: 'video/quicktime',
     extensions: ['mov'],
-    compatibleFormats: ['mp4', 'webm', 'avi'],
+    compatibleFormats: ['mp4', 'webm', 'avi', 'mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'ac3'],
     description: 'QuickTime video file'
   },
   'video/x-ms-wmv': {
     category: 'video',
     mimeType: 'video/x-ms-wmv',
     extensions: ['wmv'],
-    compatibleFormats: ['mp4', 'avi', 'mov', 'flv', 'webm', 'mkv', '3gp', 'ogv', 'm4v', 'ts', 'vob', 'asf', 'rm', 'rmvb', 'swf'],
+    compatibleFormats: ['mp4', 'avi', 'mov', 'flv', 'webm', 'mkv', '3gp', 'ogv', 'm4v', 'ts', 'vob', 'asf', 'rm', 'rmvb', 'swf', 'mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'ac3'],
     description: 'Windows Media Video file'
   },
   'video/x-flv': {
     category: 'video',
     mimeType: 'video/x-flv',
     extensions: ['flv'],
-    compatibleFormats: ['mp4', 'avi', 'mov', 'wmv', 'webm', 'mkv', '3gp', 'ogv', 'm4v', 'ts', 'vob', 'asf', 'rm', 'rmvb', 'swf'],
+    compatibleFormats: ['mp4', 'avi', 'mov', 'wmv', 'webm', 'mkv', '3gp', 'ogv', 'm4v', 'ts', 'vob', 'asf', 'rm', 'rmvb', 'swf', 'mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'ac3'],
     description: 'Flash Video file'
   },
   'video/webm': {
     category: 'video',
     mimeType: 'video/webm',
     extensions: ['webm'],
-    compatibleFormats: ['mp4', 'avi', 'mov'],
+    compatibleFormats: ['mp4', 'avi', 'mov', 'mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'ac3'],
     description: 'WebM video file'
   },
   'video/x-matroska': {
     category: 'video',
     mimeType: 'video/x-matroska',
     extensions: ['mkv'],
-    compatibleFormats: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', '3gp', 'ogv', 'm4v', 'ts', 'vob', 'asf', 'rm', 'rmvb', 'swf'],
+    compatibleFormats: ['mp4', 'avi', 'mov', 'wmv', 'flv', 'webm', '3gp', 'ogv', 'm4v', 'ts', 'vob', 'asf', 'rm', 'rmvb', 'swf', 'mp3', 'wav', 'aac', 'ogg', 'flac', 'm4a', 'wma', 'opus', 'aiff', 'alac', 'ac3'],
     description: 'Matroska video file'
   },
 
