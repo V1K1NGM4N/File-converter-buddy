@@ -87,9 +87,8 @@ const ImageConverter = () => {
       status: 'pending' as const
     }));
     
-    updateFiles([...files, ...conversionFiles]).then(() => {
-      toast.success(`Added ${reliableFiles.length} image(s) for conversion`);
-    });
+    updateFiles([...files, ...conversionFiles]);
+    toast.success(`Added ${reliableFiles.length} image(s) for conversion`);
   }, [files, updateFiles]);
 
   const handleFileUpload = () => {

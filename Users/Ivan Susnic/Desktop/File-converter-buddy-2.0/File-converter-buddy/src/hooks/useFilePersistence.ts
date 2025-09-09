@@ -161,18 +161,33 @@ export const useFilePersistence = (storageKey: string) => {
   };
 
   // Update files and persist
-  const updateFiles = useCallback(async (newFiles: ConversionFile[]) => {
+  const updateFiles = useCallback((newFiles: ConversionFile[]) => {
     // Ensure all files have proper previews
-    const filesWithPreviews = await Promise.all(newFiles.map(async (file) => {
+    const filesWithPreviews = newFiles.map(file => {
       if (!file.preview) {
         // Check if it's a HEIC file
         if (file.file.type === 'image/heic' || file.file.type === 'image/heif' || 
             file.file.name.toLowerCase().endsWith('.heic') || file.file.name.toLowerCase().endsWith('.heif')) {
-          // Create HEIC preview
-          const preview = await createHEICPreview(file.file);
+          // For HEIC files, we'll create the preview asynchronously
+          // Set a temporary preview first, then update it
+          const tempPreview = URL.createObjectURL(file.file);
+          createHEICPreview(file.file).then(heicPreview => {
+            // Update the file with the proper HEIC preview
+            setFiles(currentFiles => 
+              currentFiles.map(f => 
+                f.id === file.id ? { ...f, preview: heicPreview } : f
+              )
+            );
+            // Clean up temp preview
+            URL.revokeObjectURL(tempPreview);
+          }).catch(error => {
+            console.error('Failed to create HEIC preview:', error);
+            // Keep the temp preview if HEIC conversion fails
+          });
+          
           return {
             ...file,
-            preview
+            preview: tempPreview
           };
         } else {
           // Create normal preview
@@ -183,7 +198,7 @@ export const useFilePersistence = (storageKey: string) => {
         }
       }
       return file;
-    }));
+    });
     
     setFiles(filesWithPreviews);
     saveFiles(filesWithPreviews);
