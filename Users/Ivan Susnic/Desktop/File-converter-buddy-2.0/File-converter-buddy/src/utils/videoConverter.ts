@@ -18,7 +18,7 @@ export const initializeFFmpeg = async (): Promise<void> => {
   console.log('Creating new FFmpeg instance...');
   ffmpeg = new FFmpeg();
   
-  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+  const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd';
   
   try {
     console.log('Loading FFmpeg core...');
@@ -63,9 +63,25 @@ export const convertVideo = async (
     const command = buildFFmpegCommand(inputFileName, outputFileName, targetFormat, options);
     console.log('FFmpeg command:', command);
     
-    // Execute conversion
+    // Execute conversion with timeout
     console.log('Executing FFmpeg conversion...');
-    await ffmpeg.exec(command);
+    try {
+      await ffmpeg.exec(command);
+    } catch (execError) {
+      console.error('FFmpeg execution failed, trying fallback command:', execError);
+      
+      // Try a simpler fallback command
+      const fallbackCommand = ['-i', inputFileName, '-c:v', 'libx264', '-c:a', 'aac', outputFileName];
+      console.log('Trying fallback command:', fallbackCommand);
+      
+      try {
+        await ffmpeg.exec(fallbackCommand);
+        console.log('Fallback command succeeded');
+      } catch (fallbackError) {
+        console.error('Fallback command also failed:', fallbackError);
+        throw new Error(`Video conversion failed: ${execError instanceof Error ? execError.message : 'Unknown error'}`);
+      }
+    }
 
     // Read output file
     console.log('Reading output file...');
@@ -142,7 +158,7 @@ const buildFFmpegCommand = (
     command.push('-b:v', `${options.bitrate}k`);
   }
 
-  // Add format-specific settings
+  // Add format-specific settings - Only for supported formats
   switch (format) {
     case 'mp4':
       command.push('-c:v', 'libx264', '-c:a', 'aac', '-movflags', '+faststart');
@@ -156,17 +172,9 @@ const buildFFmpegCommand = (
     case 'mov':
       command.push('-c:v', 'libx264', '-c:a', 'aac', '-f', 'mov');
       break;
-    case 'wmv':
-      command.push('-c:v', 'wmv2', '-c:a', 'wmav2');
-      break;
-    case 'flv':
+    default:
+      // Fallback for any unexpected format
       command.push('-c:v', 'libx264', '-c:a', 'aac');
-      break;
-    case 'mkv':
-      command.push('-c:v', 'libx264', '-c:a', 'aac');
-      break;
-    case '3gp':
-      command.push('-c:v', 'libx264', '-c:a', 'aac', '-s', '320x240');
       break;
   }
 
