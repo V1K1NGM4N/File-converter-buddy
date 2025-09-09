@@ -133,19 +133,57 @@ export const useFilePersistence = (storageKey: string) => {
     }
   }, [storageKey]);
 
+  // Helper function to create preview for HEIC files
+  const createHEICPreview = async (file: File): Promise<string> => {
+    try {
+      // Import heic-to dynamically to avoid issues
+      const { heicTo } = await import('heic-to');
+      
+      // Check if file is HEIC
+      const isHeic = await heicTo.isHeic(file);
+      if (!isHeic) {
+        return URL.createObjectURL(file);
+      }
+      
+      // Convert HEIC to JPEG for preview
+      const previewBlob = await heicTo({
+        blob: file,
+        type: 'image/jpeg',
+        quality: 0.7 // Lower quality for faster preview
+      });
+      
+      return URL.createObjectURL(previewBlob);
+    } catch (error) {
+      console.error('Failed to create HEIC preview:', error);
+      // Fallback to a placeholder or the original file
+      return URL.createObjectURL(file);
+    }
+  };
+
   // Update files and persist
-  const updateFiles = useCallback((newFiles: ConversionFile[]) => {
+  const updateFiles = useCallback(async (newFiles: ConversionFile[]) => {
     // Ensure all files have proper previews
-    const filesWithPreviews = newFiles.map(file => {
+    const filesWithPreviews = await Promise.all(newFiles.map(async (file) => {
       if (!file.preview) {
-        // Create preview from file if not set
-        return {
-          ...file,
-          preview: URL.createObjectURL(file.file)
-        };
+        // Check if it's a HEIC file
+        if (file.file.type === 'image/heic' || file.file.type === 'image/heif' || 
+            file.file.name.toLowerCase().endsWith('.heic') || file.file.name.toLowerCase().endsWith('.heif')) {
+          // Create HEIC preview
+          const preview = await createHEICPreview(file.file);
+          return {
+            ...file,
+            preview
+          };
+        } else {
+          // Create normal preview
+          return {
+            ...file,
+            preview: URL.createObjectURL(file.file)
+          };
+        }
       }
       return file;
-    });
+    }));
     
     setFiles(filesWithPreviews);
     saveFiles(filesWithPreviews);
