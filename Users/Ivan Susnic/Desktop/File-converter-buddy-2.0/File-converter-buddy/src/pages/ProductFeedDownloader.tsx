@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { trackConversion } from '@/utils/conversionTracker';
+import { trackUserConversion } from '@/utils/userConversionTracker';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 import { 
@@ -38,10 +39,11 @@ import {
   XMLFeedParser
 } from '@/utils/xmlFeedParser';
 import { useProductFeedPersistence } from '@/hooks/useProductFeedPersistence';
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
+import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';
 
 const ProductFeedDownloader: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useUser();
   const { state, updateState } = useProductFeedPersistence('productFeedDownloader');
   
   // Destructure state for easier access
@@ -263,6 +265,11 @@ const ProductFeedDownloader: React.FC = () => {
   };
 
   const handleDownloadProductImages = async (product: Product) => {
+    if (!user) {
+      toast.error("Please sign in to download images");
+      return;
+    }
+
     if (product.images.length === 0) {
       toast.error("This product has no images to download");
       return;
@@ -292,6 +299,14 @@ const ProductFeedDownloader: React.FC = () => {
         groupByProduct: false
       });
       
+      // Track successful downloads
+      trackConversion('productFeeds', product.images.length);
+      
+      // Track user-specific conversions
+      if (user?.id) {
+        trackUserConversion(user.id, 'productFeeds', product.images.length);
+      }
+      
       toast.success(`Successfully downloaded ${product.images.length} images for "${product.title}" in organized structure`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to download images";
@@ -315,6 +330,11 @@ const ProductFeedDownloader: React.FC = () => {
   };
 
   const handleDownloadAllImages = async () => {
+    if (!user) {
+      toast.error("Please sign in to download images");
+      return;
+    }
+
     if (!parsedFeed || parsedFeed.products.length === 0) {
       toast.error("No products available to download");
       return;
@@ -363,6 +383,11 @@ const ProductFeedDownloader: React.FC = () => {
 
       // Track successful downloads
       trackConversion('productFeeds', totalImages);
+      
+      // Track user-specific conversions
+      if (user?.id) {
+        trackUserConversion(user.id, 'productFeeds', totalImages);
+      }
       
       toast.success(`Successfully downloaded ${totalImages} images from ${productsWithImages.length} products in organized structure`);
     } catch (error) {
@@ -418,6 +443,11 @@ const ProductFeedDownloader: React.FC = () => {
   };
 
   const handleDownloadSelectedImages = async () => {
+    if (!user) {
+      toast.error("Please sign in to download images");
+      return;
+    }
+
     if (!selectedProduct) return;
 
     const imagesToDownload = selectedImages.size > 0 
@@ -443,6 +473,14 @@ const ProductFeedDownloader: React.FC = () => {
         createFolderStructure: true,
         groupByProduct: false
       });
+      
+      // Track successful downloads
+      trackConversion('productFeeds', imagesToDownload.length);
+      
+      // Track user-specific conversions
+      if (user?.id) {
+        trackUserConversion(user.id, 'productFeeds', imagesToDownload.length);
+      }
       
       toast.success(`Successfully downloaded ${imagesToDownload.length} images for "${selectedProduct.title}" in organized structure`);
       setSelectedProduct(null);
@@ -507,6 +545,11 @@ const ProductFeedDownloader: React.FC = () => {
   };
 
   const handleDownloadSelectedProducts = async () => {
+    if (!user) {
+      toast.error("Please sign in to download images");
+      return;
+    }
+
     if (selectedProducts.size === 0) {
       toast.error("No products selected to download");
       return;
@@ -553,8 +596,16 @@ const ProductFeedDownloader: React.FC = () => {
       });
       setDownloadProgress(100);
 
+      // Track successful downloads
+      trackConversion('productFeeds', totalImages);
+      
+      // Track user-specific conversions
+      if (user?.id) {
+        trackUserConversion(user.id, 'productFeeds', totalImages);
+      }
+
       toast.success(`Successfully downloaded ${totalImages} images from ${productsWithImages.length} selected products`);
-      setSelectedProducts(new Set()); // Clear selection after successful download
+      updateState({ selectedProducts: [] }); // Clear selection after successful download
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "Failed to download images";
       

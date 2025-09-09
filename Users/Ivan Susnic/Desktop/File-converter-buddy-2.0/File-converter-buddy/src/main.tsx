@@ -12,7 +12,15 @@ if (!PUBLISHABLE_KEY) {
   createRoot(document.getElementById("root")!).render(<App />);
 } else {
   createRoot(document.getElementById("root")!).render(
-    <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
+    <ClerkProvider 
+      publishableKey={PUBLISHABLE_KEY}
+      appearance={{
+        elements: {
+          // Hide development mode badge in production
+          badge: import.meta.env.PROD ? "hidden" : undefined
+        }
+      }}
+    >
       <App />
     </ClerkProvider>
   );

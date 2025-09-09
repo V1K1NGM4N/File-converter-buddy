@@ -48,7 +48,7 @@ const AudioConverter = () => {
     // Check if any files are already in the target format
     const alreadyInTargetFormat = newFiles.filter(file => {
       const fileType = detectFileType(file);
-      return fileType?.extension === selectedFormat;
+      return fileType?.extensions.includes(selectedFormat);
     });
     
     if (alreadyInTargetFormat.length > 0) {
@@ -57,7 +57,7 @@ const AudioConverter = () => {
     
     const filesToConvert = newFiles.filter(file => {
       const fileType = detectFileType(file);
-      return fileType?.extension !== selectedFormat;
+      return !fileType?.extensions.includes(selectedFormat);
     });
     
     if (filesToConvert.length === 0) {
