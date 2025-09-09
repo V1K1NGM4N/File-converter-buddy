@@ -265,10 +265,6 @@ const ProductFeedDownloader: React.FC = () => {
   };
 
   const handleDownloadProductImages = async (product: Product) => {
-    if (!user) {
-      toast.error("Please sign in to download images");
-      return;
-    }
 
     if (product.images.length === 0) {
       toast.error("This product has no images to download");
@@ -330,10 +326,6 @@ const ProductFeedDownloader: React.FC = () => {
   };
 
   const handleDownloadAllImages = async () => {
-    if (!user) {
-      toast.error("Please sign in to download images");
-      return;
-    }
 
     if (!parsedFeed || parsedFeed.products.length === 0) {
       toast.error("No products available to download");
@@ -443,10 +435,6 @@ const ProductFeedDownloader: React.FC = () => {
   };
 
   const handleDownloadSelectedImages = async () => {
-    if (!user) {
-      toast.error("Please sign in to download images");
-      return;
-    }
 
     if (!selectedProduct) return;
 
@@ -545,10 +533,6 @@ const ProductFeedDownloader: React.FC = () => {
   };
 
   const handleDownloadSelectedProducts = async () => {
-    if (!user) {
-      toast.error("Please sign in to download images");
-      return;
-    }
 
     if (selectedProducts.size === 0) {
       toast.error("No products selected to download");
@@ -1029,14 +1013,27 @@ const ProductFeedDownloader: React.FC = () => {
                       ))}
                     </select>
                   </div>
-                  <Button
-                    onClick={handleDownloadAllImages}
-                    disabled={filteredProducts.length === 0}
-                    className="whitespace-nowrap"
-                  >
-                    <DownloadCloud className="h-4 w-4 mr-2" />
-                    Download All ({filteredProducts.reduce((sum, p) => sum + p.images.length, 0)} images)
-                  </Button>
+                  <SignedIn>
+                    <Button
+                      onClick={handleDownloadAllImages}
+                      disabled={filteredProducts.length === 0}
+                      className="whitespace-nowrap"
+                    >
+                      <DownloadCloud className="h-4 w-4 mr-2" />
+                      Download All ({filteredProducts.reduce((sum, p) => sum + p.images.length, 0)} images)
+                    </Button>
+                  </SignedIn>
+                  <SignedOut>
+                    <SignInButton mode="modal">
+                      <Button
+                        disabled={filteredProducts.length === 0}
+                        className="whitespace-nowrap"
+                      >
+                        <DownloadCloud className="h-4 w-4 mr-2" />
+                        Download All ({filteredProducts.reduce((sum, p) => sum + p.images.length, 0)} images)
+                      </Button>
+                    </SignInButton>
+                  </SignedOut>
                 </div>
                 {downloadProgress > 0 && (
                   <div className="mt-4">
@@ -1100,14 +1097,29 @@ const ProductFeedDownloader: React.FC = () => {
                 </Button>
                 
                 {selectedProducts.size > 0 && (
-                  <Button
-                    onClick={handleDownloadSelectedProducts}
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-700"
-                  >
-                    <DownloadCloud className="h-4 w-4 mr-2" />
-                    Download Selected ({selectedProducts.size})
-                  </Button>
+                  <>
+                    <SignedIn>
+                      <Button
+                        onClick={handleDownloadSelectedProducts}
+                        size="sm"
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <DownloadCloud className="h-4 w-4 mr-2" />
+                        Download Selected ({selectedProducts.size})
+                      </Button>
+                    </SignedIn>
+                    <SignedOut>
+                      <SignInButton mode="modal">
+                        <Button
+                          size="sm"
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <DownloadCloud className="h-4 w-4 mr-2" />
+                          Download Selected ({selectedProducts.size})
+                        </Button>
+                      </SignInButton>
+                    </SignedOut>
+                  </>
                 )}
                 
                 <Button
@@ -1176,14 +1188,27 @@ const ProductFeedDownloader: React.FC = () => {
                         <span className="text-sm text-muted-foreground">
                           {selectedProducts.size} products selected
                         </span>
-                        <Button
-                          onClick={handleDownloadSelectedProducts}
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          <DownloadCloud className="h-4 w-4 mr-2" />
-                          Download Selected
-                        </Button>
+                        <SignedIn>
+                          <Button
+                            onClick={handleDownloadSelectedProducts}
+                            size="sm"
+                            className="bg-green-600 hover:bg-green-700"
+                          >
+                            <DownloadCloud className="h-4 w-4 mr-2" />
+                            Download Selected
+                          </Button>
+                        </SignedIn>
+                        <SignedOut>
+                          <SignInButton mode="modal">
+                            <Button
+                              size="sm"
+                              className="bg-green-600 hover:bg-green-700"
+                            >
+                              <DownloadCloud className="h-4 w-4 mr-2" />
+                              Download Selected
+                            </Button>
+                          </SignInButton>
+                        </SignedOut>
                       </div>
                     )}
                   </div>
@@ -1279,24 +1304,38 @@ const ProductFeedDownloader: React.FC = () => {
                               <option value="webp">WebP</option>
                             </select>
                             
-                            <Button
-                              onClick={() => handleDownloadProductImages(product)}
-                              disabled={product.images.length === 0 || downloadingImages.has(product.id)}
-                              className="flex-1"
-                              size="sm"
-                            >
-                              {downloadingImages.has(product.id) ? (
-                                <>
-                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                                  Downloading...
-                                </>
-                              ) : (
-                                <>
+                            <SignedIn>
+                              <Button
+                                onClick={() => handleDownloadProductImages(product)}
+                                disabled={product.images.length === 0 || downloadingImages.has(product.id)}
+                                className="flex-1"
+                                size="sm"
+                              >
+                                {downloadingImages.has(product.id) ? (
+                                  <>
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                    Downloading...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Download className="h-4 w-4 mr-2" />
+                                    Download Images
+                                  </>
+                                )}
+                              </Button>
+                            </SignedIn>
+                            <SignedOut>
+                              <SignInButton mode="modal">
+                                <Button
+                                  disabled={product.images.length === 0 || downloadingImages.has(product.id)}
+                                  className="flex-1"
+                                  size="sm"
+                                >
                                   <Download className="h-4 w-4 mr-2" />
                                   Download Images
-                                </>
-                              )}
-                            </Button>
+                                </Button>
+                              </SignInButton>
+                            </SignedOut>
                             
                             {product.productUrl && (
                               <Button
@@ -1516,23 +1555,36 @@ const ProductFeedDownloader: React.FC = () => {
                   <option value="webp">WebP</option>
                 </select>
                 
-                <Button
-                  onClick={handleDownloadSelectedImages}
-                  disabled={downloadingImages.has(selectedProduct.id)}
-                  size="sm"
-                >
-                  {downloadingImages.has(selectedProduct.id) ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Downloading...
-                    </>
-                  ) : (
-                    <>
+                <SignedIn>
+                  <Button
+                    onClick={handleDownloadSelectedImages}
+                    disabled={downloadingImages.has(selectedProduct.id)}
+                    size="sm"
+                  >
+                    {downloadingImages.has(selectedProduct.id) ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Downloading...
+                      </>
+                    ) : (
+                      <>
+                        <Download className="h-4 w-4 mr-2" />
+                        Download {selectedImages.size > 0 ? `${selectedImages.size} Selected` : 'All'}
+                      </>
+                    )}
+                  </Button>
+                </SignedIn>
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <Button
+                      disabled={downloadingImages.has(selectedProduct.id)}
+                      size="sm"
+                    >
                       <Download className="h-4 w-4 mr-2" />
                       Download {selectedImages.size > 0 ? `${selectedImages.size} Selected` : 'All'}
-                    </>
-                  )}
-                </Button>
+                    </Button>
+                  </SignInButton>
+                </SignedOut>
               </div>
             </div>
           </div>

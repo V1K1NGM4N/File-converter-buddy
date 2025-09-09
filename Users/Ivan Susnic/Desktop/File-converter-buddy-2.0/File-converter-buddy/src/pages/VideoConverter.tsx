@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { trackConversion } from '@/utils/conversionTracker';
+import { convertVideo, VideoFormat, needsConversion } from '@/utils/videoConverter';
 import { 
   Video, 
   Download, 
@@ -50,8 +51,7 @@ const VideoConverter = () => {
   const handleFilesSelected = useCallback((newFiles: File[]) => {
     // Check if any files are already in the target format
     const alreadyInTargetFormat = newFiles.filter(file => {
-      const fileType = detectFileType(file);
-      return fileType?.extensions.includes(selectedFormat);
+      return !needsConversion(file, selectedFormat as VideoFormat);
     });
     
     if (alreadyInTargetFormat.length > 0) {
@@ -59,8 +59,7 @@ const VideoConverter = () => {
     }
     
     const filesToConvert = newFiles.filter(file => {
-      const fileType = detectFileType(file);
-      return !fileType?.extensions.includes(selectedFormat);
+      return needsConversion(file, selectedFormat as VideoFormat);
     });
     
     if (filesToConvert.length === 0) {
@@ -127,8 +126,11 @@ const VideoConverter = () => {
           updateFiles(currentFiles);
         }
         
-        // Create a mock converted blob (in real app, this would be the actual converted video)
-        const converted = new Blob([file.file], { type: `video/${selectedFormat}` });
+        // Convert the video using FFmpeg
+        const converted = await convertVideo(file.file, selectedFormat as VideoFormat, {
+          quality: 'medium',
+          resolution: 'original'
+        });
         
         currentFiles = currentFiles.map(f => 
           f.id === file.id 

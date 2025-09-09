@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { trackConversion } from '@/utils/conversionTracker';
+import { convertAudio, AudioFormat, needsConversion } from '@/utils/audioConverter';
 import { 
   Music, 
   Upload, 
@@ -47,8 +48,7 @@ const AudioConverter = () => {
   const handleFilesSelected = useCallback((newFiles: File[]) => {
     // Check if any files are already in the target format
     const alreadyInTargetFormat = newFiles.filter(file => {
-      const fileType = detectFileType(file);
-      return fileType?.extensions.includes(selectedFormat);
+      return !needsConversion(file, selectedFormat as AudioFormat);
     });
     
     if (alreadyInTargetFormat.length > 0) {
@@ -56,8 +56,7 @@ const AudioConverter = () => {
     }
     
     const filesToConvert = newFiles.filter(file => {
-      const fileType = detectFileType(file);
-      return !fileType?.extensions.includes(selectedFormat);
+      return needsConversion(file, selectedFormat as AudioFormat);
     });
     
     if (filesToConvert.length === 0) {
@@ -124,8 +123,10 @@ const AudioConverter = () => {
           updateFiles(currentFiles);
         }
         
-        // Create a mock converted blob (in real app, this would be the actual converted audio)
-        const converted = new Blob([file.file], { type: `audio/${selectedFormat}` });
+        // Convert the audio using Web Audio API
+        const converted = await convertAudio(file.file, selectedFormat as AudioFormat, {
+          quality: 'medium'
+        });
         
         currentFiles = currentFiles.map(f => 
           f.id === file.id 
