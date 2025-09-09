@@ -1122,14 +1122,27 @@ const ProductFeedDownloader: React.FC = () => {
                   </>
                 )}
                 
-                <Button
-                  onClick={handleDownloadAllImages}
-                  disabled={filteredProducts.length === 0}
-                  size="sm"
-                >
-                  <DownloadCloud className="h-4 w-4 mr-2" />
-                  Download All
-                </Button>
+                <SignedIn>
+                  <Button
+                    onClick={handleDownloadAllImages}
+                    disabled={filteredProducts.length === 0}
+                    size="sm"
+                  >
+                    <DownloadCloud className="h-4 w-4 mr-2" />
+                    Download All
+                  </Button>
+                </SignedIn>
+                <SignedOut>
+                  <SignInButton mode="modal">
+                    <Button
+                      disabled={filteredProducts.length === 0}
+                      size="sm"
+                    >
+                      <DownloadCloud className="h-4 w-4 mr-2" />
+                      Download All
+                    </Button>
+                  </SignInButton>
+                </SignedOut>
               </div>
             </div>
           )}
