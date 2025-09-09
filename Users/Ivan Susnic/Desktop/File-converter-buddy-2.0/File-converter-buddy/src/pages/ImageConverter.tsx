@@ -35,8 +35,49 @@ const ImageConverter = () => {
   const [isConverting, setIsConverting] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
 
+  // Helper function to check if file is a reliable image format
+  const isReliableImageFormat = (file: File): boolean => {
+    const reliableTypes = [
+      'image/jpeg',
+      'image/png', 
+      'image/webp',
+      'image/gif',
+      'image/bmp',
+      'image/svg+xml'
+    ];
+    
+    const reliableExtensions = [
+      '.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg'
+    ];
+    
+    // Check MIME type
+    if (reliableTypes.includes(file.type)) {
+      return true;
+    }
+    
+    // Check file extension (fallback for when MIME type is wrong)
+    const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    if (reliableExtensions.includes(extension)) {
+      return true;
+    }
+    
+    return false;
+  };
+
   const handleFilesSelected = useCallback((newFiles: File[]) => {
-    const conversionFiles: ConversionFile[] = newFiles.map(file => ({
+    // Filter to only reliable formats
+    const reliableFiles = newFiles.filter(isReliableImageFormat);
+    const rejectedFiles = newFiles.filter(file => !isReliableImageFormat(file));
+    
+    if (rejectedFiles.length > 0) {
+      toast.error(`Skipped ${rejectedFiles.length} unsupported file(s). Only JPEG, PNG, WebP, GIF, BMP, and SVG are supported.`);
+    }
+    
+    if (reliableFiles.length === 0) {
+      return;
+    }
+    
+    const conversionFiles: ConversionFile[] = reliableFiles.map(file => ({
       id: crypto.randomUUID(),
       file,
       preview: '', // Will be set by the persistence hook
@@ -45,14 +86,14 @@ const ImageConverter = () => {
     }));
     
     updateFiles([...files, ...conversionFiles]);
-    toast.success(`Added ${newFiles.length} image(s) for conversion`);
+    toast.success(`Added ${reliableFiles.length} image(s) for conversion`);
   }, [files, updateFiles]);
 
   const handleFileUpload = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
-    input.accept = 'image/jpeg,image/png,image/webp,image/gif,image/bmp,image/svg+xml';
+    input.accept = 'image/*';
     input.onchange = (e) => {
       const files = Array.from((e.target as HTMLInputElement).files || []);
       handleFilesSelected(files);
@@ -374,7 +415,7 @@ const ImageConverter = () => {
               <input
                 type="file"
                 multiple
-                accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/svg+xml"
+                accept="image/*"
                 onChange={(e) => {
                   const files = Array.from(e.target.files || []);
                   handleFilesSelected(files);
@@ -396,7 +437,7 @@ const ImageConverter = () => {
                     Drag and drop your image files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports PNG, JPEG, WebP, GIF, BMP, SVG formats (reliable conversion)
+                    Supports PNG, JPEG, WebP, GIF, BMP, SVG formats
                   </p>
                 </div>
                 
