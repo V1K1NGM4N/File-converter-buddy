@@ -15,14 +15,23 @@ export interface VideoConversionOptions {
 export const initializeFFmpeg = async (): Promise<void> => {
   if (ffmpeg) return;
   
+  console.log('Creating new FFmpeg instance...');
   ffmpeg = new FFmpeg();
   
   const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
   
-  await ffmpeg.load({
-    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-  });
+  try {
+    console.log('Loading FFmpeg core...');
+    await ffmpeg.load({
+      coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+      wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+    });
+    console.log('FFmpeg loaded successfully');
+  } catch (error) {
+    console.error('Failed to load FFmpeg:', error);
+    ffmpeg = null;
+    throw new Error(`Failed to initialize FFmpeg: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
 };
 
 // Convert video file
@@ -31,45 +40,58 @@ export const convertVideo = async (
   targetFormat: VideoFormat,
   options: VideoConversionOptions = {}
 ): Promise<Blob> => {
-  if (!ffmpeg) {
-    await initializeFFmpeg();
-  }
-
-  if (!ffmpeg) {
-    throw new Error('Failed to initialize FFmpeg');
-  }
-
-  const inputFileName = 'input' + getFileExtension(file.name);
-  const outputFileName = `output.${targetFormat}`;
-
+  console.log(`convertVideo called: ${file.name} -> ${targetFormat}`);
+  
   try {
+    if (!ffmpeg) {
+      console.log('Initializing FFmpeg...');
+      await initializeFFmpeg();
+    }
+
+    if (!ffmpeg) {
+      throw new Error('Failed to initialize FFmpeg');
+    }
+
+    const inputFileName = 'input' + getFileExtension(file.name);
+    const outputFileName = `output.${targetFormat}`;
+
+    console.log(`Writing input file: ${inputFileName}`);
     // Write input file to FFmpeg
     await ffmpeg.writeFile(inputFileName, await fetchFile(file));
 
     // Build FFmpeg command based on target format and options
     const command = buildFFmpegCommand(inputFileName, outputFileName, targetFormat, options);
+    console.log('FFmpeg command:', command);
     
     // Execute conversion
+    console.log('Executing FFmpeg conversion...');
     await ffmpeg.exec(command);
 
     // Read output file
+    console.log('Reading output file...');
     const data = await ffmpeg.readFile(outputFileName);
     
     // Clean up files
+    console.log('Cleaning up files...');
     await ffmpeg.deleteFile(inputFileName);
     await ffmpeg.deleteFile(outputFileName);
 
     // Convert to blob
     const blob = new Blob([data], { type: `video/${targetFormat}` });
+    console.log('Conversion successful, blob size:', blob.size);
     return blob;
 
   } catch (error) {
+    console.error('Video conversion error:', error);
+    
     // Clean up on error
-    try {
-      await ffmpeg.deleteFile(inputFileName);
-      await ffmpeg.deleteFile(outputFileName);
-    } catch (cleanupError) {
-      console.warn('Failed to clean up FFmpeg files:', cleanupError);
+    if (ffmpeg) {
+      try {
+        await ffmpeg.deleteFile('input' + getFileExtension(file.name));
+        await ffmpeg.deleteFile(`output.${targetFormat}`);
+      } catch (cleanupError) {
+        console.warn('Failed to clean up FFmpeg files:', cleanupError);
+      }
     }
     
     throw new Error(`Video conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`);

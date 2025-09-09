@@ -136,17 +136,30 @@ const VideoConverter = () => {
         }
         
         // Convert the video using FFmpeg
-        const converted = await convertVideo(file.file, selectedFormat as VideoFormat, {
-          quality: 'medium',
-          resolution: 'original'
-        });
-        
-        currentFiles = currentFiles.map(f => 
-          f.id === file.id 
-            ? { ...f, status: 'completed', progress: 100, converted }
-            : f
-        );
-        updateFiles(currentFiles);
+        console.log(`Starting conversion: ${file.file.name} -> ${selectedFormat}`);
+        try {
+          const converted = await convertVideo(file.file, selectedFormat as VideoFormat, {
+            quality: 'medium',
+            resolution: 'original'
+          });
+          console.log(`Conversion completed: ${file.file.name} -> ${selectedFormat}`, converted);
+          
+          currentFiles = currentFiles.map(f => 
+            f.id === file.id 
+              ? { ...f, status: 'completed', progress: 100, converted }
+              : f
+          );
+          updateFiles(currentFiles);
+        } catch (conversionError) {
+          console.error(`Conversion failed for ${file.file.name}:`, conversionError);
+          currentFiles = currentFiles.map(f => 
+            f.id === file.id 
+              ? { ...f, status: 'error', progress: 0 }
+              : f
+          );
+          updateFiles(currentFiles);
+          throw conversionError; // Re-throw to be caught by outer try-catch
+        }
         
         completedFiles++;
         setOverallProgress((completedFiles / totalFiles) * 100);
