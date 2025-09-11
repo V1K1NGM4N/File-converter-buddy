@@ -788,17 +788,52 @@ export class XMLFeedParser {
 
   private extractBrand(content: string): string {
     const patterns = [
+      // XML tag patterns - these should work correctly
       /<g:brand[^>]*>([^<]+)<\/g:brand>/i,
       /<brand[^>]*>([^<]+)<\/brand>/i,
       /<manufacturer[^>]*>([^<]+)<\/manufacturer>/i,
-      /brand[^:]*:\s*([^\n\r<]+)/i,
-      /manufacturer[^:]*:\s*([^\n\r<]+)/i
+      /<maker[^>]*>([^<]+)<\/maker>/i,
+      /<vendor[^>]*>([^<]+)<\/vendor>/i,
+      
+      // Key-value patterns - improved to avoid capturing the word "brand"
+      /brand[^:]*:\s*([^\n\r<,;]+)/i,
+      /manufacturer[^:]*:\s*([^\n\r<,;]+)/i,
+      /maker[^:]*:\s*([^\n\r<,;]+)/i,
+      /vendor[^:]*:\s*([^\n\r<,;]+)/i,
+      
+      // JSON patterns
+      /"brand"\s*:\s*"([^"]+)"/i,
+      /"manufacturer"\s*:\s*"([^"]+)"/i,
+      /"maker"\s*:\s*"([^"]+)"/i,
+      /"vendor"\s*:\s*"([^"]+)"/i
     ];
     
     for (const pattern of patterns) {
       const match = content.match(pattern);
       if (match) {
-        return match[1].trim();
+        let brand = match[1].trim();
+        
+        // Clean up the brand name
+        brand = brand
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .trim();
+        
+        // Skip if it's just the word "brand" or other generic terms
+        if (brand && 
+            brand.length > 2 && 
+            !brand.toLowerCase().includes('brand') &&
+            !brand.toLowerCase().includes('manufacturer') &&
+            !brand.toLowerCase().includes('maker') &&
+            !brand.toLowerCase().includes('vendor') &&
+            !brand.includes('<') &&
+            !brand.includes('>') &&
+            !brand.includes('//')) {
+          return brand;
+        }
       }
     }
     

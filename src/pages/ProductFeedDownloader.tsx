@@ -996,7 +996,7 @@ const ProductFeedDownloader: React.FC = () => {
                   <Button
                     onClick={handleDownloadAllImages}
                     disabled={filteredProducts.length === 0}
-                    className="whitespace-nowrap"
+                    className="whitespace-nowrap px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
                   >
                     <DownloadCloud className="h-4 w-4 mr-2" />
                     Download All ({filteredProducts.reduce((sum, p) => sum + p.images.length, 0)} images)
@@ -1080,6 +1080,7 @@ const ProductFeedDownloader: React.FC = () => {
                     onClick={handleDownloadAllImages}
                     disabled={filteredProducts.length === 0}
                     size="sm"
+                    className="px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
                   >
                     <DownloadCloud className="h-4 w-4 mr-2" />
                     Download All
@@ -1087,6 +1088,7 @@ const ProductFeedDownloader: React.FC = () => {
                   <Button
                     disabled={filteredProducts.length === 0}
                     size="sm"
+                    className="px-6 py-2.5 text-sm font-medium border border-input bg-background rounded-lg hover:bg-accent hover:border-accent-foreground/20 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
                   >
                     <DownloadCloud className="h-4 w-4 mr-2" />
                     Download All
@@ -1262,7 +1264,7 @@ const ProductFeedDownloader: React.FC = () => {
                               <Button
                                 onClick={() => handleDownloadProductImages(product)}
                                 disabled={product.images.length === 0 || downloadingImages.has(product.id)}
-                                className="flex-1"
+                                className="flex-1 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
                                 size="sm"
                               >
                                 {downloadingImages.has(product.id) ? (
@@ -1279,7 +1281,7 @@ const ProductFeedDownloader: React.FC = () => {
                               </Button>
                                 <Button
                                   disabled={product.images.length === 0 || downloadingImages.has(product.id)}
-                                  className="flex-1"
+                                  className="flex-1 px-4 py-2 text-sm font-medium border border-input bg-background rounded-lg hover:bg-accent hover:border-accent-foreground/20 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
                                   size="sm"
                                 >
                                   <Download className="h-4 w-4 mr-2" />
