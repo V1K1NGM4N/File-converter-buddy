@@ -33,227 +33,598 @@ export interface ParsedFeed {
 }
 
 /**
- * Parses XML product feed and extracts product information
+ * Universal Product Feed Parser - Handles ANY feed format
+ * Supports: RSS, XML, JSON, CSV, HTML, and custom formats
  */
 export class XMLFeedParser {
-  private xmlDoc: Document | null = null;
   private xmlContent: string;
+  private feedType: 'xml' | 'json' | 'csv' | 'html' | 'unknown' = 'unknown';
 
   constructor(xmlContent: string) {
     this.xmlContent = xmlContent;
-    this.parseXML(xmlContent);
-  }
-
-  private parseXML(xmlContent: string): void {
-    // For simple parsing, we'll use regex to extract data directly
-    // This avoids XML parsing issues with malformed content
-    this.xmlDoc = null; // We'll use regex instead of DOM parsing
+    this.detectFeedType();
   }
 
   /**
-   * Gets initial scope of the feed (product count and estimated image count)
+   * Detect the type of feed we're dealing with
+   */
+  private detectFeedType(): void {
+    const content = this.xmlContent.trim();
+    
+    if (content.startsWith('{') || content.startsWith('[')) {
+      this.feedType = 'json';
+    } else if (content.includes('<') && content.includes('>')) {
+      this.feedType = 'xml';
+    } else if (content.includes(',') && content.includes('\n')) {
+      this.feedType = 'csv';
+    } else if (content.includes('<html') || content.includes('<!DOCTYPE')) {
+      this.feedType = 'html';
+    } else {
+      this.feedType = 'unknown';
+    }
+    
+    console.log(`Detected feed type: ${this.feedType}`);
+  }
+
+  /**
+   * Universal scope detection - works with any feed format
    */
   public getInitialScope(): { products: number; images: number } {
-    // Much faster approach - just count occurrences of key strings
-    const itemCount = (this.xmlContent.split('<item>').length - 1) + 
-                     (this.xmlContent.split('<item ').length - 1);
-    
-    // Count image links more efficiently
-    const imageLinkCount = (this.xmlContent.split('<g:image_link>').length - 1) + 
-                          (this.xmlContent.split('<g:additional_image_link>').length - 1);
-    
-    return {
-      products: Math.max(0, itemCount),
-      images: Math.max(0, imageLinkCount)
-    };
+    let products = 0;
+    let images = 0;
+
+    switch (this.feedType) {
+      case 'xml':
+        products = this.detectXMLProducts();
+        images = this.detectXMLImages();
+        break;
+      case 'json':
+        products = this.detectJSONProducts();
+        images = this.detectJSONImages();
+        break;
+      case 'csv':
+        products = this.detectCSVProducts();
+        images = this.detectCSVImages();
+        break;
+      case 'html':
+        products = this.detectHTMLProducts();
+        images = this.detectHTMLImages();
+        break;
+      default:
+        // Fallback: try all detection methods
+        products = Math.max(
+          this.detectXMLProducts(),
+          this.detectJSONProducts(),
+          this.detectCSVProducts(),
+          this.detectHTMLProducts(),
+          this.detectGenericProducts()
+        );
+        images = Math.max(
+          this.detectXMLImages(),
+          this.detectJSONImages(),
+          this.detectCSVImages(),
+          this.detectHTMLImages(),
+          this.detectGenericImages()
+        );
+    }
+
+    return { products, images };
   }
 
   /**
-   * Extracts all products from the XML feed using regex with performance optimizations
+   * Universal product parsing - works with any feed format
    */
   public parseProducts(onProgress?: (current: number, total: number, imagesFound: number) => void): ParsedFeed {
-    const products: Product[] = [];
-    const productMap = new Map<string, Product>();
-    
-    // Split content into individual items with better regex for performance
-    const itemMatches = this.xmlContent.match(/<item[^>]*>[\s\S]*?<\/item>/gi) || [];
-    const totalItems = itemMatches.length;
+    let products: Product[] = [];
     let totalImagesFound = 0;
-    
-    // Process items in batches for better performance on large feeds
-    const BATCH_SIZE = 100;
-    const batches = [];
-    for (let i = 0; i < itemMatches.length; i += BATCH_SIZE) {
-      batches.push(itemMatches.slice(i, i + BATCH_SIZE));
+
+    switch (this.feedType) {
+      case 'xml':
+        products = this.parseXMLProducts(onProgress);
+        break;
+      case 'json':
+        products = this.parseJSONProducts(onProgress);
+        break;
+      case 'csv':
+        products = this.parseCSVProducts(onProgress);
+        break;
+      case 'html':
+        products = this.parseHTMLProducts(onProgress);
+        break;
+      default:
+        // Try all parsing methods and combine results
+        products = this.parseUniversalProducts(onProgress);
     }
-    
-    let processedItems = 0;
-    
-    for (const batch of batches) {
-      // Process batch synchronously for better performance
-      for (let batchIndex = 0; batchIndex < batch.length; batchIndex++) {
-        const itemContent = batch[batchIndex];
-        const index = processedItems + batchIndex;
-        
-        try {
-          const product = this.extractProductFromItemContent(itemContent, index);
-          if (product) {
-            // Count images for this product
-            totalImagesFound += product.images.length;
-            
-            // Report progress every 10 items to avoid too many updates
-            if (onProgress && (index + 1) % 10 === 0) {
-              onProgress(index + 1, totalItems, totalImagesFound);
-            }
-            
-            // Use product title as the key to group variants
-            const productKey = product.title.trim().toLowerCase();
-            
-            if (productMap.has(productKey)) {
-              // Product already exists, merge the images
-              const existingProduct = productMap.get(productKey)!;
-              const newImages = product.images.filter(newImage => 
-                !existingProduct.images.some(existingImage => existingImage.url === newImage.url)
-              );
-              existingProduct.images.push(...newImages);
-              
-              // Update other fields if they're missing in the existing product
-              if (!existingProduct.brand && product.brand) {
-                existingProduct.brand = product.brand;
-              }
-              if (!existingProduct.description && product.description) {
-                existingProduct.description = product.description;
-              }
-              if (!existingProduct.productUrl && product.productUrl) {
-                existingProduct.productUrl = product.productUrl;
-              }
-              if (!existingProduct.price && product.price) {
-                existingProduct.price = product.price;
-              } else if (existingProduct.price && product.price && existingProduct.price !== product.price) {
-                // If both have prices, use the first one (they should be the same anyway)
-                // This handles cases where variants might have slightly different price formatting
-                existingProduct.price = existingProduct.price;
-              }
-              
-              // Update availability - if any variant is in stock, mark as in stock
-              if (product.availability === 'in_stock' || existingProduct.availability === 'in_stock') {
-                existingProduct.availability = 'in_stock';
-              }
-            } else {
-              // New product, add it to the map
-              productMap.set(productKey, product);
-            }
-          }
-        } catch (error) {
-          console.warn(`Failed to parse product at index ${index}:`, error);
-        }
-      }
-      
-      processedItems += batch.length;
-      
-      // Report progress at the end of each batch
-      if (onProgress) {
-        onProgress(processedItems, totalItems, totalImagesFound);
-      }
-      
-      // Small delay between batches to prevent blocking the UI
-      if (batches.indexOf(batch) < batches.length - 1) {
-        // Use setTimeout to yield control back to the browser
-        // Note: This is a synchronous method, so we can't use await here
-        // The batching itself helps with performance
-      }
-    }
+
+    // Sort products alphabetically by title
+    products = products.sort((a, b) => {
+      const titleA = a.title.toLowerCase().trim();
+      const titleB = b.title.toLowerCase().trim();
+      return titleA.localeCompare(titleB);
+    });
+
+    // Count total images
+    totalImagesFound = products.reduce((sum, product) => sum + product.images.length, 0);
 
     // Final progress update
     if (onProgress) {
-      onProgress(totalItems, totalItems, totalImagesFound);
+      onProgress(products.length, products.length, totalImagesFound);
     }
 
-    // Convert map values to array
-    const uniqueProducts = Array.from(productMap.values());
-
     return {
-      products: uniqueProducts,
-      totalCount: uniqueProducts.length,
+      products,
+      totalCount: products.length,
       feedTitle: 'Product Feed',
-      feedDescription: 'Parsed from XML content'
+      feedDescription: `Parsed from ${this.feedType} content`
     };
   }
 
-  private extractProductFromItemContent(itemContent: string, index: number): Product | null {
-    // Extract title using regex
-    const titleMatch = itemContent.match(/<title[^>]*>([^<]+)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].trim() : '';
-
-    if (!title) {
-      return null; // Skip items without title
-    }
-
-    // Extract description
-    const descMatch = itemContent.match(/<description[^>]*>([^<]+)<\/description>/i);
-    const description = descMatch ? descMatch[1].trim() : '';
-
-    // Extract brand
-    const brandMatch = itemContent.match(/<g:brand[^>]*>([^<]+)<\/g:brand>/i);
-    const brand = brandMatch ? brandMatch[1].trim() : '';
-
-    // Extract price and clean up currency duplicates
-    const priceMatch = itemContent.match(/<g:price[^>]*>([^<]+)<\/g:price>/i);
-    let price = priceMatch ? priceMatch[1].trim() : '';
+  // XML Detection Methods
+  private detectXMLProducts(): number {
+    const patterns = [
+      /<item[^>]*>/gi,
+      /<product[^>]*>/gi,
+      /<entry[^>]*>/gi,
+      /<rss:item[^>]*>/gi,
+      /<atom:entry[^>]*>/gi
+    ];
     
-    // Clean up duplicate currency symbols
-    if (price) {
-      console.log('Original price:', price); // Debug log
+    let count = 0;
+    patterns.forEach(pattern => {
+      const matches = this.xmlContent.match(pattern);
+      if (matches) count += matches.length;
+    });
+    
+    return count;
+  }
+
+  private detectXMLImages(): number {
+    const patterns = [
+      /<g:image_link[^>]*>/gi,
+      /<g:additional_image_link[^>]*>/gi,
+      /<image_link[^>]*>/gi,
+      /<image[^>]*>/gi,
+      /\.jpeg/gi,
+      /\.jpg/gi,
+      /\.png/gi,
+      /\.gif/gi,
+      /\.webp/gi,
+      /\/assets\/img\//gi,
+      /\/images\//gi,
+      /\/media\//gi
+    ];
+    
+    let count = 0;
+    patterns.forEach(pattern => {
+      const matches = this.xmlContent.match(pattern);
+      if (matches) count += matches.length;
+    });
+    
+    return count;
+  }
+
+  // JSON Detection Methods
+  private detectJSONProducts(): number {
+    try {
+      const data = JSON.parse(this.xmlContent);
       
-      // More aggressive cleaning - remove all currency codes and rebuild
-      const numericMatch = price.match(/^([\d.,\s]+)/);
-      const currencyMatches = price.match(/\b([A-Z]{3})\b/g);
+      // Try different JSON structures
+      if (Array.isArray(data)) {
+        return data.length;
+      } else if (data.products && Array.isArray(data.products)) {
+        return data.products.length;
+      } else if (data.items && Array.isArray(data.items)) {
+        return data.items.length;
+      } else if (data.entries && Array.isArray(data.entries)) {
+        return data.entries.length;
+      }
       
-      if (numericMatch) {
-        const numericPart = numericMatch[1].trim();
-        if (currencyMatches && currencyMatches.length > 0) {
-          // Take only the first currency found
-          const uniqueCurrency = currencyMatches[0];
-          price = numericPart + ' ' + uniqueCurrency;
-        } else {
-          // If no currency found, just use the numeric part
-          price = numericPart;
-        }
-        console.log('Cleaned price:', price); // Debug log
+      return 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  private detectJSONImages(): number {
+    try {
+      const data = JSON.parse(this.xmlContent);
+      const jsonString = JSON.stringify(data);
+      
+      const patterns = [
+        /\.jpeg/gi,
+        /\.jpg/gi,
+        /\.png/gi,
+        /\.gif/gi,
+        /\.webp/gi,
+        /"image"/gi,
+        /"photo"/gi,
+        /"picture"/gi
+      ];
+      
+      let count = 0;
+      patterns.forEach(pattern => {
+        const matches = jsonString.match(pattern);
+        if (matches) count += matches.length;
+      });
+      
+      return count;
+    } catch {
+      return 0;
+    }
+  }
+
+  // CSV Detection Methods
+  private detectCSVProducts(): number {
+    const lines = this.xmlContent.split('\n').filter(line => line.trim());
+    return Math.max(0, lines.length - 1); // Subtract header row
+  }
+
+  private detectCSVImages(): number {
+    const patterns = [
+      /\.jpeg/gi,
+      /\.jpg/gi,
+      /\.png/gi,
+      /\.gif/gi,
+      /\.webp/gi
+    ];
+    
+    let count = 0;
+    patterns.forEach(pattern => {
+      const matches = this.xmlContent.match(pattern);
+      if (matches) count += matches.length;
+    });
+    
+    return count;
+  }
+
+  // HTML Detection Methods
+  private detectHTMLProducts(): number {
+    const patterns = [
+      /<div[^>]*class[^>]*product[^>]*>/gi,
+      /<article[^>]*class[^>]*product[^>]*>/gi,
+      /<section[^>]*class[^>]*product[^>]*>/gi,
+      /<li[^>]*class[^>]*product[^>]*>/gi,
+      /product[^:]*:\s*[^\n\r<]+/gi
+    ];
+    
+    let count = 0;
+    patterns.forEach(pattern => {
+      const matches = this.xmlContent.match(pattern);
+      if (matches) count += matches.length;
+    });
+    
+    return count;
+  }
+
+  private detectHTMLImages(): number {
+    const patterns = [
+      /<img[^>]*src[^>]*>/gi,
+      /<picture[^>]*>/gi,
+      /\.jpeg/gi,
+      /\.jpg/gi,
+      /\.png/gi,
+      /\.gif/gi,
+      /\.webp/gi
+    ];
+    
+    let count = 0;
+    patterns.forEach(pattern => {
+      const matches = this.xmlContent.match(pattern);
+      if (matches) count += matches.length;
+    });
+    
+    return count;
+  }
+
+  // Generic Detection Methods (fallback)
+  private detectGenericProducts(): number {
+    const patterns = [
+      /https?:\/\/[^\s<>"']+\/produkt\/[^\s<>"']*/gi,
+      /https?:\/\/[^\s<>"']+\/product\/[^\s<>"']*/gi,
+      /https?:\/\/[^\s<>"']+\/item\/[^\s<>"']*/gi,
+      /product[^:]*:\s*[^\n\r<]+/gi,
+      /item[^:]*:\s*[^\n\r<]+/gi
+    ];
+    
+    let count = 0;
+    patterns.forEach(pattern => {
+      const matches = this.xmlContent.match(pattern);
+      if (matches) count += matches.length;
+    });
+    
+    return count;
+  }
+
+  private detectGenericImages(): number {
+    const patterns = [
+      /https?:\/\/[^\s<>"']+\.(jpg|jpeg|png|gif|webp|svg|bmp|tiff|tif)(?:\?[^\s<>"']*)?/gi,
+      /\/assets\/img\//gi,
+      /\/images\//gi,
+      /\/media\//gi,
+      /\/photos\//gi,
+      /\/pictures\//gi
+    ];
+    
+    let count = 0;
+    patterns.forEach(pattern => {
+      const matches = this.xmlContent.match(pattern);
+      if (matches) count += matches.length;
+    });
+    
+    return count;
+  }
+
+  // Parsing Methods
+  private parseXMLProducts(onProgress?: (current: number, total: number, imagesFound: number) => void): Product[] {
+    const products: Product[] = [];
+    const productMap = new Map<string, Product>();
+    
+    // Try multiple XML parsing strategies
+    const strategies = [
+      () => this.xmlContent.match(/<item[^>]*>[\s\S]*?<\/item>/gi) || [],
+      () => this.xmlContent.match(/<product[^>]*>[\s\S]*?<\/product>/gi) || [],
+      () => this.xmlContent.match(/<entry[^>]*>[\s\S]*?<\/entry>/gi) || [],
+      () => this.extractFromContent() // Fallback
+    ];
+    
+    let itemMatches: string[] = [];
+    for (const strategy of strategies) {
+      itemMatches = strategy();
+      if (itemMatches.length > 0) {
+        console.log(`Found ${itemMatches.length} items using XML strategy`);
+        break;
       }
     }
+    
+    let totalImagesFound = 0;
+    
+    for (let index = 0; index < itemMatches.length; index++) {
+      const itemContent = itemMatches[index];
+      
+      try {
+        const product = this.extractProductFromContent(itemContent, index);
+        if (product && product.title) {
+          totalImagesFound += product.images.length;
+          
+          if (onProgress && (index + 1) % 10 === 0) {
+            onProgress(index + 1, itemMatches.length, totalImagesFound);
+          }
+          
+          const productKey = product.title.trim().toLowerCase();
+          if (productMap.has(productKey)) {
+            const existingProduct = productMap.get(productKey)!;
+            const newImages = product.images.filter(newImage => 
+              !existingProduct.images.some(existingImage => existingImage.url === newImage.url)
+            );
+            existingProduct.images.push(...newImages);
+          } else {
+            productMap.set(productKey, product);
+          }
+        }
+      } catch (error) {
+        console.warn(`Failed to parse XML product at index ${index}:`, error);
+      }
+    }
+    
+    return Array.from(productMap.values());
+  }
 
-    // Extract size
-    const sizeMatch = itemContent.match(/<g:size[^>]*>([^<]+)<\/g:size>/i);
-    const size = sizeMatch ? sizeMatch[1].trim() : '';
+  private parseJSONProducts(onProgress?: (current: number, total: number, imagesFound: number) => void): Product[] {
+    try {
+      const data = JSON.parse(this.xmlContent);
+      const products: Product[] = [];
+      
+      let items: any[] = [];
+      
+      // Try different JSON structures
+      if (Array.isArray(data)) {
+        items = data;
+      } else if (data.products && Array.isArray(data.products)) {
+        items = data.products;
+      } else if (data.items && Array.isArray(data.items)) {
+        items = data.items;
+      } else if (data.entries && Array.isArray(data.entries)) {
+        items = data.entries;
+      }
+      
+      let totalImagesFound = 0;
+      
+      for (let index = 0; index < items.length; index++) {
+        const item = items[index];
+        
+        try {
+          const product = this.extractProductFromJSON(item, index);
+          if (product && product.title) {
+            totalImagesFound += product.images.length;
+            
+            if (onProgress && (index + 1) % 10 === 0) {
+              onProgress(index + 1, items.length, totalImagesFound);
+            }
+            
+            products.push(product);
+          }
+        } catch (error) {
+          console.warn(`Failed to parse JSON product at index ${index}:`, error);
+        }
+      }
+      
+      return products;
+    } catch (error) {
+      console.warn('Failed to parse JSON:', error);
+      return [];
+    }
+  }
 
-    // Extract color
-    const colorMatch = itemContent.match(/<g:color[^>]*>([^<]+)<\/g:color>/i);
-    const color = colorMatch ? colorMatch[1].trim() : '';
+  private parseCSVProducts(onProgress?: (current: number, total: number, imagesFound: number) => void): Product[] {
+    const lines = this.xmlContent.split('\n').filter(line => line.trim());
+    if (lines.length < 2) return [];
+    
+    const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+    const products: Product[] = [];
+    
+    let totalImagesFound = 0;
+    
+    for (let index = 1; index < lines.length; index++) {
+      const line = lines[index];
+      const values = line.split(',').map(v => v.trim());
+      
+      try {
+        const product = this.extractProductFromCSV(headers, values, index);
+        if (product && product.title) {
+          totalImagesFound += product.images.length;
+          
+          if (onProgress && (index + 1) % 10 === 0) {
+            onProgress(index + 1, lines.length, totalImagesFound);
+          }
+          
+          products.push(product);
+        }
+      } catch (error) {
+        console.warn(`Failed to parse CSV product at index ${index}:`, error);
+      }
+    }
+    
+    return products;
+  }
 
-    // Extract product URL
-    const linkMatch = itemContent.match(/<link[^>]*>([^<]+)<\/link>/i);
-    const productUrl = linkMatch ? linkMatch[1].trim() : '';
+  private parseHTMLProducts(onProgress?: (current: number, total: number, imagesFound: number) => void): Product[] {
+    const products: Product[] = [];
+    
+    // Extract product sections from HTML
+    const productSections = this.extractHTMLProductSections();
+    
+    let totalImagesFound = 0;
+    
+    for (let index = 0; index < productSections.length; index++) {
+      const section = productSections[index];
+      
+      try {
+        const product = this.extractProductFromContent(section, index);
+        if (product && product.title) {
+          totalImagesFound += product.images.length;
+          
+          if (onProgress && (index + 1) % 10 === 0) {
+            onProgress(index + 1, productSections.length, totalImagesFound);
+          }
+          
+          products.push(product);
+        }
+      } catch (error) {
+        console.warn(`Failed to parse HTML product at index ${index}:`, error);
+      }
+    }
+    
+    return products;
+  }
 
-    // Extract images using regex
-    const images = this.extractImagesFromContent(itemContent);
+  private parseUniversalProducts(onProgress?: (current: number, total: number, imagesFound: number) => void): Product[] {
+    // Try all parsing methods and combine results
+    const xmlProducts = this.parseXMLProducts();
+    const jsonProducts = this.parseJSONProducts();
+    const csvProducts = this.parseCSVProducts();
+    const htmlProducts = this.parseHTMLProducts();
+    
+    // Combine and deduplicate
+    const allProducts = [...xmlProducts, ...jsonProducts, ...csvProducts, ...htmlProducts];
+    const productMap = new Map<string, Product>();
+    
+    allProducts.forEach(product => {
+      const key = product.title.trim().toLowerCase();
+      if (productMap.has(key)) {
+        const existing = productMap.get(key)!;
+        const newImages = product.images.filter(newImage => 
+          !existing.images.some(existingImage => existingImage.url === newImage.url)
+        );
+        existing.images.push(...newImages);
+      } else {
+        productMap.set(key, product);
+      }
+    });
+    
+    return Array.from(productMap.values());
+  }
 
-    // Generate ID
-    const id = `product_${index}`;
+  // Helper Methods
+  private extractFromContent(): string[] {
+    const items: string[] = [];
+    
+    // Look for product URLs and extract surrounding content
+    const productUrlPattern = /https?:\/\/[^\s<>"']+\/(produkt|product|item)\/[^\s<>"']*/gi;
+    const productUrls = this.xmlContent.match(productUrlPattern) || [];
+    
+    if (productUrls.length > 0) {
+      productUrls.forEach((url) => {
+        const urlIndex = this.xmlContent.indexOf(url);
+        if (urlIndex !== -1) {
+          const start = Math.max(0, urlIndex - 500);
+          const end = Math.min(this.xmlContent.length, urlIndex + 500);
+          const chunk = this.xmlContent.substring(start, end);
+          items.push(chunk);
+        }
+      });
+    } else {
+      // Fallback: split by image URLs
+      const imagePattern = /https?:\/\/[^\s<>"']+\.(jpg|jpeg|png|gif|webp)/gi;
+      const imageUrls = this.xmlContent.match(imagePattern) || [];
+      
+      imageUrls.forEach((url) => {
+        const urlIndex = this.xmlContent.indexOf(url);
+        if (urlIndex !== -1) {
+          const start = Math.max(0, urlIndex - 300);
+          const end = Math.min(this.xmlContent.length, urlIndex + 300);
+          const chunk = this.xmlContent.substring(start, end);
+          items.push(chunk);
+        }
+      });
+    }
+    
+    return items;
+  }
+
+  private extractHTMLProductSections(): string[] {
+    const sections: string[] = [];
+    
+    const patterns = [
+      /<div[^>]*class[^>]*product[^>]*>[\s\S]*?<\/div>/gi,
+      /<article[^>]*class[^>]*product[^>]*>[\s\S]*?<\/article>/gi,
+      /<section[^>]*class[^>]*product[^>]*>[\s\S]*?<\/section>/gi,
+      /<li[^>]*class[^>]*product[^>]*>[\s\S]*?<\/li>/gi
+    ];
+    
+    patterns.forEach(pattern => {
+      const matches = this.xmlContent.match(pattern);
+      if (matches) {
+        sections.push(...matches);
+      }
+    });
+    
+    return sections;
+  }
+
+  private extractProductFromContent(content: string, index: number): Product | null {
+    // Universal product extraction that works with any format
+    const title = this.extractTitle(content);
+    if (!title) return null;
+
+    const description = this.extractDescription(content);
+    const brand = this.extractBrand(content);
+    const price = this.extractPrice(content);
+    const productUrl = this.extractProductUrl(content);
+    const images = this.extractImages(content);
 
     return {
-      id,
+      id: `product_${index}`,
       title,
       description,
       brand,
       price,
-      currency: '', // No default currency
+      currency: '',
       availability: 'in_stock',
       condition: 'new',
       gender: '',
       ageGroup: '',
-      size,
-      color,
+      size: '',
+      color: '',
       material: '',
       category: '',
       images,
@@ -264,91 +635,349 @@ export class XMLFeedParser {
     };
   }
 
-  private extractImagesFromContent(itemContent: string): ProductImage[] {
+  private extractProductFromJSON(item: any, index: number): Product | null {
+    const title = this.extractTitleFromJSON(item);
+    if (!title) return null;
+
+    const description = this.extractDescriptionFromJSON(item);
+    const brand = this.extractBrandFromJSON(item);
+    const price = this.extractPriceFromJSON(item);
+    const productUrl = this.extractProductUrlFromJSON(item);
+    const images = this.extractImagesFromJSON(item);
+
+    return {
+      id: `product_${index}`,
+      title,
+      description,
+      brand,
+      price,
+      currency: '',
+      availability: 'in_stock',
+      condition: 'new',
+      gender: '',
+      ageGroup: '',
+      size: '',
+      color: '',
+      material: '',
+      category: '',
+      images,
+      productUrl,
+      gtin: '',
+      mpn: '',
+      weight: ''
+    };
+  }
+
+  private extractProductFromCSV(headers: string[], values: string[], index: number): Product | null {
+    const titleIndex = headers.findIndex(h => h.includes('title') || h.includes('name'));
+    if (titleIndex === -1 || !values[titleIndex]) return null;
+
+    const title = values[titleIndex];
+    const description = this.getCSVValue(headers, values, ['description', 'desc', 'summary']);
+    const brand = this.getCSVValue(headers, values, ['brand', 'manufacturer', 'maker']);
+    const price = this.getCSVValue(headers, values, ['price', 'cost', 'amount']);
+    const productUrl = this.getCSVValue(headers, values, ['url', 'link', 'href']);
+    const images = this.extractImagesFromCSV(headers, values);
+
+    return {
+      id: `product_${index}`,
+      title,
+      description,
+      brand,
+      price,
+      currency: '',
+      availability: 'in_stock',
+      condition: 'new',
+      gender: '',
+      ageGroup: '',
+      size: '',
+      color: '',
+      material: '',
+      category: '',
+      images,
+      productUrl,
+      gtin: '',
+      mpn: '',
+      weight: ''
+    };
+  }
+
+  // Universal extraction methods
+  private extractTitle(content: string): string {
+    const patterns = [
+      // XML tag patterns
+      /<title[^>]*>([^<]+)<\/title>/i,
+      /<g:title[^>]*>([^<]+)<\/g:title>/i,
+      /<name[^>]*>([^<]+)<\/name>/i,
+      /<product_name[^>]*>([^<]+)<\/product_name>/i,
+      /<item_title[^>]*>([^<]+)<\/item_title>/i,
+      /<product_title[^>]*>([^<]+)<\/product_title>/i,
+      
+      // Key-value patterns
+      /product[^:]*:\s*([^\n\r<]+)/i,
+      /title[^:]*:\s*([^\n\r<]+)/i,
+      /name[^:]*:\s*([^\n\r<]+)/i,
+      /item[^:]*:\s*([^\n\r<]+)/i,
+      
+      // URL-based extraction (for Vivibene and similar)
+      /https?:\/\/[^\s<>"']+\/(produkt|product|item)\/([^\/\s<>"']+)/i,
+      
+      // Generic product name patterns
+      /"name"\s*:\s*"([^"]+)"/i,
+      /"title"\s*:\s*"([^"]+)"/i,
+      /"product_name"\s*:\s*"([^"]+)"/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = content.match(pattern);
+      if (match) {
+        let title = match[1] || match[2] || match[0];
+        
+        // Clean up the title
+        title = title
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .trim();
+        
+        // Skip generic or malformed titles
+        if (title && 
+            title.length > 2 && 
+            !title.includes('google_product_category') &&
+            !title.includes('//') &&
+            !title.startsWith('<') &&
+            !title.endsWith('>')) {
+          return title;
+        }
+      }
+    }
+
+    // Try to extract from URL as last resort
+    const urlMatch = content.match(/https?:\/\/[^\s<>"']+\/(produkt|product|item)\/([^\/\s<>"']+)/i);
+    if (urlMatch) {
+      return urlMatch[2]
+        .replace(/[-_]/g, ' ')
+        .replace(/\b\w/g, l => l.toUpperCase())
+        .trim();
+    }
+
+    return '';
+  }
+
+  private extractDescription(content: string): string {
+    const patterns = [
+      /<description[^>]*>([^<]+)<\/description>/i,
+      /<g:description[^>]*>([^<]+)<\/g:description>/i,
+      /<summary[^>]*>([^<]+)<\/summary>/i,
+      /<content[^>]*>([^<]+)<\/content>/i,
+      /description[^:]*:\s*([^\n\r<]+)/i,
+      /summary[^:]*:\s*([^\n\r<]+)/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = content.match(pattern);
+      if (match) {
+        return match[1].trim();
+      }
+    }
+    
+    return '';
+  }
+
+  private extractBrand(content: string): string {
+    const patterns = [
+      /<g:brand[^>]*>([^<]+)<\/g:brand>/i,
+      /<brand[^>]*>([^<]+)<\/brand>/i,
+      /<manufacturer[^>]*>([^<]+)<\/manufacturer>/i,
+      /brand[^:]*:\s*([^\n\r<]+)/i,
+      /manufacturer[^:]*:\s*([^\n\r<]+)/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = content.match(pattern);
+      if (match) {
+        return match[1].trim();
+      }
+    }
+    
+    return '';
+  }
+
+  private extractPrice(content: string): string {
+    const patterns = [
+      /<g:price[^>]*>([^<]+)<\/g:price>/i,
+      /<price[^>]*>([^<]+)<\/price>/i,
+      /<cost[^>]*>([^<]+)<\/cost>/i,
+      /(\d+[\.,]\d+)\s*(NOK|USD|EUR|GBP|\$|€|£|kr)/i,
+      /price[^:]*:\s*([^\n\r<]+)/i,
+      /cost[^:]*:\s*([^\n\r<]+)/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = content.match(pattern);
+      if (match) {
+        return match[1].trim();
+      }
+    }
+    
+    return '';
+  }
+
+  private extractProductUrl(content: string): string {
+    const patterns = [
+      /<link[^>]*>([^<]+)<\/link>/i,
+      /<g:link[^>]*>([^<]+)<\/g:link>/i,
+      /<url[^>]*>([^<]+)<\/url>/i,
+      /https?:\/\/[^\s<>"']+\/(produkt|product|item)\/[^\s<>"']*/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = content.match(pattern);
+      if (match) {
+        return (match[1] || match[0]).trim();
+      }
+    }
+    
+    return '';
+  }
+
+  private extractImages(content: string): ProductImage[] {
     const images: ProductImage[] = [];
     
-    // Multiple patterns to extract image URLs from different XML formats
-    const imagePatterns = [
-      // Google Shopping format
+    // Universal image extraction patterns
+    const patterns = [
+      // XML formats
       /<g:image_link[^>]*>([^<]+)<\/g:image_link>/gi,
       /<g:additional_image_link[^>]*>([^<]+)<\/g:additional_image_link>/gi,
-      
-      // Standard RSS/XML formats
       /<image_link[^>]*>([^<]+)<\/image_link>/gi,
       /<image[^>]*>([^<]+)<\/image>/gi,
       /<img[^>]*src=["']([^"']+)["'][^>]*>/gi,
       
-      // Other common formats
-      /<picture[^>]*>([^<]+)<\/picture>/gi,
-      /<media:content[^>]*url=["']([^"']+)["'][^>]*>/gi,
-      /<enclosure[^>]*url=["']([^"']+)["'][^>]*>/gi,
-      
-      // Generic URL patterns that might be images
-      /<url[^>]*>([^<]+\.(jpg|jpeg|png|gif|webp|svg|bmp|tiff|tif)[^<]*)<\/url>/gi,
-      /<link[^>]*>([^<]+\.(jpg|jpeg|png|gif|webp|svg|bmp|tiff|tif)[^<]*)<\/link>/gi
+      // Direct URL patterns
+      /https?:\/\/[^\s<>"']+\/assets\/img\/[^\s<>"']+\.(jpg|jpeg|png|gif|webp)/gi,
+      /https?:\/\/[^\s<>"']+\/images\/[^\s<>"']+\.(jpg|jpeg|png|gif|webp)/gi,
+      /https?:\/\/[^\s<>"']+\/media\/[^\s<>"']+\.(jpg|jpeg|png|gif|webp)/gi,
+      /https?:\/\/[^\s<>"']+\.(jpg|jpeg|png|gif|webp)(?:\?[^\s<>"']*)?/gi
     ];
     
-    // Extract URLs using all patterns
-    imagePatterns.forEach((pattern, patternIndex) => {
-      const matches = itemContent.match(pattern);
+    patterns.forEach(pattern => {
+      const matches = content.match(pattern);
       if (matches) {
-        matches.forEach((match, index) => {
+        matches.forEach(match => {
           let url = '';
           
-          // Extract URL from different match formats
           if (pattern.source.includes('src=')) {
             const urlMatch = match.match(/src=["']([^"']+)["']/i);
             url = urlMatch ? urlMatch[1] : '';
-          } else if (pattern.source.includes('url=')) {
-            const urlMatch = match.match(/url=["']([^"']+)["']/i);
-            url = urlMatch ? urlMatch[1] : '';
+          } else if (pattern.source.includes('https?:')) {
+            url = match;
           } else {
-            // Extract content between tags
             const contentMatch = match.match(/>([^<]+)</i);
             url = contentMatch ? contentMatch[1] : '';
           }
           
           if (url && this.isValidImageUrl(url)) {
-            // Clean and decode URL
             url = decodeURIComponent(url.trim());
-            
-            // Avoid duplicates
             if (!images.some(img => img.url === url)) {
               images.push({
                 url,
-                alt: `Image ${images.length + 1}`
+                alt: `Product Image ${images.length + 1}`
               });
             }
           }
         });
       }
     });
-    
-    // Additional fallback: look for any URLs in the content that might be images
-    const urlPattern = /https?:\/\/[^\s<>"']+\.(jpg|jpeg|png|gif|webp|svg|bmp|tiff|tif)(?:\?[^\s<>"']*)?/gi;
-    const urlMatches = itemContent.match(urlPattern);
-    if (urlMatches) {
-      urlMatches.forEach(url => {
-        if (this.isValidImageUrl(url) && !images.some(img => img.url === url)) {
-          images.push({
-            url: decodeURIComponent(url.trim()),
-            alt: `Found image ${images.length + 1}`
-          });
-        }
-      });
-    }
 
+    return images;
+  }
+
+  // JSON-specific extraction methods
+  private extractTitleFromJSON(item: any): string {
+    return item.title || item.name || item.product_name || item.label || '';
+  }
+
+  private extractDescriptionFromJSON(item: any): string {
+    return item.description || item.desc || item.summary || item.content || '';
+  }
+
+  private extractBrandFromJSON(item: any): string {
+    return item.brand || item.manufacturer || item.maker || item.vendor || '';
+  }
+
+  private extractPriceFromJSON(item: any): string {
+    return item.price || item.cost || item.amount || item.value || '';
+  }
+
+  private extractProductUrlFromJSON(item: any): string {
+    return item.url || item.link || item.href || item.product_url || '';
+  }
+
+  private extractImagesFromJSON(item: any): ProductImage[] {
+    const images: ProductImage[] = [];
+    
+    // Try different image field names
+    const imageFields = [
+      'image', 'images', 'image_url', 'image_urls', 'photo', 'photos',
+      'picture', 'pictures', 'media', 'media_urls', 'gallery'
+    ];
+    
+    imageFields.forEach(field => {
+      if (item[field]) {
+        if (Array.isArray(item[field])) {
+          item[field].forEach((url: string) => {
+            if (this.isValidImageUrl(url)) {
+              images.push({ url, alt: `Product Image ${images.length + 1}` });
+            }
+          });
+        } else if (typeof item[field] === 'string' && this.isValidImageUrl(item[field])) {
+          images.push({ url: item[field], alt: `Product Image ${images.length + 1}` });
+        }
+      }
+    });
+    
+    return images;
+  }
+
+  // CSV-specific extraction methods
+  private getCSVValue(headers: string[], values: string[], possibleHeaders: string[]): string {
+    for (const possibleHeader of possibleHeaders) {
+      const index = headers.findIndex(h => h.includes(possibleHeader));
+      if (index !== -1 && values[index]) {
+        return values[index];
+      }
+    }
+    return '';
+  }
+
+  private extractImagesFromCSV(headers: string[], values: string[]): ProductImage[] {
+    const images: ProductImage[] = [];
+    
+    const imageHeaders = ['image', 'images', 'photo', 'photos', 'picture', 'pictures', 'media'];
+    
+    imageHeaders.forEach(header => {
+      const index = headers.findIndex(h => h.includes(header));
+      if (index !== -1 && values[index]) {
+        const urls = values[index].split(';').map(url => url.trim());
+        urls.forEach(url => {
+          if (this.isValidImageUrl(url)) {
+            images.push({ url, alt: `Product Image ${images.length + 1}` });
+          }
+        });
+      }
+    });
+    
     return images;
   }
 
   private isValidImageUrl(url: string): boolean {
     if (!url || typeof url !== 'string') return false;
     
-    // Clean the URL
     const cleanUrl = url.trim();
     if (!cleanUrl) return false;
     
-    // Check if it's a valid URL format
     try {
       new URL(cleanUrl);
     } catch {
@@ -358,21 +987,15 @@ export class XMLFeedParser {
     const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.bmp', '.tiff', '.tif'];
     const lowerUrl = cleanUrl.toLowerCase();
     
-    // Check for image extensions
     const hasImageExtension = imageExtensions.some(ext => lowerUrl.includes(ext));
+    const hasImageKeywords = lowerUrl.includes('image') || lowerUrl.includes('photo') || 
+                            lowerUrl.includes('picture') || lowerUrl.includes('img') || 
+                            lowerUrl.includes('media') || lowerUrl.includes('assets');
+    const hasImagePattern = lowerUrl.includes('/assets/img/') || lowerUrl.includes('/images/') || 
+                           lowerUrl.includes('/media/') || lowerUrl.includes('cdn.') || 
+                           lowerUrl.includes('static.') || lowerUrl.includes('amazonaws.com');
     
-    // Check for image-related keywords in URL
-    const hasImageKeywords = lowerUrl.includes('image') ||
-                            lowerUrl.includes('photo') ||
-                            lowerUrl.includes('picture') ||
-                            lowerUrl.includes('img') ||
-                            lowerUrl.includes('media');
-    
-    // Check for common image hosting domains
-    const imageDomains = ['imgur.com', 'flickr.com', 'amazonaws.com', 'cloudinary.com', 'cdn.', 'static.'];
-    const hasImageDomain = imageDomains.some(domain => lowerUrl.includes(domain));
-    
-    return hasImageExtension || hasImageKeywords || hasImageDomain;
+    return hasImageExtension || hasImageKeywords || hasImagePattern;
   }
 
 }
