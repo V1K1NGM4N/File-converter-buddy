@@ -704,34 +704,30 @@ export class XMLFeedParser {
 
   // Universal extraction methods
   private extractTitle(content: string): string {
-    const patterns = [
-      // XML tag patterns
-      /<title[^>]*>([^<]+)<\/title>/i,
+    // First, try to find actual product titles in the content
+    const titlePatterns = [
+      // Look for actual product names in the content
       /<g:title[^>]*>([^<]+)<\/g:title>/i,
+      /<title[^>]*>([^<]+)<\/title>/i,
       /<name[^>]*>([^<]+)<\/name>/i,
       /<product_name[^>]*>([^<]+)<\/product_name>/i,
       /<item_title[^>]*>([^<]+)<\/item_title>/i,
       /<product_title[^>]*>([^<]+)<\/product_title>/i,
       
-      // Key-value patterns
-      /product[^:]*:\s*([^\n\r<]+)/i,
-      /title[^:]*:\s*([^\n\r<]+)/i,
-      /name[^:]*:\s*([^\n\r<]+)/i,
-      /item[^:]*:\s*([^\n\r<]+)/i,
+      // Look for product names in description or content
+      /<g:description[^>]*>([^<]+)<\/g:description>/i,
+      /<description[^>]*>([^<]+)<\/description>/i,
       
-      // URL-based extraction (for Vivibene and similar)
-      /https?:\/\/[^\s<>"']+\/(produkt|product|item)\/([^\/\s<>"']+)/i,
-      
-      // Generic product name patterns
+      // JSON patterns
       /"name"\s*:\s*"([^"]+)"/i,
       /"title"\s*:\s*"([^"]+)"/i,
       /"product_name"\s*:\s*"([^"]+)"/i
     ];
     
-    for (const pattern of patterns) {
+    for (const pattern of titlePatterns) {
       const match = content.match(pattern);
       if (match) {
-        let title = match[1] || match[2] || match[0];
+        let title = match[1].trim();
         
         // Clean up the title
         title = title
@@ -742,27 +738,129 @@ export class XMLFeedParser {
           .replace(/&#39;/g, "'")
           .trim();
         
-        // Skip generic or malformed titles
-        if (title && 
-            title.length > 2 && 
-            !title.includes('google_product_category') &&
-            !title.includes('//') &&
-            !title.startsWith('<') &&
-            !title.endsWith('>')) {
+        // Check if this looks like a real product name
+        if (this.isValidProductTitle(title)) {
           return title;
         }
       }
     }
 
-    // Try to extract from URL as last resort
+    // Try to extract from URL as fallback
     const urlMatch = content.match(/https?:\/\/[^\s<>"']+\/(produkt|product|item)\/([^\/\s<>"']+)/i);
     if (urlMatch) {
-      return urlMatch[2]
+      const urlTitle = urlMatch[2]
         .replace(/[-_]/g, ' ')
         .replace(/\b\w/g, l => l.toUpperCase())
         .trim();
+      
+      if (this.isValidProductTitle(urlTitle)) {
+        return urlTitle;
+      }
     }
 
+    // Last resort: try to find any meaningful text that could be a product name
+    const meaningfulText = this.extractMeaningfulText(content);
+    if (meaningfulText && this.isValidProductTitle(meaningfulText)) {
+      return meaningfulText;
+    }
+
+    return '';
+  }
+
+  // Helper method to validate if a title looks like a real product name
+  private isValidProductTitle(title: string): boolean {
+    if (!title || title.length < 3) return false;
+    
+    // Skip generic XML tags and technical terms
+    const skipPatterns = [
+      'google_product_category',
+      'xmlns:',
+      'http://',
+      'https://',
+      'schema.org',
+      'rdf:',
+      'dc:',
+      'atom:',
+      'rss:',
+      'feed',
+      'channel',
+      'item',
+      'product',
+      'entry',
+      'link',
+      'guid',
+      'pubdate',
+      'lastbuilddate',
+      'generator',
+      'language',
+      'copyright',
+      'managingeditor',
+      'webmaster',
+      'ttl',
+      'skipdays',
+      'skiphours',
+      'image',
+      'url',
+      'width',
+      'height',
+      'description',
+      'title',
+      'name',
+      'id>',
+      'id:'
+    ];
+    
+    const lowerTitle = title.toLowerCase();
+    
+    // Skip if it contains any of the skip patterns
+    for (const pattern of skipPatterns) {
+      if (lowerTitle.includes(pattern)) {
+        return false;
+      }
+    }
+    
+    // Skip if it's mostly XML tags or technical content
+    if (title.includes('<') || title.includes('>') || title.includes('//')) {
+      return false;
+    }
+    
+    // Skip if it's too short or looks like a technical identifier
+    if (title.length < 3 || /^[a-z0-9_-]+$/i.test(title)) {
+      return false;
+    }
+    
+    // Must contain at least one letter
+    if (!/[a-zA-Z]/.test(title)) {
+      return false;
+    }
+    
+    return true;
+  }
+
+  // Helper method to extract meaningful text from content
+  private extractMeaningfulText(content: string): string {
+    // Look for text that appears to be product names
+    const patterns = [
+      // Look for text between quotes that could be product names
+      /"([^"]{3,50})"/g,
+      // Look for text after common product indicators
+      /(?:name|title|product)[^:]*:\s*([^\n\r<,;]{3,50})/gi,
+      // Look for capitalized words that could be product names
+      /([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})/g
+    ];
+    
+    for (const pattern of patterns) {
+      const matches = content.match(pattern);
+      if (matches) {
+        for (const match of matches) {
+          const text = match.replace(/^["']|["']$/g, '').trim();
+          if (this.isValidProductTitle(text)) {
+            return text;
+          }
+        }
+      }
+    }
+    
     return '';
   }
 
