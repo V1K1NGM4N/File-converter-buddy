@@ -27,7 +27,6 @@ import { generateConvertedFilename } from '@/utils/imageConverter';
 import { downloadMultipleFilesAsZip } from '@/utils/zipDownload';
 import { useFilePersistence } from '@/hooks/useFilePersistence';
 import { detectFileType } from '@/utils/fileTypeDetector';
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
 
 interface ConversionFile {
   id: string;
@@ -284,24 +283,6 @@ const AudioConverter = () => {
                 Blog
               </button>
               
-              {/* Authentication */}
-              <div className="flex items-center space-x-2">
-                <SignedOut>
-                  <SignInButton mode="modal">
-                    <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
-                      Sign In
-                    </button>
-                  </SignInButton>
-                  <SignUpButton mode="modal">
-                    <button className="px-4 py-2 text-sm border border-input bg-background rounded-md hover:bg-accent">
-                      Sign Up
-                    </button>
-                  </SignUpButton>
-                </SignedOut>
-                <SignedIn>
-                  <UserButton afterSignOutUrl="/" />
-                </SignedIn>
-              </div>
             </div>
           </div>
         </div>

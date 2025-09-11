@@ -17,19 +17,16 @@ import {
 import { downloadMultipleFilesAsZip } from '@/utils/zipDownload';
 import { trackConversion } from '@/utils/conversionTracker';
 import { trackUserConversion } from '@/utils/userConversionTracker';
-import { useUser } from '@clerk/clerk-react';
 import { toast } from 'sonner';
 import { Zap, Image as ImageIcon, Upload, Download, X, RefreshCw, Play, Video, Music, Package } from 'lucide-react';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton } from '@clerk/clerk-react';
 import { useFilePersistence } from '@/hooks/useFilePersistence';
 
 const ImageConverter = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
   const { files, updateFiles, clearFiles } = useFilePersistence('imageConverterFiles');
   const [selectedFormat, setSelectedFormat] = useState<ImageFormat>('png');
   const [isConverting, setIsConverting] = useState(false);
@@ -273,24 +270,6 @@ const ImageConverter = () => {
                 Blog
               </button>
               
-              {/* Authentication */}
-              <div className="flex items-center space-x-2">
-                <SignedOut>
-                  <SignInButton mode="modal">
-                    <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
-                      Sign In
-                    </button>
-                  </SignInButton>
-                  <SignUpButton mode="modal">
-                    <button className="px-4 py-2 text-sm border border-input bg-background rounded-md hover:bg-accent">
-                      Sign Up
-                    </button>
-                  </SignUpButton>
-                </SignedOut>
-                <SignedIn>
-                  <UserButton afterSignOutUrl="/" />
-                </SignedIn>
-              </div>
             </div>
           </div>
         </div>

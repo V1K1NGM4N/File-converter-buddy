@@ -16,7 +16,6 @@
     "vercel-build": "npm run build"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.46.1",
     "@ffmpeg/ffmpeg": "^0.12.15",
     "@ffmpeg/util": "^0.12.2",
     "@hookform/resolvers": "^3.10.0",

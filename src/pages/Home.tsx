@@ -2,30 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Image as ImageIcon, Video, Music, Package, Zap, Shield, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getFormattedStats } from '@/utils/conversionTracker';
-import { getUserUsageDisplay } from '@/utils/userConversionTracker';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
-import { SignedIn, SignedOut, SignInButton, SignUpButton, UserButton, useUser } from '@clerk/clerk-react';
 
 const Home = () => {
   const navigate = useNavigate();
-  const { user } = useUser();
   const [conversionStats, setConversionStats] = useState({
     totalFiles: '0',
     totalDownloads: '0',
     lastConversion: 'Never'
   });
-  const [userStats, setUserStats] = useState<any>(null);
 
   useEffect(() => {
     const stats = getFormattedStats();
     setConversionStats(stats);
-    
-    // Get user-specific stats if logged in
-    if (user?.id) {
-      const userUsageStats = getUserUsageDisplay(user.id);
-      setUserStats(userUsageStats);
-    }
-  }, [user?.id]);
+  }, []);
 
   const tools = [
     {
@@ -98,24 +88,6 @@ const Home = () => {
               Blog
             </button>
             
-            {/* Authentication */}
-            <div className="flex items-center space-x-2">
-              <SignedOut>
-                <SignInButton mode="modal">
-                  <button className="px-4 py-2 text-sm bg-primary text-primary-foreground rounded-md hover:bg-primary/90">
-                    Sign In
-                  </button>
-                </SignInButton>
-                <SignUpButton mode="modal">
-                  <button className="px-4 py-2 text-sm border border-input bg-background rounded-md hover:bg-accent">
-                    Sign Up
-                  </button>
-                </SignUpButton>
-              </SignedOut>
-              <SignedIn>
-                <UserButton afterSignOutUrl="/" />
-              </SignedIn>
-            </div>
           </div>
         </div>
 
@@ -158,46 +130,18 @@ const Home = () => {
             <div className="bg-muted/30 rounded-xl p-6">
               <h3 className="font-semibold mb-4">Quick Stats</h3>
               <div className="space-y-3">
-                {userStats ? (
-                  <>
-                    {/* User's Personal Stats */}
-                    <div className="border-b border-border/50 pb-3 mb-3">
-                      <p className="text-xs text-muted-foreground mb-2">Your Usage</p>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Your Total</span>
-                          <span className="text-sm font-medium">{userStats.totalFiles}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">This Month</span>
-                          <span className="text-sm font-medium">{userStats.monthlyUsage}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Usage</span>
-                          <span className="text-sm font-medium text-green-600">Unlimited</span>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Global Stats */}
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">All Users</p>
-                      <div className="space-y-2">
-                        <div className="flex justify-between">
-                          <span className="text-sm text-muted-foreground">Files Downloaded</span>
-                          <span className="text-lg font-bold">{conversionStats.totalDownloads}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-muted-foreground">Files Downloaded</span>
-                      <span className="text-lg font-bold">{conversionStats.totalDownloads}</span>
-                    </div>
-                  </>
-                )}
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Files Downloaded</span>
+                  <span className="text-lg font-bold">{conversionStats.totalDownloads}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Total Files</span>
+                  <span className="text-lg font-bold">{conversionStats.totalFiles}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm text-muted-foreground">Last Conversion</span>
+                  <span className="text-sm font-medium">{conversionStats.lastConversion}</span>
+                </div>
               </div>
             </div>
 

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { SignedIn, SignedOut, SignInButton, SignUpButton } from '@clerk/clerk-react';
 
 interface DownloadAuthModalProps {
   isOpen: boolean;
@@ -45,7 +44,7 @@ export const DownloadAuthModal: React.FC<DownloadAuthModalProps> = ({
           marginBottom: '16px',
           color: '#1f2937'
         }}>
-          Sign In to Download
+          Download {fileName}
         </h2>
         
         <p style={{
@@ -54,7 +53,7 @@ export const DownloadAuthModal: React.FC<DownloadAuthModalProps> = ({
           marginBottom: '24px',
           lineHeight: '1.5'
         }}>
-          Create a free account to download {fileName}. This helps us provide better service and track usage.
+          Ready to download your converted files. All processing is done locally on your device.
         </p>
 
         <div style={{
@@ -63,83 +62,25 @@ export const DownloadAuthModal: React.FC<DownloadAuthModalProps> = ({
           gap: '12px',
           marginBottom: '24px'
         }}>
-          <SignedIn>
-            <button
-              onClick={onDownload}
-              style={{
-                width: '100%',
-                padding: '12px 24px',
-                backgroundColor: '#10b981',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                fontSize: '16px',
-                fontWeight: '500',
-                cursor: 'pointer',
-                transition: 'background-color 0.2s'
-              }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#059669'}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
-            >
-              Download {fileName}
-            </button>
-          </SignedIn>
-
-          <SignedOut>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px'
-            }}>
-              <SignUpButton mode="modal">
-                <button
-                  style={{
-                    width: '100%',
-                    padding: '12px 24px',
-                    backgroundColor: '#3b82f6',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2563eb'}
-                  onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#3b82f6'}
-                >
-                  Create Free Account
-                </button>
-              </SignUpButton>
-
-              <SignInButton mode="modal">
-                <button
-                  style={{
-                    width: '100%',
-                    padding: '12px 24px',
-                    backgroundColor: 'transparent',
-                    color: '#3b82f6',
-                    border: '2px solid #3b82f6',
-                    borderRadius: '8px',
-                    fontSize: '16px',
-                    fontWeight: '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.backgroundColor = '#3b82f6';
-                    e.currentTarget.style.color = 'white';
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                    e.currentTarget.style.color = '#3b82f6';
-                  }}
-                >
-                  Already have an account? Sign In
-                </button>
-              </SignInButton>
-            </div>
-          </SignedOut>
+          <button
+            onClick={onDownload}
+            style={{
+              width: '100%',
+              padding: '12px 24px',
+              backgroundColor: '#10b981',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '16px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#059669'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#10b981'}
+          >
+            Download {fileName}
+          </button>
         </div>
 
         <button
