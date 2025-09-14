@@ -298,10 +298,10 @@ const ProductFeedDownloader: React.FC = () => {
       // Track successful downloads
       trackConversion('productFeeds', product.images.length);
       
-      // Track user-specific conversions
-      if (user?.id) {
-        trackUserConversion(user.id, 'productFeeds', product.images.length);
-      }
+      // Track user-specific conversions (user tracking not implemented yet)
+      // if (user?.id) {
+      //   trackUserConversion(user.id, 'productFeeds', product.images.length);
+      // }
       
       toast.success(`Successfully downloaded ${product.images.length} images for "${product.title}" in organized structure`);
     } catch (error) {
@@ -376,10 +376,10 @@ const ProductFeedDownloader: React.FC = () => {
       // Track successful downloads
       trackConversion('productFeeds', totalImages);
       
-      // Track user-specific conversions
-      if (user?.id) {
-        trackUserConversion(user.id, 'productFeeds', totalImages);
-      }
+      // Track user-specific conversions (user tracking not implemented yet)
+      // if (user?.id) {
+      //   trackUserConversion(user.id, 'productFeeds', totalImages);
+      // }
       
       toast.success(`Successfully downloaded ${totalImages} images from ${productsWithImages.length} products in organized structure`);
     } catch (error) {
@@ -465,10 +465,10 @@ const ProductFeedDownloader: React.FC = () => {
       // Track successful downloads
       trackConversion('productFeeds', imagesToDownload.length);
       
-      // Track user-specific conversions
-      if (user?.id) {
-        trackUserConversion(user.id, 'productFeeds', imagesToDownload.length);
-      }
+      // Track user-specific conversions (user tracking not implemented yet)
+      // if (user?.id) {
+      //   trackUserConversion(user.id, 'productFeeds', imagesToDownload.length);
+      // }
       
       toast.success(`Successfully downloaded ${imagesToDownload.length} images for "${selectedProduct.title}" in organized structure`);
       setSelectedProduct(null);
@@ -583,10 +583,10 @@ const ProductFeedDownloader: React.FC = () => {
       // Track successful downloads
       trackConversion('productFeeds', totalImages);
       
-      // Track user-specific conversions
-      if (user?.id) {
-        trackUserConversion(user.id, 'productFeeds', totalImages);
-      }
+      // Track user-specific conversions (user tracking not implemented yet)
+      // if (user?.id) {
+      //   trackUserConversion(user.id, 'productFeeds', totalImages);
+      // }
 
       toast.success(`Successfully downloaded ${totalImages} images from ${productsWithImages.length} selected products`);
       updateState({ selectedProducts: [] }); // Clear selection after successful download
@@ -1076,83 +1076,79 @@ const ProductFeedDownloader: React.FC = () => {
 
           {/* Conversion Controls */}
           {parsedFeed && (
-            <div className="flex flex-wrap items-center justify-between gap-4 p-4 bg-card/30 rounded-lg border border-border/50">
-              <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-muted-foreground">
-                  Unique Products: {filteredProducts.length}
+            <div className="space-y-4 p-4 bg-card/30 rounded-lg border border-border/50">
+              {/* Statistics Row */}
+              <div className="flex flex-wrap items-center gap-4 text-sm">
+                <span className="font-medium text-muted-foreground">
+                  Unique Products: <span className="text-foreground font-semibold">{filteredProducts.length}</span>
                 </span>
-                <span className="text-sm font-medium text-muted-foreground">
-                  Total Images: {filteredProducts.reduce((sum, p) => sum + p.images.length, 0)}
+                <span className="font-medium text-muted-foreground">
+                  Total Images: <span className="text-foreground font-semibold">{filteredProducts.reduce((sum, p) => sum + p.images.length, 0)}</span>
                 </span>
                 {selectedProducts.size > 0 && (
-                  <span className="text-sm font-medium text-primary">
-                    Selected: {selectedProducts.size}
+                  <span className="font-medium text-primary">
+                    Selected: <span className="font-semibold">{selectedProducts.size}</span>
                   </span>
                 )}
               </div>
               
-              <div className="flex items-center gap-2">
-                <select
-                  value={imageFormat}
-                  onChange={(e) => updateState({ imageFormat: e.target.value as 'jpg' | 'png' | 'webp' | 'original' })}
-                  className="px-3 py-2 border border-input bg-background rounded-md text-sm"
-                >
-                  <option value="original">Original Format</option>
-                  <option value="jpg">JPG</option>
-                  <option value="png">PNG</option>
-                  <option value="webp">WebP</option>
-                </select>
+              {/* Controls Row */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    value={imageFormat}
+                    onChange={(e) => updateState({ imageFormat: e.target.value as 'jpg' | 'png' | 'webp' | 'original' })}
+                    className="px-3 py-2 border border-input bg-background rounded-md text-sm min-w-[140px]"
+                  >
+                    <option value="original">Original Format</option>
+                    <option value="jpg">JPG</option>
+                    <option value="png">PNG</option>
+                    <option value="webp">WebP</option>
+                  </select>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      updateState({
+                        parsedFeed: null,
+                        searchQuery: '',
+                        selectedCategory: '',
+                        feedUrl: '',
+                        xmlContent: '',
+                        inputMode: 'url',
+                        selectedProducts: []
+                      });
+                      setDownloadProgress(0);
+                    }}
+                  >
+                    <RefreshCw className="h-4 w-4 mr-2" />
+                    Reset
+                  </Button>
+                </div>
                 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    updateState({
-                      parsedFeed: null,
-                      searchQuery: '',
-                      selectedCategory: '',
-                      feedUrl: '',
-                      xmlContent: '',
-                      inputMode: 'url',
-                      selectedProducts: []
-                    });
-                    setDownloadProgress(0);
-                  }}
-                >
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Reset
-                </Button>
-                
-                {selectedProducts.size > 0 && (
-                  <>
+                <div className="flex flex-wrap items-center gap-2">
+                  {selectedProducts.size > 0 && (
                     <Button
                       onClick={handleDownloadSelectedProducts}
                       size="sm"
-                      className="bg-green-600 hover:bg-green-700"
+                      className="bg-green-600 hover:bg-green-700 whitespace-nowrap"
                     >
                       <DownloadCloud className="h-4 w-4 mr-2" />
                       Download Selected ({selectedProducts.size})
                     </Button>
-                  </>
-                )}
-                
+                  )}
+                  
                   <Button
                     onClick={handleDownloadAllImages}
                     disabled={filteredProducts.length === 0}
                     size="sm"
-                    className="px-6 py-2.5 text-sm font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 whitespace-nowrap"
                   >
                     <DownloadCloud className="h-4 w-4 mr-2" />
                     Download All
                   </Button>
-                  <Button
-                    disabled={filteredProducts.length === 0}
-                    size="sm"
-                    className="px-6 py-2.5 text-sm font-medium border border-input bg-background rounded-lg hover:bg-accent hover:border-accent-foreground/20 transition-all duration-200 hover:scale-105 shadow-sm hover:shadow-md"
-                  >
-                    <DownloadCloud className="h-4 w-4 mr-2" />
-                    Download All
-                  </Button>
+                </div>
               </div>
             </div>
           )}
@@ -1481,7 +1477,7 @@ const ProductFeedDownloader: React.FC = () => {
 
             {/* Modal Content */}
             <div className="p-6 max-h-[60vh] overflow-y-auto">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {selectedProduct.images.map((image, index) => (
                   <div 
                     key={index} 
