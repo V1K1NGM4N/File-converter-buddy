@@ -1,0 +1,9 @@
+            <div className="flex items-center space-x-6">
+              <button 
+                onClick={() => navigate('/blog')}
+                className="text-sm text-primary font-medium"
+              >
+                Blog
+              </button>
+              
+            </div>
