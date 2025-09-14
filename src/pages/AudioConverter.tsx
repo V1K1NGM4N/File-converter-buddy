@@ -294,7 +294,7 @@ const AudioConverter = () => {
               {/* Blog Link */}
               <button 
                 onClick={() => navigate('/blog')}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="text-sm text-primary font-medium"
               >
                 Blog
               </button>

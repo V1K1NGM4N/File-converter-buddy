@@ -85,46 +85,42 @@ const Home = () => {
           }
         }}
       />
-      <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto h-screen flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
-            <div className="animate-fade-in">
-              <AnimatedFileType />
-            </div>
-            <div className="animate-fade-in-up">
-              <h1 className="text-3xl font-bold">
-                File Converter <span className="text-primary">Buddy</span>
-              </h1>
-              <p className="text-muted-foreground text-sm">Convert files with ease</p>
-            </div>
-          </div>
-          
-          <div className="hidden sm:flex items-center space-x-6 animate-fade-in-up delay-200">
-            {/* Blog Link - Hidden on mobile */}
-            <button 
-              onClick={() => navigate('/blog')}
-              className="text-sm text-muted-foreground hover:text-primary transition-colors"
+      <div className="min-h-screen bg-background">
+      {/* Global Header */}
+      <div className="bg-background border-b border-border">
+        <div className="container mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate('/')}
+              className="flex items-center space-x-3 hover:opacity-80 transition-opacity"
             >
-              Blog
+              <div className="animate-fade-in">
+                <AnimatedFileType />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold">
+                  File Converter <span className="text-primary">Buddy</span>
+                </h1>
+                <p className="text-muted-foreground text-xs">Convert files with ease</p>
+              </div>
             </button>
             
+            <div className="flex items-center space-x-6">
+              {/* Blog Link */}
+              <button 
+                onClick={() => navigate('/blog')}
+                className="text-sm text-primary font-medium"
+              >
+                Blog
+              </button>
+              
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Mobile Navigation Row */}
-        <div className="sm:hidden mb-6">
-          <div className="flex justify-center">
-            <button 
-              onClick={() => navigate('/blog')}
-              className="flex items-center space-x-2 px-6 py-3 bg-primary/10 hover:bg-primary/20 rounded-xl border border-primary/20 transition-all duration-300 hover:scale-105"
-            >
-              <BookOpen className="h-5 w-5 text-primary" />
-              <span className="text-primary font-medium">Blog</span>
-            </button>
-          </div>
-        </div>
+      <div className="max-w-7xl mx-auto p-6 h-screen flex flex-col">
+
 
         {/* Main Content Grid */}
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
