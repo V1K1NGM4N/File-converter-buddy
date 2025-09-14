@@ -49,7 +49,7 @@ export const FileTypeNavigation = ({ className }: FileTypeNavigationProps) => {
   return (
     <div className={cn("flex flex-col items-center gap-4", className)}>
       {/* Main navigation row */}
-      <div className="flex flex-wrap justify-center gap-6">
+      <div className="flex flex-wrap justify-center gap-3 sm:gap-6">
         {mainNavigationItems.map((item) => {
           const Icon = item.icon;
           return (
@@ -58,7 +58,7 @@ export const FileTypeNavigation = ({ className }: FileTypeNavigationProps) => {
               variant={item.active ? "hero" : "secondary"}
               size="lg"
               className={cn(
-                "min-w-32 hover:shadow-glow",
+                "min-w-24 sm:min-w-32 hover:shadow-glow",
                 item.active && "ring-2 ring-primary ring-offset-2 ring-offset-background"
               )}
               onClick={() => navigate(item.path)}
@@ -76,7 +76,7 @@ export const FileTypeNavigation = ({ className }: FileTypeNavigationProps) => {
           variant={productFeedItem.active ? "hero" : "secondary"}
           size="lg"
           className={cn(
-            "min-w-32 hover:shadow-glow",
+            "min-w-24 sm:min-w-32 hover:shadow-glow",
             productFeedItem.active && "ring-2 ring-primary ring-offset-2 ring-offset-background"
           )}
           onClick={() => navigate(productFeedItem.path)}

@@ -55,7 +55,7 @@ export const ConversionControls = ({
             size="lg"
             onClick={onStartConversion}
             disabled={!hasFiles || isConverting}
-            className="flex-1"
+            className="flex-1 w-full sm:w-auto"
           >
             <Play className="h-4 w-4 mr-2" />
             {isConverting ? 'Converting...' : 'Start Conversion'}
@@ -66,7 +66,7 @@ export const ConversionControls = ({
             size="lg"
             onClick={onDownloadAll}
             disabled={!allCompleted}
-            className="flex-1"
+            className="flex-1 w-full sm:w-auto"
           >
             <Download className="h-4 w-4 mr-2" />
             Download All ({completedFiles})

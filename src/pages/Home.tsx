@@ -117,15 +117,15 @@ const Home = () => {
         <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Tools Section */}
           <div className="lg:col-span-2">
-            <h2 className="text-xl font-semibold mb-6 animate-fade-in-up delay-300">Choose Your Tool</h2>
-            <div className="grid grid-cols-2 gap-4">
+            <h2 className="text-lg sm:text-xl font-semibold mb-6 animate-fade-in-up delay-300">Choose Your Tool</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {tools.map((tool, index) => {
                 const Icon = tool.icon;
                 return (
                   <button
                     key={tool.path}
                     onClick={() => navigate(tool.path)}
-                    className={`group p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${tool.borderColor} ${tool.bgColor} animate-fade-in-up`}
+                    className={`group p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg ${tool.borderColor} ${tool.bgColor} animate-fade-in-up`}
                     style={{ animationDelay: `${0.4 + index * 0.1}s` }}
                   >
                     <div className="flex items-center space-x-4">
@@ -133,10 +133,10 @@ const Home = () => {
                         <Icon className={`h-6 w-6 ${tool.color}`} />
                       </div>
                       <div className="text-left">
-                        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors text-base sm:text-sm">
                           {tool.title}
                         </h3>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm sm:text-xs text-muted-foreground">
                           {tool.description}
                         </p>
                       </div>
@@ -190,7 +190,7 @@ const Home = () => {
             </div>
 
             <div className="bg-muted/30 rounded-xl p-6">
-              <h3 className="font-semibold mb-4">Getting Started</h3>
+              <h3 className="font-semibold mb-4 text-base sm:text-sm">Getting Started</h3>
               <div className="space-y-3 text-sm text-muted-foreground">
                 <div className="flex items-start space-x-3">
                   <div className="w-6 h-6 bg-primary/20 text-primary rounded-full flex items-center justify-center text-xs font-medium">1</div>
