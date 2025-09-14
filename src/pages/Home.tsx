@@ -3,6 +3,7 @@ import { Image as ImageIcon, Video, Music, Package, Zap, Shield, Clock } from 'l
 import { useNavigate } from 'react-router-dom';
 import { getFormattedStats } from '@/utils/conversionTracker';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
+import { SEOHead } from '@/components/SEOHead';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -63,7 +64,28 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <>
+      <SEOHead
+        title="Free Online File Converter"
+        description="Convert images, videos, audio files, and more with our free online file converter. No registration required, secure processing, and support for 100+ file formats."
+        keywords="file converter, image converter, video converter, audio converter, online converter, free converter, file conversion"
+        canonicalUrl="https://fileconverterbuddy.com/"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "File Converter Buddy",
+          "description": "Free online file converter for images, videos, audio, and more",
+          "url": "https://fileconverterbuddy.com",
+          "applicationCategory": "UtilityApplication",
+          "operatingSystem": "Web Browser",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          }
+        }}
+      />
+      <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto h-screen flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
@@ -188,6 +210,7 @@ const Home = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

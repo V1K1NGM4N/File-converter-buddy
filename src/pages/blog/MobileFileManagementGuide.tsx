@@ -291,7 +291,7 @@ const MobileFileManagementGuide = () => {
             <div className="text-center">
               <Button
                 size="lg"
-                onClick={() => navigate('/universal-converter')}
+                onClick={() => navigate('/images')}
                 className="mr-4"
               >
                 Try Our Mobile File Converter
@@ -377,7 +377,7 @@ const MobileFileManagementGuide = () => {
             <div className="text-center">
               <Button
                 size="lg"
-                onClick={() => navigate('/universal-converter')}
+                onClick={() => navigate('/images')}
                 className="mr-4"
               >
                 Start Managing Mobile Files Now

@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { trackConversion } from '@/utils/conversionTracker';
 import { convertVideo, VideoFormat, needsConversion } from '@/utils/videoConverter';
+import { SEOHead } from '@/components/SEOHead';
 import { 
   Video, 
   Download, 
@@ -271,7 +272,22 @@ const VideoConverter = () => {
   }, [files, clearFiles]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEOHead
+        title="Video File Converter"
+        description="Convert videos between MP4, AVI, MOV, MKV, WebM and more formats. Free online video converter with high quality output and no file size limits."
+        keywords="video converter, mp4 converter, avi to mp4, video format converter, free video converter, online video converter"
+        canonicalUrl="https://fileconverterbuddy.com/video"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Video File Converter",
+          "description": "Free online video format converter",
+          "url": "https://fileconverterbuddy.com/video",
+          "applicationCategory": "UtilityApplication"
+        }}
+      />
+      <div className="min-h-screen bg-background">
       {/* Global Header */}
       <div className="bg-background border-b border-border">
         <div className="container mx-auto px-6 py-4">
@@ -620,6 +636,7 @@ const VideoConverter = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

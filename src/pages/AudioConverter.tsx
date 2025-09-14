@@ -6,6 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { trackConversion } from '@/utils/conversionTracker';
 import { convertAudio, AudioFormat, needsConversion } from '@/utils/audioConverter';
+import { SEOHead } from '@/components/SEOHead';
 import { 
   Music, 
   Upload, 
@@ -254,7 +255,22 @@ const AudioConverter = () => {
   }, [files, clearFiles]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEOHead
+        title="Audio File Converter"
+        description="Convert audio between MP3, WAV, FLAC, AAC, OGG and more formats. Free online audio converter with high quality output and no file size limits."
+        keywords="audio converter, mp3 converter, wav to mp3, audio format converter, free audio converter, online audio converter"
+        canonicalUrl="https://fileconverterbuddy.com/audio"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Audio File Converter",
+          "description": "Free online audio format converter",
+          "url": "https://fileconverterbuddy.com/audio",
+          "applicationCategory": "UtilityApplication"
+        }}
+      />
+      <div className="min-h-screen bg-background">
       {/* Global Header */}
       <div className="bg-background border-b border-border">
         <div className="container mx-auto px-6 py-4">
@@ -625,6 +641,7 @@ const AudioConverter = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

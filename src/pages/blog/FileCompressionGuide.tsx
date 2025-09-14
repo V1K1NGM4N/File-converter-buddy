@@ -294,7 +294,7 @@ const FileCompressionGuide = () => {
             <div className="text-center">
               <Button
                 size="lg"
-                onClick={() => navigate('/universal-converter')}
+                onClick={() => navigate('/images')}
                 className="mr-4"
               >
                 Try Our File Converter
@@ -380,7 +380,7 @@ const FileCompressionGuide = () => {
             <div className="text-center">
               <Button
                 size="lg"
-                onClick={() => navigate('/universal-converter')}
+                onClick={() => navigate('/images')}
                 className="mr-4"
               >
                 Start Compressing Files Now

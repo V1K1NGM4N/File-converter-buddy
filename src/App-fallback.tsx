@@ -8,7 +8,6 @@ import Home from "./pages/Home-fallback";
 import ImageConverter from "./pages/ImageConverter-fallback";
 import VideoConverter from "./pages/VideoConverter";
 import AudioConverter from "./pages/AudioConverter";
-import UniversalConverter from "./pages/UniversalConverter";
 import ProductFeedDownloader from "./pages/ProductFeedDownloader";
 import Blog from "./pages/Blog-fallback";
 import NotFound from "./pages/NotFound";
@@ -25,7 +24,6 @@ const App = () => (
           <Route path="/" element={<Home />} />
           <Route path="/test" element={<Test />} />
           <Route path="/blog" element={<Blog />} />
-          <Route path="/universal-converter" element={<UniversalConverter />} />
           <Route path="/video" element={<VideoConverter />} />
           <Route path="/audio" element={<AudioConverter />} />
           <Route path="/images" element={<ImageConverter />} />

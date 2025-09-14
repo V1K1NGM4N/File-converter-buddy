@@ -291,7 +291,7 @@ const FileFormatSecurityBestPractices = () => {
             <div className="text-center">
               <Button
                 size="lg"
-                onClick={() => navigate('/universal-converter')}
+                onClick={() => navigate('/images')}
                 className="mr-4"
               >
                 Try Our Secure Converter
@@ -377,7 +377,7 @@ const FileFormatSecurityBestPractices = () => {
             <div className="text-center">
               <Button
                 size="lg"
-                onClick={() => navigate('/universal-converter')}
+                onClick={() => navigate('/images')}
                 className="mr-4"
               >
                 Start Secure Converting Now

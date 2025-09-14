@@ -300,7 +300,7 @@ const CrossPlatformFileCompatibility = () => {
             <div className="text-center">
               <Button
                 size="lg"
-                onClick={() => navigate('/universal-converter')}
+                onClick={() => navigate('/images')}
                 className="mr-4"
               >
                 Try Our Universal Converter
@@ -386,7 +386,7 @@ const CrossPlatformFileCompatibility = () => {
             <div className="text-center">
               <Button
                 size="lg"
-                onClick={() => navigate('/universal-converter')}
+                onClick={() => navigate('/images')}
                 className="mr-4"
               >
                 Start Converting for Compatibility Now

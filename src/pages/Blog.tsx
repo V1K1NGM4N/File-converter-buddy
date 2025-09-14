@@ -1,12 +1,31 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
+import { SEOHead } from '@/components/SEOHead';
 
 const Blog = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEOHead
+        title="File Conversion Blog"
+        description="Learn about file formats, conversion techniques, and best practices for images, videos, audio, and documents. Expert guides and tutorials for file conversion."
+        keywords="file conversion blog, file format guide, image conversion, video conversion, audio conversion, file format tutorial"
+        canonicalUrl="https://fileconverterbuddy.com/blog"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          "name": "File Converter Buddy Blog",
+          "description": "Expert guides and tutorials for file conversion",
+          "url": "https://fileconverterbuddy.com/blog",
+          "publisher": {
+            "@type": "Organization",
+            "name": "File Converter Buddy"
+          }
+        }}
+      />
+      <div className="min-h-screen bg-background">
       {/* Global Header */}
       <div className="bg-background border-b border-border">
         <div className="container mx-auto px-6 py-4">
@@ -313,6 +332,7 @@ const Blog = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

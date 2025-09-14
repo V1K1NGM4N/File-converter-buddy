@@ -6,6 +6,7 @@ import { SmartFormatSelector } from '@/components/SmartFormatSelector';
 import { ConversionControls } from '@/components/ConversionControls';
 import { Button } from '@/components/ui/button';
 import { ImageUpload, ImageFormat } from '@/components/ImageUpload';
+import { SEOHead } from '@/components/SEOHead';
 import { 
   ConversionFile, 
   convertImage, 
@@ -241,7 +242,22 @@ const ImageConverter = () => {
   }, [files, clearFiles]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <>
+      <SEOHead
+        title="Image File Converter"
+        description="Convert images between JPG, PNG, WebP, GIF, BMP, TIFF and more formats. Free online image converter with no file size limits and secure processing."
+        keywords="image converter, jpg to png, png to jpg, webp converter, image format converter, free image converter"
+        canonicalUrl="https://fileconverterbuddy.com/images"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "Image File Converter",
+          "description": "Free online image format converter",
+          "url": "https://fileconverterbuddy.com/images",
+          "applicationCategory": "UtilityApplication"
+        }}
+      />
+      <div className="min-h-screen bg-background">
       {/* Global Header */}
       <div className="bg-background border-b border-border">
         <div className="container mx-auto px-6 py-4">
@@ -518,6 +534,7 @@ const ImageConverter = () => {
         </div>
       </div>
     </div>
+    </>
   );
 };
 

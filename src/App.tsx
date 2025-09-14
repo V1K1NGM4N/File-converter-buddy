@@ -8,7 +8,6 @@ import Home from "./pages/Home";
 import ImageConverter from "./pages/ImageConverter";
 import VideoConverter from "./pages/VideoConverter";
 import AudioConverter from "./pages/AudioConverter";
-import UniversalConverter from "./pages/UniversalConverter";
 import ProductFeedDownloader from "./pages/ProductFeedDownloader";
 import Blog from "./pages/Blog";
 import CompleteGuideToImageFileFormats from "./pages/blog/CompleteGuideToImageFileFormats";
@@ -64,7 +63,6 @@ const App = () => (
           <Route path="/blog/how-to-extract-images-from-xml-product-feeds" element={<HowToExtractImagesFromXMLProductFeeds />} />
           <Route path="/blog/bulk-product-image-downloader-for-ecommerce" element={<BulkProductImageDownloaderForEcommerce />} />
           <Route path="/blog/product-feed-image-optimization-best-practices" element={<ProductFeedImageOptimizationBestPractices />} />
-          <Route path="/universal-converter" element={<UniversalConverter />} />
           <Route path="/video" element={<VideoConverter />} />
           <Route path="/audio" element={<AudioConverter />} />
           <Route path="/images" element={<ImageConverter />} />
