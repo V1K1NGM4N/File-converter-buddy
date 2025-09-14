@@ -1521,38 +1521,42 @@ const ProductFeedDownloader: React.FC = () => {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-between p-6 border-t bg-muted/30">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSelectAllImages}
-                >
-                  Select All
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSelectNoneImages}
-                >
-                  Select None
-                </Button>
-                <span className="text-sm text-muted-foreground">
-                  {selectedImages.size} of {selectedProduct.images.length} selected
-                </span>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <select
-                  value={imageFormat}
-                  onChange={(e) => updateState({ imageFormat: e.target.value as 'jpg' | 'png' | 'webp' | 'original' })}
-                  className="px-3 py-2 border border-input bg-background rounded-md text-sm"
-                >
-                  <option value="original">Original Format</option>
-                  <option value="jpg">JPG</option>
-                  <option value="png">PNG</option>
-                  <option value="webp">WebP</option>
-                </select>
+            <div className="space-y-4 p-6 border-t bg-muted/30">
+              {/* Selection Controls */}
+              <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectAllImages}
+                    className="whitespace-nowrap"
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleSelectNoneImages}
+                    className="whitespace-nowrap"
+                  >
+                    Select None
+                  </Button>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    {selectedImages.size} of {selectedProduct.images.length} selected
+                  </span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <select
+                    value={imageFormat}
+                    onChange={(e) => updateState({ imageFormat: e.target.value as 'jpg' | 'png' | 'webp' | 'original' })}
+                    className="px-3 py-2 border border-input bg-background rounded-md text-sm min-w-[140px]"
+                  >
+                    <option value="original">Original Format</option>
+                    <option value="jpg">JPG</option>
+                    <option value="png">PNG</option>
+                    <option value="webp">WebP</option>
+                  </select>
                 
                   <Button
                     onClick={handleDownloadSelectedImages}
@@ -1571,13 +1575,7 @@ const ProductFeedDownloader: React.FC = () => {
                       </>
                     )}
                   </Button>
-                  <Button
-                    disabled={downloadingImages.has(selectedProduct.id)}
-                    size="sm"
-                  >
-                    <Download className="h-4 w-4 mr-2" />
-                    Download {selectedImages.size > 0 ? `${selectedImages.size} Selected` : 'All'}
-                  </Button>
+                </div>
               </div>
             </div>
           </div>
