@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, Video, Music, Package, Zap, Shield, Clock } from 'lucide-react';
+import { Image as ImageIcon, Video, Music, Package, Zap, Shield, Clock, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getFormattedStats } from '@/utils/conversionTracker';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
@@ -101,8 +101,8 @@ const Home = () => {
             </div>
           </div>
           
-          <div className="flex items-center space-x-6 animate-fade-in-up delay-200">
-            {/* Blog Link */}
+          <div className="hidden sm:flex items-center space-x-6 animate-fade-in-up delay-200">
+            {/* Blog Link - Hidden on mobile */}
             <button 
               onClick={() => navigate('/blog')}
               className="text-sm text-muted-foreground hover:text-primary transition-colors"
@@ -110,6 +110,19 @@ const Home = () => {
               Blog
             </button>
             
+          </div>
+        </div>
+
+        {/* Mobile Navigation Row */}
+        <div className="sm:hidden mb-6">
+          <div className="flex justify-center">
+            <button 
+              onClick={() => navigate('/blog')}
+              className="flex items-center space-x-2 px-6 py-3 bg-primary/10 hover:bg-primary/20 rounded-xl border border-primary/20 transition-all duration-300 hover:scale-105"
+            >
+              <BookOpen className="h-5 w-5 text-primary" />
+              <span className="text-primary font-medium">Blog</span>
+            </button>
           </div>
         </div>
 

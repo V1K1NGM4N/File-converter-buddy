@@ -681,10 +681,10 @@ const ProductFeedDownloader: React.FC = () => {
       <div className="bg-background border-b border-border">
         <div className="container mx-auto px-6 py-8">
           <h2 className="text-xl font-semibold mb-6 animate-fade-in-up delay-300">Choose Your Tool</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <button
               onClick={() => navigate('/images')}
-              className="group p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-blue-500/20 bg-blue-500/10 animate-fade-in-up"
+              className="group p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-blue-500/20 bg-blue-500/10 animate-fade-in-up"
               style={{ animationDelay: '0.4s' }}
             >
               <div className="flex items-center space-x-4">
@@ -705,7 +705,7 @@ const ProductFeedDownloader: React.FC = () => {
 
             <button
               onClick={() => navigate('/video')}
-              className="group p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-purple-500/20 bg-purple-500/10 animate-fade-in-up"
+              className="group p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-purple-500/20 bg-purple-500/10 animate-fade-in-up"
               style={{ animationDelay: '0.5s' }}
             >
               <div className="flex items-center space-x-4">
@@ -726,7 +726,7 @@ const ProductFeedDownloader: React.FC = () => {
 
             <button
               onClick={() => navigate('/audio')}
-              className="group p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-green-500/20 bg-green-500/10 animate-fade-in-up"
+              className="group p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-green-500/20 bg-green-500/10 animate-fade-in-up"
               style={{ animationDelay: '0.6s' }}
             >
               <div className="flex items-center space-x-4">
@@ -747,7 +747,7 @@ const ProductFeedDownloader: React.FC = () => {
 
             <button
               onClick={() => navigate('/product-feed-image-downloader')}
-              className="group p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-orange-500/20 bg-orange-500/10 animate-fade-in-up"
+              className="group p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-orange-500/20 bg-orange-500/10 animate-fade-in-up"
               style={{ animationDelay: '0.7s' }}
             >
               <div className="flex items-center space-x-4">
