@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { 
   Download, 
   Search, 
@@ -23,7 +24,8 @@ import {
   X,
   RefreshCw,
   Video,
-  Music
+  Music,
+  ChevronDown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { trackConversion } from '@/utils/conversionTracker';
@@ -642,7 +644,7 @@ const ProductFeedDownloader: React.FC = () => {
 
       {/* Hero Section */}
       <div className="bg-background">
-        <div className="container mx-auto px-6 py-12">
+        <div className="container mx-auto px-6 py-6 sm:py-12">
           <div className="flex items-center space-x-4">
             <div className="animate-fade-in">
               <AnimatedFileType />
@@ -661,9 +663,11 @@ const ProductFeedDownloader: React.FC = () => {
 
       {/* Tool Navigation */}
       <div className="bg-background border-b border-border">
-        <div className="container mx-auto px-6 py-8">
-          <h2 className="text-xl font-semibold mb-6 animate-fade-in-up delay-300">Choose Your Tool</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="container mx-auto px-6 py-4 sm:py-8">
+          {/* Desktop Tool Navigation */}
+          <div className="hidden sm:block">
+            <h2 className="text-xl font-semibold mb-6 animate-fade-in-up delay-300">Choose Your Tool</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
             <button
               onClick={() => navigate('/images')}
               className="group p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-blue-500/20 bg-blue-500/10 animate-fade-in-up"
@@ -747,7 +751,81 @@ const ProductFeedDownloader: React.FC = () => {
                 </div>
               </div>
             </button>
+            </div>
           </div>
+          
+          {/* Mobile Collapsible Tool Navigation */}
+          <Collapsible className="block sm:hidden">
+            <CollapsibleTrigger asChild>
+              <Button variant="outline" className="w-full justify-between">
+                <span>Choose Your Tool</span>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="mt-4">
+              <div className="grid grid-cols-1 gap-4">
+                <button
+                  onClick={() => navigate('/images')}
+                  className="group p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-blue-500/20 bg-blue-500/10"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                      <ImageIcon className="h-6 w-6 text-blue-500" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">Images</h3>
+                      <p className="text-sm text-muted-foreground">JPG, PNG, WebP and more</p>
+                    </div>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => navigate('/video')}
+                  className="group p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-purple-500/20 bg-purple-500/10"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                      <Video className="h-6 w-6 text-purple-500" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">Video</h3>
+                      <p className="text-sm text-muted-foreground">MP4, AVI, MOV and more</p>
+                    </div>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => navigate('/audio')}
+                  className="group p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-green-500/20 bg-green-500/10"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                      <Music className="h-6 w-6 text-green-500" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">Audio</h3>
+                      <p className="text-sm text-muted-foreground">MP3, WAV, FLAC and more</p>
+                    </div>
+                  </div>
+                </button>
+                
+                <button
+                  onClick={() => navigate('/product-feed-image-downloader')}
+                  className="group p-4 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-orange-500/20 bg-orange-500/10"
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                      <Package className="h-6 w-6 text-orange-500" />
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">Product Feed</h3>
+                      <p className="text-sm text-muted-foreground">Easily download product feed images in the format you need</p>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
       </div>
 
