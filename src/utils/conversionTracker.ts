@@ -1,4 +1,5 @@
 import { getGlobalStats, updateGlobalStats } from './databaseService'
+import { trackConversionEvent, trackDownloadEvent } from './gtmEvents'
 
 export interface ConversionStats {
   totalFilesConverted: number;
@@ -60,6 +61,8 @@ export const trackConversion = async (type: "images" | "videos" | "audio" | "pro
     // Try to update database first
     const success = await updateGlobalStats(type, fileCount);
     if (success) {
+      // Send GTM event
+      trackConversionEvent(type, fileCount);
       return await getConversionStats();
     }
   } catch (error) {
@@ -74,7 +77,16 @@ export const trackConversion = async (type: "images" | "videos" | "audio" | "pro
   stats.conversionsByType[type] += fileCount;
   
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+  
+  // Send GTM event
+  trackConversionEvent(type, fileCount);
+  
   return stats;
+};
+
+// Track downloads specifically
+export const trackDownload = (type: "images" | "videos" | "audio" | "productFeeds", fileCount: number, downloadMethod: 'single' | 'bulk' | 'zip' = 'single') => {
+  trackDownloadEvent(type, fileCount, downloadMethod);
 };
 
 export const getFormattedStats = async () => {

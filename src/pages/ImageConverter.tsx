@@ -17,7 +17,7 @@ import {
   generateConvertedFilename 
 } from '@/utils/imageConverter';
 import { downloadMultipleFilesAsZip } from '@/utils/zipDownload';
-import { trackConversion } from '@/utils/conversionTracker';
+import { trackConversion, trackDownload } from '@/utils/conversionTracker';
 import { trackUserConversion } from '@/utils/userConversionTracker';
 import { toast } from 'sonner';
 import { Zap, Image as ImageIcon, Upload, Download, X, RefreshCw, Play, Video, Music, Package, ChevronDown } from 'lucide-react';
@@ -191,6 +191,10 @@ const ImageConverter = () => {
     
     const filename = generateConvertedFilename(file.file.name, selectedFormat);
     downloadBlob(file.converted, filename);
+    
+    // Track download event
+    trackDownload('images', 1, 'single');
+    
     toast.success(`Downloaded ${filename}`);
   }, [selectedFormat]);
 
@@ -226,6 +230,10 @@ const ImageConverter = () => {
       const zipFilename = `FileConverterBuddyDownload - ${date} ${time}.zip`;
       
       await downloadMultipleFilesAsZip(filesForZip, zipFilename, true);
+      
+      // Track bulk download event
+      trackDownload('images', completedFiles.length, 'zip');
+      
       toast.success(`Downloaded ${completedFiles.length} images as organized ZIP`);
     } catch (error) {
       console.error('Download error:', error);

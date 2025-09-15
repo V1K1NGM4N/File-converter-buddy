@@ -28,7 +28,7 @@ import {
   ChevronDown
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { trackConversion } from '@/utils/conversionTracker';
+import { trackConversion, trackDownload } from '@/utils/conversionTracker';
 import { trackUserConversion } from '@/utils/userConversionTracker';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
 import { FileTypeNavigation } from '@/components/FileTypeNavigation';
@@ -297,6 +297,7 @@ const ProductFeedDownloader: React.FC = () => {
       
       // Track successful downloads
       trackConversion('productFeeds', product.images.length);
+      trackDownload('productFeeds', product.images.length, 'bulk');
       
       // Track user-specific conversions (user tracking not implemented yet)
       // if (user?.id) {
@@ -375,6 +376,7 @@ const ProductFeedDownloader: React.FC = () => {
 
       // Track successful downloads
       trackConversion('productFeeds', totalImages);
+      trackDownload('productFeeds', totalImages, 'bulk');
       
       // Track user-specific conversions (user tracking not implemented yet)
       // if (user?.id) {
@@ -464,6 +466,7 @@ const ProductFeedDownloader: React.FC = () => {
       
       // Track successful downloads
       trackConversion('productFeeds', imagesToDownload.length);
+      trackDownload('productFeeds', imagesToDownload.length, 'bulk');
       
       // Track user-specific conversions (user tracking not implemented yet)
       // if (user?.id) {
@@ -582,6 +585,7 @@ const ProductFeedDownloader: React.FC = () => {
 
       // Track successful downloads
       trackConversion('productFeeds', totalImages);
+      trackDownload('productFeeds', totalImages, 'bulk');
       
       // Track user-specific conversions (user tracking not implemented yet)
       // if (user?.id) {

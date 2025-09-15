@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { toast } from 'sonner';
-import { trackConversion } from '@/utils/conversionTracker';
+import { trackConversion, trackDownload } from '@/utils/conversionTracker';
 import { convertAudio, AudioFormat, needsConversion } from '@/utils/audioConverter';
 import { SEOHead } from '@/components/SEOHead';
 import { 
@@ -214,6 +214,11 @@ const AudioConverter = () => {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     }
+    
+    // Track download event
+    trackDownload('audio', 1, 'single');
+    
+    toast.success(`Downloaded ${newName}`);
   }, [selectedFormat]);
 
   const handleDownloadAll = useCallback(async () => {
@@ -240,6 +245,10 @@ const AudioConverter = () => {
       const zipFilename = `FileConverterBuddyDownload - ${date} ${time}.zip`;
       
       await downloadMultipleFilesAsZip(filesForZip, zipFilename, true);
+      
+      // Track bulk download event
+      trackDownload('audio', completedFiles.length, 'zip');
+      
       toast.success(`Downloaded ${completedFiles.length} audio files as organized ZIP`);
     } catch (error) {
       console.error('Download error:', error);

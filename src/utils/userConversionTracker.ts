@@ -1,4 +1,5 @@
 import { getUserStats, createUserStats, updateUserStats } from './databaseService'
+import { trackConversionEvent } from './gtmEvents'
 
 export interface UserConversionStats {
   userId: string;
@@ -72,6 +73,9 @@ export const trackUserConversion = (
   
   const storageKey = getUserStorageKey(userId);
   localStorage.setItem(storageKey, JSON.stringify(stats));
+  
+  // Send GTM event with user context
+  trackConversionEvent(type, fileCount);
   
   return {
     success: true,
