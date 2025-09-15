@@ -133,15 +133,22 @@ export const useFilePersistence = (storageKey: string) => {
     }
   }, [storageKey]);
 
-  // Helper function to create preview for HEIC files
+  // Enhanced HEIC preview generation with better error handling
   const createHEICPreview = async (file: File): Promise<string> => {
     console.log('🔍 Creating HEIC preview for:', file.name, 'Type:', file.type);
     try {
+      // Check file size limit for preview (20MB max)
+      const maxPreviewSize = 20 * 1024 * 1024; // 20MB
+      if (file.size > maxPreviewSize) {
+        console.log('⚠️ HEIC file too large for preview, using placeholder');
+        return URL.createObjectURL(file); // Fallback to original
+      }
+      
       // Import heic-to dynamically to avoid issues
       const { heicTo } = await import('heic-to');
       console.log('✅ heic-to imported successfully');
       
-      // Check if file is HEIC by file extension and type
+      // Enhanced HEIC detection
       const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || 
                      file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
       console.log('🔍 isHeic check result:', isHeic);
@@ -151,19 +158,49 @@ export const useFilePersistence = (storageKey: string) => {
         return URL.createObjectURL(file);
       }
       
+      // Check browser compatibility
+      if (!window.Worker) {
+        console.log('⚠️ Browser does not support HEIC conversion, using original file');
+        return URL.createObjectURL(file);
+      }
+      
       console.log('🔄 Converting HEIC to JPEG for preview...');
-      // Convert HEIC to JPEG for preview
-      const previewBlob = await heicTo({
+      
+      // Add timeout for preview conversion (15 seconds)
+      const previewPromise = heicTo({
         blob: file,
         type: 'image/jpeg',
         quality: 0.7 // Lower quality for faster preview
       });
       
-      console.log('✅ HEIC preview conversion successful, blob size:', previewBlob.size);
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('HEIC preview conversion timed out')), 15000);
+      });
+      
+      const previewBlob = await Promise.race([previewPromise, timeoutPromise]);
+      
+      // Validate preview result
+      if (!previewBlob || previewBlob.size === 0) {
+        throw new Error('HEIC preview conversion failed: Empty result');
+      }
+      
+      console.log('✅ HEIC preview conversion successful, blob size:', (previewBlob.size / 1024).toFixed(1) + 'KB');
       return URL.createObjectURL(previewBlob);
     } catch (error) {
       console.error('❌ Failed to create HEIC preview:', error);
-      // Fallback to a placeholder or the original file
+      
+      // Provide specific error handling
+      if (error instanceof Error) {
+        if (error.message.includes('timeout')) {
+          console.log('⚠️ HEIC preview timed out, using original file');
+        } else if (error.message.includes('too large')) {
+          console.log('⚠️ HEIC file too large for preview, using original file');
+        } else {
+          console.log('⚠️ HEIC preview failed:', error.message, 'using original file');
+        }
+      }
+      
+      // Fallback to original file
       return URL.createObjectURL(file);
     }
   };

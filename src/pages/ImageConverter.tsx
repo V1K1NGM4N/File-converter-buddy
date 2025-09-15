@@ -18,6 +18,7 @@ import {
 } from '@/utils/imageConverter';
 import { downloadMultipleFilesAsZip } from '@/utils/zipDownload';
 import { trackConversion, trackDownload } from '@/utils/conversionTracker';
+import { isHEICSupported } from '@/utils/imageConverter';
 import { trackUserConversion } from '@/utils/userConversionTracker';
 import { toast } from 'sonner';
 import { Zap, Image as ImageIcon, Upload, Download, X, RefreshCw, Play, Video, Music, Package, ChevronDown } from 'lucide-react';
@@ -122,12 +123,24 @@ const ImageConverter = () => {
   const handleStartConversion = useCallback(async () => {
     if (files.length === 0) return;
     
+    // Check for HEIC files and browser support
+    const heicFiles = files.filter(f => 
+      f.file.type === 'image/heic' || f.file.type === 'image/heif' || 
+      f.file.name.toLowerCase().endsWith('.heic') || f.file.name.toLowerCase().endsWith('.heif')
+    );
+    
+    if (heicFiles.length > 0 && !isHEICSupported()) {
+      toast.error('HEIC conversion is not supported in your browser. Please try Chrome, Firefox, or Safari.');
+      return;
+    }
+    
     setIsConverting(true);
     setOverallProgress(0);
     
     try {
       const totalFiles = files.length;
       let completedFiles = 0;
+      let failedFiles = 0;
       let currentFiles = [...files];
       
       // Convert files in parallel with progress tracking
@@ -159,6 +172,7 @@ const ImageConverter = () => {
             f.id === file.id ? { ...f, status: 'error', progress: 0 } : f
           );
           updateFiles(currentFiles);
+          failedFiles++;
         }
       });
       
@@ -176,7 +190,14 @@ const ImageConverter = () => {
         }
       }
       
-      toast.success(`Conversion complete! ${completedFiles} files converted.`);
+      // Show appropriate success/error message
+      if (failedFiles === 0) {
+        toast.success(`Conversion complete! ${completedFiles} files converted.`);
+      } else if (completedFiles > 0) {
+        toast.warning(`Conversion completed with issues. ${completedFiles} files converted, ${failedFiles} failed.`);
+      } else {
+        toast.error('All conversions failed. Please check your files and try again.');
+      }
       
     } catch (error) {
       toast.error('Conversion failed. Please try again.');

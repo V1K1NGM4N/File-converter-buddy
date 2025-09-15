@@ -16,27 +16,60 @@ export interface ConversionFile {
   status: 'pending' | 'converting' | 'completed' | 'error';
 }
 
+// Check if browser supports HEIC conversion
+export const isHEICSupported = (): boolean => {
+  try {
+    // Check for Web Worker support (required by heic-to)
+    if (!window.Worker) {
+      console.log('❌ Web Worker not supported - HEIC conversion unavailable');
+      return false;
+    }
+    
+    // Check if heic-to library is available
+    if (typeof heicTo !== 'function') {
+      console.log('❌ heic-to library not available - HEIC conversion unavailable');
+      return false;
+    }
+    
+    console.log('✅ HEIC conversion is supported');
+    return true;
+  } catch (error) {
+    console.log('❌ HEIC support check failed:', error);
+    return false;
+  }
+};
+
 export const convertImage = async (
   file: File, 
   format: ImageFormat, 
   quality: number = 0.9
 ): Promise<Blob> => {
-  console.log(`Starting reliable image conversion: ${file.name} (${file.type}) to ${format}`);
+  console.log(`🔄 Starting reliable image conversion: ${file.name} (${file.type}) to ${format}`);
   
   // Check if file is already in target format
   if (file.type === getMimeType(format)) {
-    console.log('File already in target format, returning original');
+    console.log('✅ File already in target format, returning original');
     return file;
   }
   
-  // Handle HEIC files with heic-to library
+  // Handle HEIC files with enhanced validation
   if (file.type === 'image/heic' || file.type === 'image/heif' || 
       file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif')) {
-    console.log('Detected HEIC/HEIF file, using heic-to converter');
+    console.log('🔍 Detected HEIC/HEIF file, checking support...');
+    
+    // Check browser support first
+    if (!isHEICSupported()) {
+      throw new Error('HEIC conversion is not supported in your browser. Please try a modern browser like Chrome, Firefox, or Safari.');
+    }
+    
     try {
       return await convertHEICImage(file, format, quality);
     } catch (error) {
-      console.error('HEIC conversion failed:', error);
+      console.error('❌ HEIC conversion failed:', error);
+      // Re-throw with more context
+      if (error instanceof Error) {
+        throw error; // Already has good error message
+      }
       throw new Error(`Failed to convert HEIC image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
@@ -79,26 +112,42 @@ export const convertImage = async (
   });
 };
 
-// Convert HEIC files using heic-to library (more reliable than heic2any)
+// Enhanced HEIC conversion with better error handling and validation
 const convertHEICImage = async (
   file: File, 
   format: ImageFormat, 
   quality: number = 0.9
 ): Promise<Blob> => {
   try {
-    console.log(`Converting HEIC file: ${file.name} to ${format}`);
-    console.log(`File size: ${file.size} bytes, File type: ${file.type}`);
+    console.log(`🔄 Converting HEIC file: ${file.name} to ${format}`);
+    console.log(`📊 File size: ${(file.size / 1024 / 1024).toFixed(2)} MB, File type: ${file.type}`);
     
-    // Validate file
+    // Enhanced file validation
     if (!file || file.size === 0) {
-      throw new Error('Invalid HEIC file');
+      throw new Error('Invalid HEIC file: File is empty or corrupted');
     }
     
-    // Check if file is actually HEIC by extension and type
+    // Check file size limit (50MB max for HEIC files)
+    const maxSize = 50 * 1024 * 1024; // 50MB
+    if (file.size > maxSize) {
+      throw new Error(`HEIC file too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 50MB.`);
+    }
+    
+    // Enhanced HEIC detection
     const isHeic = file.type === 'image/heic' || file.type === 'image/heif' || 
                    file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
     if (!isHeic) {
       throw new Error('File is not a valid HEIC/HEIF file');
+    }
+    
+    // Check browser compatibility
+    if (!window.Worker) {
+      throw new Error('Your browser does not support HEIC conversion. Please try a modern browser.');
+    }
+    
+    // Validate heic-to library availability
+    if (typeof heicTo !== 'function') {
+      throw new Error('HEIC conversion library not available. Please refresh the page and try again.');
     }
     
     // Convert HEIC to target format
@@ -109,15 +158,27 @@ const convertHEICImage = async (
       targetType = 'image/png'; // Convert to PNG for other formats, then use canvas
     }
     
-    console.log(`Converting HEIC to ${targetType} with quality ${quality}`);
+    console.log(`🎯 Converting HEIC to ${targetType} with quality ${quality}`);
     
-    const convertedBlob = await heicTo({
+    // Add timeout for HEIC conversion (30 seconds)
+    const conversionPromise = heicTo({
       blob: file,
       type: targetType,
       quality: quality
     });
     
-    console.log(`HEIC conversion successful: ${convertedBlob.size} bytes, type: ${convertedBlob.type}`);
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => reject(new Error('HEIC conversion timed out after 30 seconds')), 30000);
+    });
+    
+    const convertedBlob = await Promise.race([conversionPromise, timeoutPromise]);
+    
+    // Validate conversion result
+    if (!convertedBlob || convertedBlob.size === 0) {
+      throw new Error('HEIC conversion failed: Empty result');
+    }
+    
+    console.log(`✅ HEIC conversion successful: ${(convertedBlob.size / 1024).toFixed(1)}KB, type: ${convertedBlob.type}`);
     
     // If target format is not JPEG or PNG, convert using canvas
     if (format !== 'jpeg' && format !== 'png') {
@@ -126,34 +187,50 @@ const convertHEICImage = async (
         const ctx = canvas.getContext('2d');
         const img = new Image();
         
+        // Add timeout for image loading
+        const imageTimeout = setTimeout(() => {
+          reject(new Error('Failed to load converted HEIC image: Timeout'));
+        }, 10000);
+        
         img.onload = () => {
-          canvas.width = img.naturalWidth;
-          canvas.height = img.naturalHeight;
+          clearTimeout(imageTimeout);
           
-          if (!ctx) {
-            reject(new Error('Could not get canvas context'));
-            return;
+          try {
+            canvas.width = img.naturalWidth;
+            canvas.height = img.naturalHeight;
+            
+            if (!ctx) {
+              reject(new Error('Could not get canvas context'));
+              return;
+            }
+            
+            ctx.drawImage(img, 0, 0);
+            
+            const mimeType = getMimeType(format);
+            
+            canvas.toBlob(
+              (blob) => {
+                if (blob) {
+                  console.log(`✅ Final conversion successful: ${(blob.size / 1024).toFixed(1)}KB, type: ${blob.type}`);
+                  resolve(blob);
+                } else {
+                  reject(new Error('Failed to convert HEIC to final format'));
+                }
+              },
+              mimeType,
+              (format as string) === 'jpeg' ? quality : undefined
+            );
+          } catch (error) {
+            clearTimeout(imageTimeout);
+            reject(new Error(`Canvas conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
           }
-          
-          ctx.drawImage(img, 0, 0);
-          
-          const mimeType = getMimeType(format);
-          
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                console.log(`Final conversion successful: ${blob.size} bytes, type: ${blob.type}`);
-                resolve(blob);
-              } else {
-                reject(new Error('Failed to convert HEIC to final format'));
-              }
-            },
-            mimeType,
-            (format as string) === 'jpeg' ? quality : undefined
-          );
         };
         
-        img.onerror = () => reject(new Error('Failed to load converted HEIC image'));
+        img.onerror = () => {
+          clearTimeout(imageTimeout);
+          reject(new Error('Failed to load converted HEIC image: Invalid image data'));
+        };
+        
         img.src = URL.createObjectURL(convertedBlob);
       });
     }
@@ -161,8 +238,24 @@ const convertHEICImage = async (
     return convertedBlob;
     
   } catch (error) {
-    console.error('HEIC conversion error:', error);
-    throw new Error(`Failed to convert HEIC image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    console.error('❌ HEIC conversion error:', error);
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
+        throw new Error('HEIC conversion timed out. The file may be too large or complex. Try a smaller file.');
+      } else if (error.message.includes('too large')) {
+        throw new Error(error.message);
+      } else if (error.message.includes('browser')) {
+        throw new Error(error.message);
+      } else if (error.message.includes('library')) {
+        throw new Error(error.message);
+      } else {
+        throw new Error(`HEIC conversion failed: ${error.message}`);
+      }
+    }
+    
+    throw new Error('HEIC conversion failed: Unknown error occurred');
   }
 };
 
