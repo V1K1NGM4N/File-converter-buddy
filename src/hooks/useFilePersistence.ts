@@ -124,7 +124,49 @@ export const useFilePersistence = (storageKey: string) => {
       });
 
       Promise.all(persistedFiles).then(completed => {
-        localStorage.setItem(storageKey, JSON.stringify(completed));
+        try {
+          const dataToSave = JSON.stringify(completed);
+          
+          // Check if data is too large (5MB limit for localStorage)
+          const maxSize = 5 * 1024 * 1024; // 5MB
+          if (dataToSave.length > maxSize) {
+            console.warn('⚠️ File data too large for localStorage, saving minimal data only');
+            // Save only essential data without file content
+            const minimalData = completed.map(file => ({
+              id: file.id,
+              fileName: file.fileName,
+              fileSize: file.fileSize,
+              fileType: file.fileType,
+              progress: file.progress,
+              status: file.status
+            }));
+            localStorage.setItem(storageKey, JSON.stringify(minimalData));
+          } else {
+            localStorage.setItem(storageKey, dataToSave);
+          }
+        } catch (error) {
+          console.error('❌ Error saving files:', error);
+          
+          // If quota exceeded, try to clear some space
+          if (error instanceof Error && error.name === 'QuotaExceededError') {
+            console.log('🧹 Clearing localStorage to free up space...');
+            try {
+              localStorage.clear();
+              // Save only essential data
+              const essentialData = completed.map(file => ({
+                id: file.id,
+                fileName: file.fileName,
+                fileSize: file.fileSize,
+                fileType: file.fileType,
+                progress: file.progress,
+                status: file.status
+              }));
+              localStorage.setItem(storageKey, JSON.stringify(essentialData));
+            } catch (retryError) {
+              console.error('❌ Failed to save even after clearing localStorage:', retryError);
+            }
+          }
+        }
       }).catch(error => {
         console.error('Error saving files:', error);
       });
@@ -195,6 +237,10 @@ export const useFilePersistence = (storageKey: string) => {
           console.log('⚠️ HEIC preview timed out, using original file');
         } else if (error.message.includes('too large')) {
           console.log('⚠️ HEIC file too large for preview, using original file');
+        } else if (error.message.includes('ftyp') || error.message.includes('HEIF')) {
+          console.log('⚠️ HEIC file appears to be corrupted or invalid, using original file');
+        } else if (error.message.includes('not found') || error.message.includes('parse')) {
+          console.log('⚠️ HEIC file parsing failed, using original file');
         } else {
           console.log('⚠️ HEIC preview failed:', error.message, 'using original file');
         }

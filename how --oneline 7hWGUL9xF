@@ -1,0 +1,5 @@
+[33md104ef0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Improve HEIC file conversion reliability and consistency
+[33m176705f[m Add GTM tracking for conversions and downloads
+[33me2980d5[m Complete blog header consistency fix: remove Sign In/Sign Up buttons from all 19 blog articles to match tool pages and front page header structure
+[33m883d777[m Fix blog article headers: remove Sign In/Sign Up buttons from 8 more blog articles to match tool pages and front page header structure
+[33m37aa6cc[m Fix blog article headers: remove Sign In/Sign Up buttons from 6 more blog articles to match tool pages and front page header structure

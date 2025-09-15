@@ -250,6 +250,10 @@ const convertHEICImage = async (
         throw new Error(error.message);
       } else if (error.message.includes('library')) {
         throw new Error(error.message);
+      } else if (error.message.includes('ftyp') || error.message.includes('HEIF')) {
+        throw new Error('HEIC file appears to be corrupted or invalid. Please try a different file.');
+      } else if (error.message.includes('not found') || error.message.includes('parse')) {
+        throw new Error('HEIC file could not be parsed. The file may be corrupted or in an unsupported format.');
       } else {
         throw new Error(`HEIC conversion failed: ${error.message}`);
       }

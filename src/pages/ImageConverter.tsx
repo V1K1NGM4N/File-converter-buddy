@@ -52,6 +52,22 @@ const ImageConverter = () => {
       '.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg', '.heic', '.heif'
     ];
     
+    // File size limits (50MB for HEIC, 20MB for others)
+    const maxFileSize = 50 * 1024 * 1024; // 50MB
+    const maxRegularFileSize = 20 * 1024 * 1024; // 20MB
+    
+    // Check file size first
+    const isHeicFile = file.type === 'image/heic' || file.type === 'image/heif' || 
+                      file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
+    
+    if (isHeicFile && file.size > maxFileSize) {
+      console.log(`❌ HEIC file too large: ${(file.size / 1024 / 1024).toFixed(1)}MB (max: 50MB)`);
+      return false;
+    } else if (!isHeicFile && file.size > maxRegularFileSize) {
+      console.log(`❌ File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB (max: 20MB)`);
+      return false;
+    }
+    
     // Check MIME type
     if (reliableTypes.includes(file.type)) {
       return true;
@@ -80,7 +96,14 @@ const ImageConverter = () => {
     
     if (rejectedFiles.length > 0) {
       console.log('❌ Rejected files:', rejectedFiles.map(f => `${f.name} (${f.type})`));
-      toast.error(`Skipped ${rejectedFiles.length} unsupported file(s). Only JPEG, PNG, WebP, GIF, BMP, SVG, and HEIC are supported.`);
+      const hasLargeFiles = rejectedFiles.some(f => f.size > 20 * 1024 * 1024);
+      const hasHeicFiles = rejectedFiles.some(f => f.type === 'image/heic' || f.type === 'image/heif' || f.name.toLowerCase().endsWith('.heic') || f.name.toLowerCase().endsWith('.heif'));
+      
+      if (hasLargeFiles) {
+        toast.error(`Skipped ${rejectedFiles.length} file(s). File size limit: 20MB (50MB for HEIC files). Only JPEG, PNG, WebP, GIF, BMP, SVG, and HEIC are supported.`);
+      } else {
+        toast.error(`Skipped ${rejectedFiles.length} unsupported file(s). Only JPEG, PNG, WebP, GIF, BMP, SVG, and HEIC are supported.`);
+      }
     }
     
     if (reliableFiles.length === 0) {
