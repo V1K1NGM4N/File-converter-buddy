@@ -203,7 +203,8 @@ const ImageConverter = () => {
         }
       });
       
-      await Promise.all(conversions);
+      // Wait for all conversions to complete, but don't fail if some fail
+      await Promise.allSettled(conversions);
       
       // Track successful conversions
       const successfulConversions = currentFiles.filter(f => f.status === 'completed').length;
@@ -233,8 +234,17 @@ const ImageConverter = () => {
       }
       
     } catch (error) {
-      toast.error('Conversion failed. Please try again.');
-      console.error('Conversion error:', error);
+      console.error('Outer conversion error:', error);
+      console.error('Failed files count:', failedFiles);
+      console.error('Completed files count:', completedFiles);
+      
+      // Only show error if no files were actually converted
+      if (completedFiles === 0) {
+        toast.error('Conversion failed. Please try again.');
+      } else {
+        // Some files converted successfully, show warning instead
+        toast.warning(`Conversion completed with issues. ${completedFiles} files converted, ${failedFiles} failed.`);
+      }
     } finally {
       setIsConverting(false);
     }
