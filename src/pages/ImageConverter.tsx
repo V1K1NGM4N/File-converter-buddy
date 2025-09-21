@@ -206,7 +206,7 @@ const ImageConverter = () => {
       // Wait for all conversions to complete, but don't fail if some fail
       await Promise.allSettled(conversions);
       
-      // Track successful conversions
+      // Track successful conversions and show messages
       const successfulConversions = currentFiles.filter(f => f.status === 'completed').length;
       if (successfulConversions > 0) {
         // Track global conversions
