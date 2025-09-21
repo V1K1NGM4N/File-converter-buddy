@@ -83,15 +83,15 @@ export const SmartFormatSelector = ({
             key={format}
             variant={selectedFormatInfo === format ? 'hero' : 'secondary'}
             className={cn(
-              "h-auto p-4 flex flex-col items-center gap-2 text-left",
+              "h-auto min-h-[80px] p-4 flex flex-col items-center justify-center gap-2 text-center",
               selectedFormatInfo === format && "ring-2 ring-primary ring-offset-2 ring-offset-background"
             )}
             onClick={() => onFormatChange(format)}
           >
-            <span className="text-lg font-bold">
+            <span className="text-lg font-bold leading-tight">
               {format.toUpperCase()}
             </span>
-            <span className="text-xs opacity-80 text-center">
+            <span className="text-xs opacity-80 text-center leading-tight px-1">
               {getFormatDescription(format, fileTypeInfo.category)}
             </span>
           </Button>
@@ -106,27 +106,30 @@ export const SmartFormatSelector = ({
               <Button
                 variant={selectedOtherFormat ? 'hero' : 'secondary'}
                 className={cn(
-                  "h-auto p-4 flex flex-col items-center gap-2 text-left w-full",
+                  "h-auto min-h-[80px] p-4 flex flex-col items-center justify-center gap-2 text-center w-full",
                   selectedOtherFormat && "ring-2 ring-primary ring-offset-2 ring-offset-background"
                 )}
               >
-                <span className="text-lg font-bold flex items-center gap-1">
+                <span className="text-lg font-bold leading-tight flex items-center gap-1">
                   {selectedOtherFormat ? selectedOtherFormat.toUpperCase() : 'More'}
                   <ChevronDown className="h-4 w-4" />
                 </span>
-                <span className="text-xs opacity-80 text-center">
+                <span className="text-xs opacity-80 text-center leading-tight px-1">
                   {selectedOtherFormat ? 'Selected format' : 'Other formats'}
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-32">
+            <DropdownMenuContent className="w-40">
               {otherFormats.map((format) => (
                 <DropdownMenuItem
                   key={format}
                   onClick={() => onFormatChange(format)}
-                  className={selectedFormatInfo === format ? 'bg-accent' : ''}
+                  className={cn(
+                    "cursor-pointer",
+                    selectedFormatInfo === format ? 'bg-accent' : ''
+                  )}
                 >
-                  {format.toUpperCase()}
+                  <span className="font-medium">{format.toUpperCase()}</span>
                 </DropdownMenuItem>
               ))}
             </DropdownMenuContent>
@@ -150,42 +153,42 @@ export const SmartFormatSelector = ({
 const getFormatDescription = (format: string, category: string): string => {
   const formatDescriptions: Record<string, Record<string, string>> = {
     image: {
-      'png': 'Lossless, supports transparency',
-      'jpeg': 'Smaller size, best for photos',
-      'webp': 'Modern format, excellent compression',
-      'tiff': 'High quality, professional use',
+      'png': 'Lossless, transparency',
+      'jpeg': 'Smaller size, photos',
+      'webp': 'Modern, excellent compression',
+      'tiff': 'High quality, professional',
       'gif': 'Supports animation',
-      'bmp': 'Uncompressed, large size',
-      'svg': 'Vector format, scalable',
+      'bmp': 'Uncompressed, large',
+      'svg': 'Vector, scalable',
       'ico': 'Icon format',
-      'heic': 'High efficiency format',
+      'heic': 'High efficiency',
       'avif': 'Next-gen compression'
     },
     video: {
-      'mp4': 'Most compatible, high quality',
-      'avi': 'Uncompressed, large size',
+      'mp4': 'Most compatible',
+      'avi': 'Uncompressed, large',
       'mov': 'Apple ecosystem',
       'wmv': 'Windows Media',
       'flv': 'Flash video',
       'webm': 'Web optimized',
-      'mkv': 'Open container format',
+      'mkv': 'Open container',
       '3gp': 'Mobile optimized',
-      'ogv': 'Open source format',
+      'ogv': 'Open source',
       'm4v': 'iTunes format',
       'ts': 'Transport stream',
       'vob': 'DVD format',
-      'asf': 'Advanced Systems Format',
-      'rm': 'RealMedia format',
-      'rmvb': 'Variable bitrate RM',
+      'asf': 'Advanced Systems',
+      'rm': 'RealMedia',
+      'rmvb': 'Variable bitrate',
       'swf': 'Flash format'
     },
     audio: {
-      'mp3': 'Most compatible, good compression',
+      'mp3': 'Most compatible',
       'wav': 'Uncompressed, high quality',
-      'aac': 'Better quality than MP3',
-      'ogg': 'Open source format',
+      'aac': 'Better than MP3',
+      'ogg': 'Open source',
       'flac': 'Lossless compression',
-      'wma': 'Windows Media Audio',
+      'wma': 'Windows Media',
       'm4a': 'iTunes format',
       'opus': 'Modern codec',
       'aiff': 'Apple format',
@@ -202,36 +205,36 @@ const getFormatDescription = (format: string, category: string): string => {
       'xz': 'LZMA compression'
     },
     spreadsheet: {
-      'xlsx': 'Modern Excel format',
-      'xls': 'Legacy Excel format',
-      'csv': 'Simple text format',
-      'ods': 'OpenDocument format',
-      'tsv': 'Tab-separated values',
+      'xlsx': 'Modern Excel',
+      'xls': 'Legacy Excel',
+      'csv': 'Simple text',
+      'ods': 'OpenDocument',
+      'tsv': 'Tab-separated',
       'json': 'Structured data',
       'xml': 'Markup format'
     },
     text: {
-      'txt': 'Plain text format',
-      'md': 'Markdown format',
-      'html': 'Web markup format',
-      'css': 'Stylesheet format',
-      'js': 'JavaScript format',
+      'txt': 'Plain text',
+      'md': 'Markdown',
+      'html': 'Web markup',
+      'css': 'Stylesheet',
+      'js': 'JavaScript',
       'json': 'Data format',
       'xml': 'Markup format',
-      'csv': 'Comma-separated values',
-      'tsv': 'Tab-separated values',
-      'log': 'Log file format'
+      'csv': 'Comma-separated',
+      'tsv': 'Tab-separated',
+      'log': 'Log file'
     },
     document: {
-      'pdf': 'Portable Document Format',
-      'png': 'Lossless image format',
-      'jpeg': 'Compressed image format',
-      'webp': 'Modern web image format',
-      'tiff': 'High quality image format',
-      'txt': 'Plain text format',
-      'md': 'Markdown format',
-      'html': 'Web markup format',
-      'docx': 'Microsoft Word document'
+      'pdf': 'Portable Document',
+      'png': 'Lossless image',
+      'jpeg': 'Compressed image',
+      'webp': 'Modern web image',
+      'tiff': 'High quality image',
+      'txt': 'Plain text',
+      'md': 'Markdown',
+      'html': 'Web markup',
+      'docx': 'Microsoft Word'
     }
   };
 
