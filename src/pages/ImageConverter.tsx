@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ImageUpload, ImageFormat } from '@/components/ImageUpload';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { SEOHead } from '@/components/SEOHead';
+import { ConversionSuccessModal } from '@/components/ConversionSuccessModal';
 import { 
   ConversionFile, 
   convertImage, 
@@ -35,6 +36,16 @@ const ImageConverter = () => {
   const [selectedFormat, setSelectedFormat] = useState<ImageFormat>('png');
   const [isConverting, setIsConverting] = useState(false);
   const [overallProgress, setOverallProgress] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [conversionResults, setConversionResults] = useState({
+    totalFiles: 0,
+    successfulFiles: 0,
+    failedFiles: 0,
+    fileType: 'images' as const,
+    originalFormat: '',
+    targetFormat: '',
+    totalSizeReduction: 0
+  });
 
   // Helper function to check if file is a reliable image format
   const isReliableImageFormat = (file: File): boolean => {
@@ -218,18 +229,34 @@ const ImageConverter = () => {
         }
       }
       
-      // Show appropriate success/error message
-      if (failedFiles === 0) {
-        // Check if any files were already in target format
-        const alreadyInFormat = files.filter(f => f.file.type === getMimeType(selectedFormat));
-        if (alreadyInFormat.length > 0 && alreadyInFormat.length === files.length) {
-          toast.success(`Files are already in ${selectedFormat.toUpperCase()} format! Ready for download.`);
-        } else {
-          toast.success(`Conversion complete! ${completedFiles} files converted.`);
+      // Show success modal instead of toast
+      if (completedFiles > 0) {
+        // Calculate size reduction if possible
+        let totalSizeReduction = 0;
+        try {
+          const originalSize = files.reduce((sum, f) => sum + f.file.size, 0);
+          const convertedSize = currentFiles
+            .filter(f => f.status === 'completed' && f.converted)
+            .reduce((sum, f) => sum + (f.converted?.size || 0), 0);
+          
+          if (originalSize > 0 && convertedSize > 0) {
+            totalSizeReduction = Math.round(((originalSize - convertedSize) / originalSize) * 100);
+          }
+        } catch (error) {
+          console.warn('Could not calculate size reduction:', error);
         }
-      } else if (completedFiles > 0) {
-        toast.warning(`Conversion completed with issues. ${completedFiles} files converted, ${failedFiles} failed.`);
-      } else {
+
+        setConversionResults({
+          totalFiles: files.length,
+          successfulFiles: completedFiles,
+          failedFiles: failedFiles,
+          fileType: 'images',
+          originalFormat: files[0]?.file.name.split('.').pop() || 'unknown',
+          targetFormat: selectedFormat,
+          totalSizeReduction: totalSizeReduction
+        });
+        setShowSuccessModal(true);
+      } else if (failedFiles > 0) {
         toast.error('All conversions failed. Please check your files and try again.');
       }
       
@@ -258,8 +285,6 @@ const ImageConverter = () => {
     
     // Track download event
     trackDownload('images', 1, 'single');
-    
-    toast.success(`Downloaded ${filename}`);
   }, [selectedFormat]);
 
   const ProtectedDownloadButton = ({ file, children }: { file: ConversionFile, children: React.ReactNode }) => {
@@ -297,13 +322,20 @@ const ImageConverter = () => {
       
       // Track bulk download event
       trackDownload('images', completedFiles.length, 'zip');
-      
-      toast.success(`Downloaded ${completedFiles.length} images as organized ZIP`);
     } catch (error) {
       console.error('Download error:', error);
       toast.error('Failed to download files. Please try again.');
     }
   }, [files, selectedFormat, handleDownloadFile]);
+
+  const handleCloseSuccessModal = useCallback(() => {
+    setShowSuccessModal(false);
+  }, []);
+
+  const handleConvertAnother = useCallback(() => {
+    setShowSuccessModal(false);
+    clearFiles();
+  }, [clearFiles]);
 
   const handleReset = useCallback(() => {
     files.forEach(file => URL.revokeObjectURL(file.preview));
@@ -682,6 +714,14 @@ const ImageConverter = () => {
           )}
         </div>
       </div>
+      
+      {/* Success Modal */}
+      <ConversionSuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleCloseSuccessModal}
+        onConvertAnother={handleConvertAnother}
+        conversionResults={conversionResults}
+      />
     </div>
     </>
   );
