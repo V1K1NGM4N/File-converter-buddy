@@ -14,7 +14,8 @@ import {
   createPreviewUrl, 
   downloadBlob, 
   getFileExtension, 
-  generateConvertedFilename 
+  generateConvertedFilename,
+  getMimeType
 } from '@/utils/imageConverter';
 import { downloadMultipleFilesAsZip } from '@/utils/zipDownload';
 import { trackConversion, trackDownload } from '@/utils/conversionTracker';
@@ -174,6 +175,9 @@ const ImageConverter = () => {
         );
         updateFiles(currentFiles);
         
+        // Add a small delay to ensure UI updates are visible
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         try {
           const converted = await convertImage(file.file, selectedFormat);
           
@@ -215,7 +219,13 @@ const ImageConverter = () => {
       
       // Show appropriate success/error message
       if (failedFiles === 0) {
-        toast.success(`Conversion complete! ${completedFiles} files converted.`);
+        // Check if any files were already in target format
+        const alreadyInFormat = files.filter(f => f.file.type === getMimeType(selectedFormat));
+        if (alreadyInFormat.length > 0 && alreadyInFormat.length === files.length) {
+          toast.success(`Files are already in ${selectedFormat.toUpperCase()} format! Ready for download.`);
+        } else {
+          toast.success(`Conversion complete! ${completedFiles} files converted.`);
+        }
       } else if (completedFiles > 0) {
         toast.warning(`Conversion completed with issues. ${completedFiles} files converted, ${failedFiles} failed.`);
       } else {

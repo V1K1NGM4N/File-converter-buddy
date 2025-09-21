@@ -49,6 +49,8 @@ export const convertImage = async (
   // Check if file is already in target format
   if (file.type === getMimeType(format)) {
     console.log('✅ File already in target format, returning original');
+    // Add a small delay to ensure UI feedback is visible
+    await new Promise(resolve => setTimeout(resolve, 200));
     return file;
   }
   
@@ -264,7 +266,7 @@ const convertHEICImage = async (
 };
 
 // Get proper MIME type for format
-const getMimeType = (format: ImageFormat): string => {
+export const getMimeType = (format: ImageFormat): string => {
   switch (format) {
     case 'jpeg':
       return 'image/jpeg';
