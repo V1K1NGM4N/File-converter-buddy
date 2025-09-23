@@ -1,4 +1,4 @@
-import { Download, X, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { Download, X, CheckCircle, Clock, AlertCircle, FileImage, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -13,6 +13,26 @@ interface ImagePreviewProps {
   fileGroup?: string;
   ProtectedDownloadButton?: React.ComponentType<{ file: ConversionFile; children: React.ReactNode }>;
 }
+
+// Helper function to detect DNG files
+const isDngFile = (file: ConversionFile): boolean => {
+  return file.file.type === 'image/x-adobe-dng' || file.file.name.toLowerCase().endsWith('.dng');
+};
+
+// DNG Preview Component
+const DngPreview = ({ file }: { file: ConversionFile }) => (
+  <div className="w-full h-full flex flex-col items-center justify-center bg-muted/30 p-4">
+    <FileImage className="h-12 w-12 text-muted-foreground mb-2" />
+    <div className="text-center">
+      <p className="text-sm font-medium text-foreground">DNG File</p>
+      <p className="text-xs text-muted-foreground">Raw Image Format</p>
+    </div>
+    <div className="mt-2 flex items-center gap-1 text-xs text-amber-600">
+      <AlertTriangle className="h-3 w-3" />
+      <span>Limited browser support</span>
+    </div>
+  </div>
+);
 
 export const ImagePreview = ({ 
   files, 
@@ -64,11 +84,15 @@ export const ImagePreview = ({
         {files.map((file) => (
           <Card key={file.id} className="overflow-hidden bg-gradient-card shadow-card border-border/50">
             <div className="aspect-square relative overflow-hidden">
-              <img
-                src={file.preview}
-                alt={getDisplayFilename(file)}
-                className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-              />
+              {isDngFile(file) ? (
+                <DngPreview file={file} />
+              ) : (
+                <img
+                  src={file.preview}
+                  alt={getDisplayFilename(file)}
+                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                />
+              )}
               
               <Button
                 variant="secondary"

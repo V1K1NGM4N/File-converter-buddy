@@ -175,6 +175,17 @@ const ImageConverter = () => {
       return;
     }
     
+    // Check for DNG files and show warning
+    const dngFiles = files.filter(f => 
+      f.file.type === 'image/x-adobe-dng' || f.file.name.toLowerCase().endsWith('.dng')
+    );
+    
+    if (dngFiles.length > 0) {
+      toast.warning(`DNG files detected: Browser conversion is limited. For best results, use professional software like Adobe Lightroom or Photoshop.`, {
+        duration: 8000,
+      });
+    }
+    
     setIsConverting(true);
     setOverallProgress(0);
     
