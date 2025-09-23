@@ -1,4 +1,4 @@
-export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'gif' | 'bmp' | 'tiff' | 'svg' | 'ico' | 'heic' | 'avif';
+export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'gif' | 'bmp' | 'tiff' | 'svg' | 'ico' | 'heic' | 'avif' | 'dng';
 
 // Import heic-to for better HEIC support
 import { heicTo } from 'heic-to';
@@ -73,6 +73,21 @@ export const convertImage = async (
         throw error; // Already has good error message
       }
       throw new Error(`Failed to convert HEIC image: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+  
+  // Handle DNG files
+  if (file.type === 'image/x-adobe-dng' || file.name.toLowerCase().endsWith('.dng')) {
+    console.log('🔍 Detected DNG file, attempting conversion...');
+    
+    try {
+      return await convertDNGImage(file, format, quality);
+    } catch (error) {
+      console.error('❌ DNG conversion failed:', error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(`Failed to convert DNG image: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   }
   
@@ -265,6 +280,109 @@ const convertHEICImage = async (
   }
 };
 
+// DNG conversion function - DNG files are raw image files that need special handling
+const convertDNGImage = async (
+  file: File, 
+  format: ImageFormat, 
+  quality: number = 0.9
+): Promise<Blob> => {
+  try {
+    console.log(`🔄 Converting DNG file: ${file.name} to ${format}`);
+    console.log(`📊 File size: ${(file.size / 1024 / 1024).toFixed(2)} MB, File type: ${file.type}`);
+    
+    // Enhanced file validation
+    if (!file || file.size === 0) {
+      throw new Error('Invalid DNG file: File is empty or corrupted');
+    }
+    
+    // Check file size limit (100MB max for DNG files - they can be large)
+    const maxSize = 100 * 1024 * 1024; // 100MB
+    if (file.size > maxSize) {
+      throw new Error(`DNG file too large: ${(file.size / 1024 / 1024).toFixed(1)}MB. Maximum size is 100MB.`);
+    }
+    
+    // Enhanced DNG detection
+    const isDng = file.type === 'image/x-adobe-dng' || file.name.toLowerCase().endsWith('.dng');
+    if (!isDng) {
+      throw new Error('File is not a valid DNG file');
+    }
+    
+    // DNG files are raw image files that browsers cannot directly process
+    // We'll attempt to load them as images, but this may not work in all browsers
+    // For better DNG support, users would need specialized software
+    console.log('⚠️ DNG files are raw image formats. Browser support is limited.');
+    console.log('🔄 Attempting to load DNG as image (may not work in all browsers)...');
+    
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      // Add timeout for image loading (longer for DNG files)
+      const imageTimeout = setTimeout(() => {
+        reject(new Error('DNG file could not be processed. DNG files are raw image formats that require specialized software for proper conversion. Please use Adobe Lightroom, Photoshop, or other professional photo editing software.'));
+      }, 15000);
+      
+      img.onload = () => {
+        clearTimeout(imageTimeout);
+        
+        try {
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          
+          if (!ctx) {
+            reject(new Error('Could not get canvas context'));
+            return;
+          }
+          
+          ctx.drawImage(img, 0, 0);
+          
+          const mimeType = getMimeType(format);
+          
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                console.log(`✅ DNG conversion successful: ${(blob.size / 1024).toFixed(1)}KB, type: ${blob.type}`);
+                resolve(blob);
+              } else {
+                reject(new Error('Failed to convert DNG to final format'));
+              }
+            },
+            mimeType,
+            (format as string) === 'jpeg' ? quality : undefined
+          );
+        } catch (error) {
+          clearTimeout(imageTimeout);
+          reject(new Error(`Canvas conversion failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
+        }
+      };
+      
+      img.onerror = () => {
+        clearTimeout(imageTimeout);
+        reject(new Error('DNG file could not be processed. DNG files are raw image formats that require specialized software for proper conversion. Please use Adobe Lightroom, Photoshop, or other professional photo editing software.'));
+      };
+      
+      img.src = URL.createObjectURL(file);
+    });
+    
+  } catch (error) {
+    console.error('❌ DNG conversion error:', error);
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      if (error.message.includes('too large')) {
+        throw new Error(error.message);
+      } else if (error.message.includes('specialized software')) {
+        throw new Error(error.message);
+      } else {
+        throw new Error(`DNG conversion failed: ${error.message}`);
+      }
+    }
+    
+    throw new Error('DNG conversion failed: Unknown error occurred');
+  }
+};
+
 // Get proper MIME type for format
 export const getMimeType = (format: ImageFormat): string => {
   switch (format) {
@@ -288,6 +406,8 @@ export const getMimeType = (format: ImageFormat): string => {
       return 'image/heic';
     case 'avif':
       return 'image/avif';
+    case 'dng':
+      return 'image/x-adobe-dng';
     default:
       return 'image/png';
   }
@@ -363,6 +483,8 @@ export const getFileExtension = (format: ImageFormat): string => {
       return 'heic';
     case 'avif':
       return 'avif';
+    case 'dng':
+      return 'dng';
     default:
       return format;
   }

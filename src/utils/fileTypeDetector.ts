@@ -60,6 +60,13 @@ export const FILE_TYPES: Record<string, FileTypeInfo> = {
     compatibleFormats: ['jpeg', 'png', 'webp'],
     description: 'HEIC image file'
   },
+  'image/x-adobe-dng': {
+    category: 'image',
+    mimeType: 'image/x-adobe-dng',
+    extensions: ['dng'],
+    compatibleFormats: ['jpeg', 'png', 'webp', 'tiff'],
+    description: 'Adobe Digital Negative (DNG) raw image file'
+  },
 
   // Video formats - Can be converted to other video formats or audio formats (for audio extraction)
   'video/mp4': {

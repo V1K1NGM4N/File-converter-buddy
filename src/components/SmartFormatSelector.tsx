@@ -162,7 +162,8 @@ const getFormatDescription = (format: string, category: string): string => {
       'svg': 'Vector, scalable',
       'ico': 'Icon format',
       'heic': 'High efficiency',
-      'avif': 'Next-gen compression'
+      'avif': 'Next-gen compression',
+      'dng': 'Raw image format'
     },
     video: {
       'mp4': 'Most compatible',

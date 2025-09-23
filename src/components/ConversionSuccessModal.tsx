@@ -28,6 +28,8 @@ export const ConversionSuccessModal: React.FC<ConversionSuccessModalProps> = ({
   conversionResults
 }) => {
   const { totalFiles, successfulFiles, failedFiles, fileType, originalFormat, targetFormat, totalSizeReduction } = conversionResults;
+  
+  console.log('ConversionSuccessModal rendered:', { isOpen, conversionResults });
 
   const getFileTypeIcon = (type: string) => {
     switch (type) {

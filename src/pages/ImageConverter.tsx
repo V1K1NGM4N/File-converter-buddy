@@ -57,25 +57,31 @@ const ImageConverter = () => {
       'image/bmp',
       'image/svg+xml',
       'image/heic',
-      'image/heif'
+      'image/heif',
+      'image/x-adobe-dng'
     ];
     
     const reliableExtensions = [
-      '.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg', '.heic', '.heif'
+      '.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.svg', '.heic', '.heif', '.dng'
     ];
     
-    // File size limits (50MB for HEIC, 20MB for others)
-    const maxFileSize = 50 * 1024 * 1024; // 50MB
+    // File size limits (100MB for DNG, 50MB for HEIC, 20MB for others)
+    const maxDngFileSize = 100 * 1024 * 1024; // 100MB
+    const maxHeicFileSize = 50 * 1024 * 1024; // 50MB
     const maxRegularFileSize = 20 * 1024 * 1024; // 20MB
     
     // Check file size first
+    const isDngFile = file.type === 'image/x-adobe-dng' || file.name.toLowerCase().endsWith('.dng');
     const isHeicFile = file.type === 'image/heic' || file.type === 'image/heif' || 
                       file.name.toLowerCase().endsWith('.heic') || file.name.toLowerCase().endsWith('.heif');
     
-    if (isHeicFile && file.size > maxFileSize) {
+    if (isDngFile && file.size > maxDngFileSize) {
+      console.log(`❌ DNG file too large: ${(file.size / 1024 / 1024).toFixed(1)}MB (max: 100MB)`);
+      return false;
+    } else if (isHeicFile && file.size > maxHeicFileSize) {
       console.log(`❌ HEIC file too large: ${(file.size / 1024 / 1024).toFixed(1)}MB (max: 50MB)`);
       return false;
-    } else if (!isHeicFile && file.size > maxRegularFileSize) {
+    } else if (!isDngFile && !isHeicFile && file.size > maxRegularFileSize) {
       console.log(`❌ File too large: ${(file.size / 1024 / 1024).toFixed(1)}MB (max: 20MB)`);
       return false;
     }
@@ -112,9 +118,9 @@ const ImageConverter = () => {
       const hasHeicFiles = rejectedFiles.some(f => f.type === 'image/heic' || f.type === 'image/heif' || f.name.toLowerCase().endsWith('.heic') || f.name.toLowerCase().endsWith('.heif'));
       
       if (hasLargeFiles) {
-        toast.error(`Skipped ${rejectedFiles.length} file(s). File size limit: 20MB (50MB for HEIC files). Only JPEG, PNG, WebP, GIF, BMP, SVG, and HEIC are supported.`);
+        toast.error(`Skipped ${rejectedFiles.length} file(s). File size limit: 20MB (50MB for HEIC, 100MB for DNG files). Only JPEG, PNG, WebP, GIF, BMP, SVG, HEIC, and DNG are supported.`);
       } else {
-        toast.error(`Skipped ${rejectedFiles.length} unsupported file(s). Only JPEG, PNG, WebP, GIF, BMP, SVG, and HEIC are supported.`);
+        toast.error(`Skipped ${rejectedFiles.length} unsupported file(s). Only JPEG, PNG, WebP, GIF, BMP, SVG, HEIC, and DNG are supported.`);
       }
     }
     
@@ -139,7 +145,7 @@ const ImageConverter = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.multiple = true;
-    input.accept = 'image/*';
+    input.accept = 'image/*,.dng';
     input.onchange = (e) => {
       const files = Array.from((e.target as HTMLInputElement).files || []);
       handleFilesSelected(files);
@@ -230,6 +236,8 @@ const ImageConverter = () => {
       }
       
       // Show success modal instead of toast
+      console.log('Conversion completed. Completed files:', completedFiles, 'Failed files:', failedFiles);
+      
       if (completedFiles > 0) {
         // Calculate size reduction if possible
         let totalSizeReduction = 0;
@@ -246,6 +254,7 @@ const ImageConverter = () => {
           console.warn('Could not calculate size reduction:', error);
         }
 
+        console.log('Setting conversion results and showing modal');
         setConversionResults({
           totalFiles: files.length,
           successfulFiles: completedFiles,
@@ -256,6 +265,10 @@ const ImageConverter = () => {
           totalSizeReduction: totalSizeReduction
         });
         setShowSuccessModal(true);
+        // Fallback toast in case modal doesn't show
+        setTimeout(() => {
+          toast.success(`Conversion complete! ${completedFiles} files converted.`);
+        }, 100);
       } else if (failedFiles > 0) {
         toast.error('All conversions failed. Please check your files and try again.');
       }
@@ -591,7 +604,7 @@ const ImageConverter = () => {
               <input
                 type="file"
                 multiple
-                accept="image/*"
+                accept="image/*,.dng"
                 onChange={(e) => {
                   const files = Array.from(e.target.files || []);
                   handleFilesSelected(files);
@@ -613,7 +626,7 @@ const ImageConverter = () => {
                     Drag and drop your image files here, or click to select files
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    Supports PNG, JPEG, WebP, GIF, BMP, SVG, HEIC formats
+                    Supports PNG, JPEG, WebP, GIF, BMP, SVG, HEIC, DNG formats
                   </p>
                 </div>
                 
