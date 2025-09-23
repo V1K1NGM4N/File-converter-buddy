@@ -573,7 +573,7 @@ const VideoConverter = () => {
           {files.length > 0 && (
             <Card>
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-4">
                   <div>
                     <h3 className="text-lg font-semibold">
                       {files.length} video{files.length !== 1 ? 's' : ''} ready for conversion
@@ -582,7 +582,7 @@ const VideoConverter = () => {
                       Converting to {selectedFormat.toUpperCase()} format
                     </p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button
                       onClick={handleStartConversion}
                       disabled={isConverting}
