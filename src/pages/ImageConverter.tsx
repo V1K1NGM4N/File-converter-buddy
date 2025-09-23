@@ -657,7 +657,7 @@ const ImageConverter = () => {
             />
           )}
           
-          {/* Conversion Controls */}
+          {/* Conversion Controls - Mobile Responsive */}
           {files.length > 0 && (
             <Card>
               <CardContent className="p-6">
