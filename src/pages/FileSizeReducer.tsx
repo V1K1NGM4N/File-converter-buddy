@@ -396,7 +396,7 @@ const FileSizeReducer = () => {
                                 </div>
 
                                 <div className="text-center">
-                                    <Button variant="outline" onClick={() => document.querySelector('input[type="file"]')?.click()}>
+                                    <Button variant="outline" onClick={() => (document.querySelector('input[type="file"]') as HTMLElement)?.click()}>
                                         Add More Files
                                     </Button>
                                 </div>

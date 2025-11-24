@@ -61,5 +61,21 @@ const App = () => (
             <Route path="/blog/mobile-file-management-guide" element={<MobileFileManagementGuide />} />
             <Route path="/blog/file-format-future-trends" element={<FileFormatFutureTrends />} />
             <Route path="/blog/complete-guide-to-product-feed-image-downloading" element={<CompleteGuideToProductFeedImageDownloading />} />
+            <Route path="/blog/how-to-extract-images-from-xml-product-feeds" element={<HowToExtractImagesFromXMLProductFeeds />} />
+            <Route path="/blog/bulk-product-image-downloader-for-ecommerce" element={<BulkProductImageDownloaderForEcommerce />} />
+            <Route path="/blog/product-feed-image-optimization-best-practices" element={<ProductFeedImageOptimizationBestPractices />} />
+            <Route path="/video" element={<VideoConverter />} />
+            <Route path="/audio" element={<AudioConverter />} />
+            <Route path="/images" element={<ImageConverter />} />
+            <Route path="/product-feed-image-downloader" element={<ProductFeedDownloader />} />
+            <Route path="/reducer" element={<FileSizeReducer />} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
+);
 
-            export default App;
+export default App;
