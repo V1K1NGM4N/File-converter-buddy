@@ -21,7 +21,8 @@ import {
     Music,
     Trash2,
     CheckCircle,
-    AlertCircle
+    AlertCircle,
+    Package
 } from 'lucide-react';
 import { reduceFileSize, ReductionResult } from '@/utils/fileReducer';
 import { downloadBlob } from '@/utils/imageConverter'; // Reuse download logic
@@ -67,11 +68,7 @@ const FileSizeReducer = () => {
 
         setIsProcessing(true);
 
-        // Process files sequentially or parallel? Parallel is better but might lag UI if too many.
-        // Let's do parallel with a limit or just all at once for now as per other converters.
-
         const targetReduction = reductionPercentage[0];
-
         const newFiles = [...files];
 
         // Mark pending as processing
@@ -240,6 +237,117 @@ const FileSizeReducer = () => {
                                 <p className="text-muted-foreground text-sm mt-1">
                                     Compress images, videos, and documents efficiently
                                 </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Tool Navigation */}
+                <div className="bg-background border-b border-border">
+                    <div className="container mx-auto px-6 py-4 sm:py-8">
+                        {/* Desktop Tool Navigation */}
+                        <div className="hidden sm:block">
+                            <h2 className="text-xl font-semibold mb-6 animate-fade-in-up delay-300">Choose Your Tool</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+                                <button
+                                    onClick={() => navigate('/images')}
+                                    className="group p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-blue-500/20 bg-blue-500/10 animate-fade-in-up"
+                                    style={{ animationDelay: '0.4s' }}
+                                >
+                                    <div className="flex items-center space-x-4">
+                                        <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                                            <ImageIcon className="h-6 w-6 text-blue-500" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">
+                                                Image Converter
+                                            </h3>
+                                            <p className="text-xs text-muted-foreground">
+                                                JPG, PNG, WebP
+                                            </p>
+                                        </div>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={() => navigate('/video')}
+                                    className="group p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-purple-500/20 bg-purple-500/10 animate-fade-in-up"
+                                    style={{ animationDelay: '0.5s' }}
+                                >
+                                    <div className="flex items-center space-x-4">
+                                        <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                                            <Video className="h-6 w-6 text-purple-500" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">
+                                                Video Converter
+                                            </h3>
+                                            <p className="text-xs text-muted-foreground">
+                                                MP4, AVI, MOV
+                                            </p>
+                                        </div>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={() => navigate('/audio')}
+                                    className="group p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-green-500/20 bg-green-500/10 animate-fade-in-up"
+                                    style={{ animationDelay: '0.6s' }}
+                                >
+                                    <div className="flex items-center space-x-4">
+                                        <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                                            <Music className="h-6 w-6 text-green-500" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">
+                                                Audio Converter
+                                            </h3>
+                                            <p className="text-xs text-muted-foreground">
+                                                MP3, WAV, FLAC
+                                            </p>
+                                        </div>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={() => navigate('/product-feed-image-downloader')}
+                                    className="group p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-orange-500/20 bg-orange-500/10 animate-fade-in-up"
+                                    style={{ animationDelay: '0.7s' }}
+                                >
+                                    <div className="flex items-center space-x-4">
+                                        <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                                            <Package className="h-6 w-6 text-orange-500" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">
+                                                Feed Downloader
+                                            </h3>
+                                            <p className="text-xs text-muted-foreground">
+                                                Product Images
+                                            </p>
+                                        </div>
+                                    </div>
+                                </button>
+
+                                <button
+                                    onClick={() => navigate('/reducer')}
+                                    className="group p-4 sm:p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105 hover:shadow-lg border-red-500/20 bg-red-500/10 animate-fade-in-up"
+                                    style={{ animationDelay: '0.8s' }}
+                                >
+                                    <div className="flex items-center space-x-4">
+                                        <div className="p-3 rounded-lg bg-background/50 group-hover:scale-110 transition-transform duration-300">
+                                            <Minimize2 className="h-6 w-6 text-red-500" />
+                                        </div>
+                                        <div className="text-left">
+                                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors text-sm">
+                                                Size Reducer
+                                            </h3>
+                                            <p className="text-xs text-muted-foreground">
+                                                Compress Files
+                                            </p>
+                                        </div>
+                                    </div>
+                                </button>
                             </div>
                         </div>
                     </div>

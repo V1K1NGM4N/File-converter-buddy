@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import { Image as ImageIcon, Video, Music, Zap, Package } from 'lucide-react';
+import { Image as ImageIcon, Video, Music, Zap, Package, Minimize2 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface FileTypeNavigationProps {
@@ -36,6 +36,12 @@ export const FileTypeNavigation = ({ className }: FileTypeNavigationProps) => {
       label: 'Audio',
       icon: Music,
       active: location.pathname === '/audio'
+    },
+    {
+      path: '/reducer',
+      label: 'Reducer',
+      icon: Minimize2,
+      active: location.pathname === '/reducer'
     }
   ];
 
@@ -69,7 +75,7 @@ export const FileTypeNavigation = ({ className }: FileTypeNavigationProps) => {
           );
         })}
       </div>
-      
+
       {/* Product Feed Image Downloader - centered on its own row */}
       <div className="flex justify-center">
         <Button
