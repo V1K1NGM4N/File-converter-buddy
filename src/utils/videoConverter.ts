@@ -3,7 +3,7 @@ import { fetchFile, toBlobURL } from '@ffmpeg/util';
 
 let ffmpeg: FFmpeg | null = null;
 
-export type VideoFormat = 'mp4' | 'avi' | 'mov' | 'webm';
+export type VideoFormat = 'mp4' | 'avi' | 'mov' | 'webm' | 'mkv' | 'flv' | 'wmv' | '3gp';
 
 export interface VideoConversionOptions {
   quality?: 'low' | 'medium' | 'high';
@@ -14,12 +14,12 @@ export interface VideoConversionOptions {
 // Initialize FFmpeg
 export const initializeFFmpeg = async (): Promise<void> => {
   if (ffmpeg) return;
-  
+
   console.log('Creating new FFmpeg instance...');
   ffmpeg = new FFmpeg();
-  
+
   const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd';
-  
+
   try {
     console.log('Loading FFmpeg core...');
     await ffmpeg.load({
@@ -41,15 +41,15 @@ export const convertVideo = async (
   options: VideoConversionOptions = {}
 ): Promise<Blob> => {
   console.log(`convertVideo called: ${file.name} -> ${targetFormat}`);
-  
+
   try {
     // For now, use a reliable browser-native approach
     // This creates a properly formatted video file that browsers can handle
     console.log('Using browser-native video conversion...');
-    
+
     // Read the file as ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
-    
+
     // Create a new blob with the target format MIME type
     let mimeType: string;
     switch (targetFormat) {
@@ -65,13 +65,25 @@ export const convertVideo = async (
       case 'mov':
         mimeType = 'video/quicktime';
         break;
+      case 'mkv':
+        mimeType = 'video/x-matroska';
+        break;
+      case 'flv':
+        mimeType = 'video/x-flv';
+        break;
+      case 'wmv':
+        mimeType = 'video/x-ms-wmv';
+        break;
+      case '3gp':
+        mimeType = 'video/3gpp';
+        break;
       default:
         mimeType = 'video/mp4';
     }
-    
+
     // Create a new blob with the target format
     const convertedBlob = new Blob([arrayBuffer], { type: mimeType });
-    
+
     console.log(`Conversion successful: ${file.name} -> ${targetFormat} (${convertedBlob.size} bytes)`);
     return convertedBlob;
 
@@ -139,6 +151,18 @@ const buildFFmpegCommand = (
     case 'mov':
       command.push('-c:v', 'libx264', '-c:a', 'aac', '-f', 'mov');
       break;
+    case 'mkv':
+      command.push('-c:v', 'libx264', '-c:a', 'aac');
+      break;
+    case 'flv':
+      command.push('-c:v', 'flv', '-c:a', 'aac');
+      break;
+    case 'wmv':
+      command.push('-c:v', 'wmv2', '-c:a', 'wmav2');
+      break;
+    case '3gp':
+      command.push('-c:v', 'h263', '-c:a', 'aac', '-r', '20');
+      break;
     default:
       // Fallback for any unexpected format
       command.push('-c:v', 'libx264', '-c:a', 'aac');
@@ -164,10 +188,10 @@ export const needsConversion = (file: File, targetFormat: VideoFormat): boolean 
 
 // Get supported input formats - Limited to reliable formats
 export const getSupportedInputFormats = (): string[] => {
-  return ['mp4', 'avi', 'mov', 'webm'];
+  return ['mp4', 'avi', 'mov', 'webm', 'mkv', 'flv', 'wmv', '3gp'];
 };
 
 // Get supported output formats - Limited to reliable formats
 export const getSupportedOutputFormats = (): VideoFormat[] => {
-  return ['mp4', 'avi', 'mov', 'webm'];
+  return ['mp4', 'avi', 'mov', 'webm', 'mkv', 'flv', 'wmv', '3gp'];
 };

@@ -12,16 +12,16 @@ interface SmartFormatSelectorProps {
   className?: string;
 }
 
-export const SmartFormatSelector = ({ 
-  files, 
-  selectedFormat, 
-  onFormatChange, 
-  className 
+export const SmartFormatSelector = ({
+  files,
+  selectedFormat,
+  onFormatChange,
+  className
 }: SmartFormatSelectorProps) => {
   // Detect file type from the first file (assuming all files are the same type)
   const firstFile = files[0];
   const fileTypeInfo = firstFile ? detectFileType(firstFile) : null;
-  
+
   if (!fileTypeInfo) {
     return (
       <Card className={cn("p-6 bg-gradient-card shadow-card border-border/50", className)}>
@@ -37,19 +37,19 @@ export const SmartFormatSelector = ({
   }
 
   const compatibleFormats = getCompatibleFormats(fileTypeInfo);
-  
+
   // Group formats into main (most common) and other formats
   // Show 3 main formats, then "More" dropdown for the rest
   const shouldShowMore = compatibleFormats.length > 3;
   const mainFormats = shouldShowMore ? compatibleFormats.slice(0, 3) : compatibleFormats;
   const otherFormats = shouldShowMore ? compatibleFormats.slice(3) : [];
-  
+
   // Get current file extension for display
   const currentExtension = fileTypeInfo.extensions[0]?.toUpperCase() || 'Unknown';
-  
+
   // Find the selected format info
-  const selectedFormatInfo = compatibleFormats.includes(selectedFormat) 
-    ? selectedFormat 
+  const selectedFormatInfo = compatibleFormats.includes(selectedFormat)
+    ? selectedFormat
     : compatibleFormats[0];
 
   const selectedOtherFormat = otherFormats.find(f => f === selectedFormatInfo);
@@ -60,7 +60,7 @@ export const SmartFormatSelector = ({
         <FileType className="h-5 w-5 text-primary" />
         <h3 className="text-lg font-semibold">Choose Output Format</h3>
       </div>
-      
+
       {/* File Type Info */}
       <div className="mb-6 p-4 bg-muted/30 rounded-lg border border-border/50">
         <div className="flex items-center gap-2 mb-2">
@@ -75,7 +75,7 @@ export const SmartFormatSelector = ({
           <span className="text-sm text-muted-foreground">{fileTypeInfo.description}</span>
         </div>
       </div>
-      
+
       {/* Format Selection */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         {mainFormats.map((format) => (
@@ -97,7 +97,7 @@ export const SmartFormatSelector = ({
           </Button>
         ))}
       </div>
-      
+
       {/* More Formats Dropdown - Only show if there are additional formats */}
       {otherFormats.length > 0 && (
         <div className="mt-3">
@@ -136,7 +136,7 @@ export const SmartFormatSelector = ({
           </DropdownMenu>
         </div>
       )}
-      
+
       {/* Conversion Info */}
       <div className="mt-4 p-3 bg-primary/5 rounded-lg border border-primary/20">
         <p className="text-xs text-primary/80 text-center">
@@ -194,7 +194,8 @@ const getFormatDescription = (format: string, category: string): string => {
       'opus': 'Modern codec',
       'aiff': 'Apple format',
       'alac': 'Apple lossless',
-      'ac3': 'Dolby Digital'
+      'ac3': 'Dolby Digital',
+      'm4r': 'iPhone Ringtone'
     },
     archive: {
       'zip': 'Most compatible',

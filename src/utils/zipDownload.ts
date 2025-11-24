@@ -14,39 +14,13 @@ export const downloadMultipleFilesAsZip = async (
 
   try {
     const zip = new JSZip();
-    
+
     // Create timestamped folder name (simplified format)
     const now = new Date();
     const date = now.toISOString().slice(0, 10); // YYYY-MM-DD
     const time = now.toTimeString().slice(0, 5); // HH:MM
     const baseFolderName = `FileConverterBuddyDownload - ${date} ${time}`;
-    
-    // Add all files to the ZIP with organized structure
-    files.forEach(({ name, blob, folder }) => {
-      // Sanitize filename for Mac compatibility
-      const sanitizedName = sanitizeFilenameForMac(name);
-      
-      // Create folder path
-      let filePath: string;
-      if (createFolderStructure) {
-        if (folder) {
-          // Use custom folder if provided
-          const sanitizedFolder = sanitizeFilenameForMac(folder);
-          filePath = `${baseFolderName}/${sanitizedFolder}/${sanitizedName}`;
-        } else {
-          // Default to base folder
-          filePath = `${baseFolderName}/${sanitizedName}`;
-        }
-      } else {
-        // No folder structure, just the filename
-        filePath = sanitizedName;
-      }
-      
-      zip.file(filePath, blob);
-    });
-
-    // Generate the ZIP file with Mac-compatible settings
-    const zipBlob = await zip.generateAsync({ 
+    const zipBlob = await zip.generateAsync({
       type: 'blob',
       compression: 'DEFLATE',
       compressionOptions: {
@@ -81,7 +55,7 @@ const downloadBlobAsFile = async (blob: Blob, filename: string, mimeType: string
   // Detect if we're on Mac/Safari
   const isMac = /Mac|iPod|iPhone|iPad/.test(navigator.userAgent);
   const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-  
+
   if (isMac && isSafari) {
     // Safari on Mac requires a different approach
     try {
@@ -91,13 +65,13 @@ const downloadBlobAsFile = async (blob: Blob, filename: string, mimeType: string
       link.href = url;
       link.download = filename;
       link.style.display = 'none';
-      
+
       // Add to DOM temporarily
       document.body.appendChild(link);
-      
+
       // Trigger download
       link.click();
-      
+
       // Clean up
       setTimeout(() => {
         document.body.removeChild(link);
@@ -137,7 +111,7 @@ export const downloadMultipleFiles = async (
     try {
       const sanitizedName = sanitizeFilenameForMac(name);
       await downloadBlobAsFile(blob, sanitizedName, blob.type);
-      
+
       // Small delay between downloads to prevent browser blocking
       await new Promise(resolve => setTimeout(resolve, 200));
     } catch (error) {
