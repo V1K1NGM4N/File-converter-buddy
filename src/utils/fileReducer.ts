@@ -1,7 +1,7 @@
 import { convertImage, ImageFormat } from './imageConverter';
 import JSZip from 'jszip';
 import { FFmpeg } from '@ffmpeg/ffmpeg';
-import { toBlobURL } from '@ffmpeg/util';
+import { toBlobURL, fetchFile } from '@ffmpeg/util';
 
 // Initialize FFmpeg instance
 let ffmpeg: FFmpeg | null = null;
@@ -11,10 +11,10 @@ const initializeFFmpeg = async (): Promise<FFmpeg> => {
 
   console.log('Creating new FFmpeg instance for reducer...');
   const instance = new FFmpeg();
-  
+
   // Use a reliable CDN for ffmpeg binaries
   const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
-  
+
   try {
     await instance.load({
       coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
@@ -43,13 +43,13 @@ export const reduceFileSize = async (
 ): Promise<ReductionResult> => {
   const fileType = file.type;
   const originalSize = file.size;
-  
+
   // Calculate target quality (1.0 - reduction/100)
   // e.g. 10% reduction -> 0.9 quality
   // e.g. 80% reduction -> 0.2 quality
   // Clamp between 0.1 and 1.0
   const quality = Math.max(0.1, Math.min(1.0, 1 - (reductionPercentage / 100)));
-  
+
   console.log(`Reducing ${file.name} (${fileType}) by ${reductionPercentage}% (Quality: ${quality})`);
 
   let resultBlob: Blob;
@@ -70,13 +70,8 @@ export const reduceFileSize = async (
 
   // If result is larger than original (can happen with zip on already compressed files), return original
   if (resultBlob.size >= originalSize && !fileType.startsWith('image/') && !fileType.startsWith('video/')) {
-      // For images/video we might want to keep the processed version even if larger? 
-      // No, usually user wants smaller size.
-      // But for format conversion it might be different. Here we are just reducing size.
-      // Let's stick to: if larger, return original, UNLESS it was a format change that user explicitly requested (not the case here).
-      // However, for ZIP, if it gets bigger, it's useless.
-      console.log('Result larger than original, returning original');
-      resultBlob = file;
+    console.log('Result larger than original, returning original');
+    resultBlob = file;
   }
 
   return {
@@ -92,14 +87,14 @@ const reduceImage = async (file: File, quality: number): Promise<Blob> => {
   // Use existing image converter but force JPEG or WebP for better compression if original is PNG/Lossless
   // Or just keep original format if supported.
   // convertImage takes (file, format, quality).
-  
+
   let targetFormat: ImageFormat = 'jpeg';
-  if (file.type === 'image/png') targetFormat = 'png'; // PNG compression is lossless usually, but canvas toBlob can do lossy PNG? No, standard is lossless.
+  if (file.type === 'image/png') targetFormat = 'png';
   if (file.type === 'image/webp') targetFormat = 'webp';
-  
+
   // If user wants high reduction on PNG, we might need to convert to JPEG or WebP
   if (file.type === 'image/png' && quality < 0.8) {
-      targetFormat = 'jpeg'; // Force JPEG for better compression
+    targetFormat = 'jpeg'; // Force JPEG for better compression
   }
 
   return await convertImage(file, targetFormat, quality);
@@ -108,13 +103,12 @@ const reduceImage = async (file: File, quality: number): Promise<Blob> => {
 const reduceVideo = async (file: File, quality: number): Promise<Blob> => {
   try {
     const ffmpegInstance = await initializeFFmpeg();
-    const { fetchFile } = await import('@ffmpeg/util');
-    
+
     const inputName = 'input' + getFileExtension(file.name);
     const outputName = 'output.mp4'; // Always output MP4 for now for compatibility
-    
+
     await ffmpegInstance.writeFile(inputName, await fetchFile(file));
-    
+
     // Calculate bitrate based on quality
     // Base bitrate assumption: 1080p ~ 5000k, 720p ~ 2500k
     // We'll just use CRF (Constant Rate Factor) for x264
@@ -124,9 +118,9 @@ const reduceVideo = async (file: File, quality: number): Promise<Blob> => {
     // 0.1 -> 51
     // Formula: 18 + (1-quality) * 33
     const crf = Math.round(18 + (1 - quality) * 33);
-    
+
     console.log(`Running FFmpeg with CRF: ${crf}`);
-    
+
     await ffmpegInstance.exec([
       '-i', inputName,
       '-vcodec', 'libx264',
@@ -136,10 +130,10 @@ const reduceVideo = async (file: File, quality: number): Promise<Blob> => {
       '-b:a', '128k', // reasonable audio
       outputName
     ]);
-    
+
     const data = await ffmpegInstance.readFile(outputName);
     return new Blob([data], { type: 'video/mp4' });
-    
+
   } catch (error) {
     console.error('Video reduction error:', error);
     // Fallback: return original if ffmpeg fails
@@ -150,10 +144,10 @@ const reduceVideo = async (file: File, quality: number): Promise<Blob> => {
 const compressToZip = async (file: File): Promise<Blob> => {
   const zip = new JSZip();
   zip.file(file.name, file);
-  return await zip.generateAsync({ 
-      type: 'blob', 
-      compression: 'DEFLATE', 
-      compressionOptions: { level: 9 } 
+  return await zip.generateAsync({
+    type: 'blob',
+    compression: 'DEFLATE',
+    compressionOptions: { level: 9 }
   });
 };
 
