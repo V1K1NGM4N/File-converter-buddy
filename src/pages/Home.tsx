@@ -63,6 +63,15 @@ const Home = () => {
       color: 'text-red-500',
       bgColor: 'bg-red-500/10',
       borderColor: 'border-red-500/20'
+    },
+    {
+      icon: Video, // Reusing Video icon, or import Film if available
+      title: 'Video to GIF',
+      description: 'Convert video clips to animated GIFs',
+      path: '/video-to-gif',
+      color: 'text-pink-500',
+      bgColor: 'bg-pink-500/10',
+      borderColor: 'border-pink-500/20'
     }
   ];
 

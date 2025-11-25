@@ -44,14 +44,31 @@ const FileSizeReducer = () => {
     const [isProcessing, setIsProcessing] = useState(false);
 
     const handleFilesSelected = useCallback((newFiles: File[]) => {
-        const reducerFiles: ReducerFile[] = newFiles.map(file => ({
+        const validFiles: File[] = [];
+        let hasLargeFile = false;
+
+        newFiles.forEach(file => {
+            if (file.size > 1024 * 1024 * 1024) { // 1GB
+                hasLargeFile = true;
+            } else {
+                validFiles.push(file);
+            }
+        });
+
+        if (hasLargeFile) {
+            toast.error('Some files were skipped because they are larger than 1GB. Please use smaller files for browser-based processing.');
+        }
+
+        const reducerFiles: ReducerFile[] = validFiles.map(file => ({
             id: crypto.randomUUID(),
             file,
             status: 'pending',
             progress: 0
         }));
         setFiles(prev => [...prev, ...reducerFiles]);
-        toast.success(`Added ${newFiles.length} file(s)`);
+        if (validFiles.length > 0) {
+            toast.success(`Added ${validFiles.length} file(s)`);
+        }
     }, []);
 
     const handleRemoveFile = useCallback((id: string) => {
@@ -62,6 +79,18 @@ const FileSizeReducer = () => {
         setFiles([]);
         toast.success('Cleared all files');
     }, []);
+
+    const triggerConfetti = () => {
+        // @ts-ignore
+        if (window.confetti) {
+            // @ts-ignore
+            window.confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+            });
+        }
+    };
 
     const handleStartReduction = useCallback(async () => {
         if (files.length === 0) return;
@@ -129,6 +158,7 @@ const FileSizeReducer = () => {
         }));
 
         setIsProcessing(false);
+        triggerConfetti();
         toast.success('Processing complete');
 
     }, [files, reductionPercentage]);
@@ -429,7 +459,33 @@ const FileSizeReducer = () => {
                                                 </div>
                                             </div>
 
-                                            <div className="pt-2 px-2">
+                                            <div className="pt-2 px-2 space-y-4">
+                                                <div className="flex gap-2 justify-center">
+                                                    <Button
+                                                        variant={reductionPercentage[0] === 10 ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => setReductionPercentage([10])}
+                                                        className="flex-1"
+                                                    >
+                                                        Light (10%)
+                                                    </Button>
+                                                    <Button
+                                                        variant={reductionPercentage[0] === 50 ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => setReductionPercentage([50])}
+                                                        className="flex-1"
+                                                    >
+                                                        Balanced (50%)
+                                                    </Button>
+                                                    <Button
+                                                        variant={reductionPercentage[0] === 80 ? "default" : "outline"}
+                                                        size="sm"
+                                                        onClick={() => setReductionPercentage([80])}
+                                                        className="flex-1"
+                                                    >
+                                                        Max (80%)
+                                                    </Button>
+                                                </div>
                                                 <Slider
                                                     value={reductionPercentage}
                                                     onValueChange={setReductionPercentage}

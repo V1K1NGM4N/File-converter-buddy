@@ -11,6 +11,7 @@ import AudioConverter from "./pages/AudioConverter";
 import ProductFeedDownloader from "./pages/ProductFeedDownloader";
 import Blog from "./pages/Blog";
 import FileSizeReducer from "./pages/FileSizeReducer";
+import VideoToGif from "./pages/VideoToGif";
 import CompleteGuideToImageFileFormats from "./pages/blog/CompleteGuideToImageFileFormats";
 import CompleteGuideToVideoFileFormats from "./pages/blog/CompleteGuideToVideoFileFormats";
 import CompleteGuideToAudioFileFormats from "./pages/blog/CompleteGuideToAudioFileFormats";
@@ -33,7 +34,6 @@ import ProductFeedImageOptimizationBestPractices from "./pages/blog/ProductFeedI
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
-
 
 const App = () => (
   <HelmetProvider>
@@ -69,7 +69,7 @@ const App = () => (
             <Route path="/images" element={<ImageConverter />} />
             <Route path="/product-feed-image-downloader" element={<ProductFeedDownloader />} />
             <Route path="/reducer" element={<FileSizeReducer />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/video-to-gif" element={<VideoToGif />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -113,11 +113,11 @@ const reduceVideo = async (file: File, quality: number): Promise<Blob> => {
     // Base bitrate assumption: 1080p ~ 5000k, 720p ~ 2500k
     // We'll just use CRF (Constant Rate Factor) for x264
     // CRF 18-28 is sane range. 51 is worst.
-    // Map quality (1.0 - 0.1) to CRF (18 - 51)
-    // 1.0 -> 18
-    // 0.1 -> 51
-    // Formula: 18 + (1-quality) * 33
-    const crf = Math.round(18 + (1 - quality) * 33);
+    // Map quality (1.0 - 0.1) to CRF (24 - 51)
+    // 1.0 -> 24 (Standard web quality, good compression)
+    // 0.1 -> 51 (Lowest quality)
+    // Formula: 24 + (1-quality) * 27
+    const crf = Math.round(24 + (1 - quality) * 27);
 
     console.log(`Running FFmpeg with CRF: ${crf}`);
 
