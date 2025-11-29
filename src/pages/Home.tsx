@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Image as ImageIcon, Video, Music, Package, Zap, Shield, Clock, BookOpen, Minimize2 } from 'lucide-react';
+import { Image as ImageIcon, Video, Music, Package, Zap, Shield, Clock, BookOpen, Minimize2, FileText } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getFormattedStats } from '@/utils/conversionTracker';
 import { AnimatedFileType } from '@/components/AnimatedFileType';
@@ -65,13 +65,22 @@ const Home = () => {
       borderColor: 'border-red-500/20'
     },
     {
-      icon: Video, // Reusing Video icon, or import Film if available
+      icon: Video,
       title: 'Video to GIF',
       description: 'Convert video clips to animated GIFs',
       path: '/video-to-gif',
       color: 'text-pink-500',
       bgColor: 'bg-pink-500/10',
       borderColor: 'border-pink-500/20'
+    },
+    {
+      icon: FileText,
+      title: 'Image to PDF',
+      description: 'Combine multiple images into a single PDF document',
+      path: '/image-to-pdf',
+      color: 'text-red-500',
+      bgColor: 'bg-red-500/10',
+      borderColor: 'border-red-500/20'
     }
   ];
 
@@ -127,7 +136,7 @@ const Home = () => {
                 {/* Blog Link */}
                 <button
                   onClick={() => navigate('/blog')}
-                  className="text-sm text-primary font-medium"
+                  className="text-sm text-foreground hover:text-primary transition-colors font-medium"
                 >
                   Blog
                 </button>
@@ -137,7 +146,7 @@ const Home = () => {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto p-6 h-screen flex flex-col">
+        <main className="max-w-7xl mx-auto p-6 h-screen flex flex-col">
 
 
           {/* Main Content Grid */}
@@ -235,7 +244,7 @@ const Home = () => {
               </div>
             </div>
           </div>
-        </div>
+        </main>
       </div>
     </>
   );
